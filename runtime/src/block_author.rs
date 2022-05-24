@@ -1,45 +1,51 @@
 use sp_core::sr25519;
 use sp_std::vec::Vec;
 use sp_runtime::RuntimeString;
-use frame_support::{
-	decl_module, decl_storage, decl_error, ensure,
-	weights::Weight,
-};
-use frame_system::ensure_none;
-use sp_inherents::{InherentIdentifier, InherentData, ProvideInherent, IsFatalError};
+use sp_inherents::{InherentIdentifier, ProvideInherent, IsFatalError};
 #[cfg(feature = "std")]
 use sp_inherents::ProvideInherentData;
 use parity_scale_codec::{Encode, Decode};
 
-/// The pallet's configuration trait. Nothing to configure.
-pub trait Config: frame_system::Trait {}
 
-decl_error! {
-	pub enum Error for Module<T: Trait> {
+pub use pallet::*;
+
+#[frame_support::pallet]
+pub mod pallet {
+	use frame_support::pallet_prelude::*;
+	use frame_system::pallet_prelude::*;
+	use super::*;
+
+	/// The BlockAuthor Inherent pallet.
+	#[pallet::pallet]
+	pub struct Pallet<T>(PhantomData<T>);
+	/// The pallet's configuration trait. Nothing to configure.
+	pub trait Config: frame_system::Trait {}
+
+	#[pallet::error]
+	pub enum Error<T> {
 		/// Author already set in block.
 		AuthorAlreadySet,
 	}
-}
 
-decl_storage! {
-	trait Store for Module<T: Trait> as Rewards {
-		Author: Option<sr25519::Public>;
-	}
-}
+	/// Author of current block.
+	#[pallet::storage]
+	pub type Author<T: Config> = StorageValue<_, sr25519::Public, OptionQuery>;
 
-decl_module! {
-	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-		type Error = Error<T>;
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
 
 		/// Inherent to set the author of a block
 		#[weight = 1_000_000]
-		fn set_author(origin, author: sr25519::Public) {
+		fn set_author(origin: OriginFor<T>, author: sr25519::Public) {
 			ensure_none(origin)?;
 			ensure!(Author::get().is_none(), Error::<T>::AuthorAlreadySet);
 
 			<Self as Store>::Author::put(author);
 		}
-
+	}
+	
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize() -> Weight {
 			// Reset the author to None at the beginning of the block
 			<Self as Store>::Author::kill();
@@ -47,6 +53,37 @@ decl_module! {
 			// Return zero weight because we are not using weight-based
 			// transaction fees.
 			0
+		}
+	}
+
+	#[pallet::inherent]
+	impl<T:Config> ProvideInherent for Pallet<T> {
+		type Call = Call<T>;
+		type Error = InherentError;
+		const INHERENT_IDENTIFIER: InherentIdentifier = INHERENT_IDENTIFIER;
+
+		fn is_inherent_required(_: &InherentData) -> Result<Option<Self::Error>, Self::Error> {
+			// Return Ok(Some(_)) unconditionally because this inherent is required in every block
+			// If it is not found, throw an AuthorInherentRequired error.
+			Ok(Some(InherentError::Other(
+				sp_runtime::RuntimeString::Borrowed("BlockAuthorInherentRequired"),
+			)))
+		}
+
+		fn create_inherent(data: &InherentData) -> Option<Self::Call> {
+			// Grab the Vec<u8> labelled with "author_" from the map of all inherent data
+			let author_raw = data.get_data::<InherentType>(&INHERENT_IDENTIFIER)
+			.expect("Gets and decodes authorship inherent data")?;
+
+			// Decode the Vec<u8> into an actual author
+			let author = sr25519::Public::decode(&mut &author_raw[..])
+				.expect("Decodes author raw inherent data");
+
+			Some(Call::set_author{author})
+		}
+
+		fn is_inherent(call: &Self::Call) -> bool {
+			matches!(call, Call::set_author{..})
 		}
 	}
 }
@@ -63,7 +100,7 @@ impl BlockAuthor for () {
 	}
 }
 
-impl<T: Trait> BlockAuthor for Module<T> {
+impl<T: Trait> BlockAuthor for Pallet<T> {
 	fn block_author() -> Option<sr25519::Public> {
 		Author::get()
 	}
@@ -90,7 +127,7 @@ impl InherentError {
 	#[cfg(feature = "std")]
 	pub fn try_from(id: &InherentIdentifier, data: &[u8]) -> Option<Self> {
 		if id == &INHERENT_IDENTIFIER {
-			<InherentError as codec::Decode>::decode(&mut &data[..]).ok()
+			<InherentError as parity_scale_codec::Decode>::decode(&mut &data[..]).ok()
 		} else {
 			None
 		}
@@ -105,34 +142,26 @@ pub type InherentType = Vec<u8>;
 pub struct InherentDataProvider(pub InherentType);
 
 #[cfg(feature = "std")]
-impl ProvideInherentData for InherentDataProvider {
-	fn inherent_identifier(&self) -> &'static InherentIdentifier {
-		&INHERENT_IDENTIFIER
-	}
-
-	fn provide_inherent_data(&self, inherent_data: &mut InherentData) -> Result<(), sp_inherents::Error> {
+#[async_trait::async_trait]
+impl sp_inherents::InherentDataProvider for InherentDataProvider {
+	fn provide_inherent_data(
+		&self,
+		inherent_data: &mut InherentData,
+	) -> Result<(), sp_inherents::Error> {
 		inherent_data.put_data(INHERENT_IDENTIFIER, &self.0)
 	}
 
-	fn error_to_string(&self, error: &[u8]) -> Option<String> {
-		InherentError::try_from(&INHERENT_IDENTIFIER, error).map(|e| format!("{:?}", e))
-	}
-}
+	async fn try_handle_error(
+		&self,
+		identifier: &InherentIdentifier,
+		_error: &[u8],
+	) -> Option<Result<(), sp_inherents::Error>> {
+		// Dont' process modules from other inherents
+		if *identifier != INHERENT_IDENTIFIER {
+			return None
+		}
 
-impl<T: Trait> ProvideInherent for Module<T> {
-	type Call = Call<T>;
-	type Error = InherentError;
-	const INHERENT_IDENTIFIER: InherentIdentifier = INHERENT_IDENTIFIER;
-
-	fn create_inherent(data: &InherentData) -> Option<Self::Call> {
-		// Grab the Vec<u8> labelled with "author_" from the map of all inherent data
-		let author_raw = data.get_data::<InherentType>(&INHERENT_IDENTIFIER)
-			.expect("Gets and decodes authorship inherent data")?;
-
-		// Decode the Vec<u8> into an actual author
-		let author = sr25519::Public::decode(&mut &author_raw[..])
-			.expect("Decodes author raw inherent data");
-
-		Some(Call::set_author(author))
+		// All errors with the author inehrent are fatal
+		Some(Err(sp_inherents::Error::Application(Box::from(String::from("Error processing author inherent")))))
 	}
 }
