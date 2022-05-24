@@ -60,6 +60,7 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
@@ -86,7 +87,7 @@ pub mod pallet {
 	/// and use blake2_128_concat here. I'm deferring that so as not to break
 	/// the workshop inputs.
 	#[pallet::storage]
-	pub type UtxoStore =
+	pub type UtxoStore<T> =
 		StorageMap<_, Identity, H256, TransactionOutput>;
 
 	/// Total reward value to be redistributed to the miner.
@@ -94,7 +95,7 @@ pub mod pallet {
 	/// and then allocated to the miner at the end of the block.
 	#[pallet::storage]
 	#[pallet::getter(fn reward_total)]
-	pub type RewardTotal = StorageValue<_, Value>;
+	pub type RewardTotal<T> = StorageValue<_, Value>;
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		genesis_utxos: Vec<TransactionOutput>,
@@ -120,7 +121,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 
 		/// Dispatch a single transaction and update UTXO set accordingly
-		#[weight = 1_000_000] //TODO weight should be proportional to number of inputs + outputs
+		#[pallet::weight(1_000_000)] //TODO weight should be proportional to number of inputs + outputs
 		pub fn spend(_origin: OriginFor<T>, transaction: Transaction) -> DispatchResult {
 			let transaction_validity = Self::validate_transaction(&transaction)?;
 			ensure!(transaction_validity.requires.is_empty(), "missing inputs");
@@ -159,7 +160,7 @@ pub mod pallet {
 }
 
 // "Internal" functions, callable by code.
-impl<T: Config> Module<T> {
+impl<T: Config> Pallet<T> {
 
 	/// Check transaction for validity, errors, & race conditions
 	/// Called by both transaction pool and runtime execution

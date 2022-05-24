@@ -8,6 +8,7 @@
 use core::cmp::{min, max};
 use parity_scale_codec::{Encode, Decode};
 use sp_core::U256;
+use frame_support::traits::Time;
 
 #[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, Debug)]
 pub struct DifficultyAndTimestamp<M> {
@@ -32,12 +33,14 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
 	/// Pallet's configuration trait.
 	/// Tightly coupled to the timestamp trait because we need it's timestamp information
-	pub trait Config: frame_system::Trait {
+	#[pallet::config]
+	pub trait Config: frame_system::Config {
 		/// A Source for timestamp data
 		type TimeProvider: Time;
 		/// The block time that the DAA will attempt to maintain
@@ -61,9 +64,9 @@ pub mod pallet {
 
 	/// Past difficulties and timestamps, from earliest to latest.
 	#[pallet::storage]
-	pub type PastDifficultiesAndTimestamps<T>: StorageValue<
+	pub type PastDifficultiesAndTimestamps<T> = StorageValue<
 		_,
-		[Option<DifficultyAndTimestamp<<<T as Trait>::TimeProvider as Time>::Moment>>; 60],
+		[Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60],
 		ValueQuery
 	>;
 	
@@ -71,11 +74,15 @@ pub mod pallet {
 	/// Current difficulty.
 	#[pallet::storage]
 	#[pallet::getter(fn difficulty)]
-	pub type CurrentDifficulty = StorageValue<_, Difficulty, ValueQuery>;
+	pub type CurrentDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
+
+	/// Initial difficulty.
+	#[pallet::storage]
+	pub type InitialDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub initial_difficulty: Difficlty,
+		pub initial_difficulty: Difficulty,
 	}
 
 	#[pallet::genesis_build]
@@ -84,8 +91,12 @@ pub mod pallet {
 			// Initialize the past data to all NONE
 			PastDifficultiesAndTimestamps::put([None; DIFFICULTY_ADJUST_WINDOW as usize]);
 
-			// Store the intial difficulty
+			// Initialize the Current difficulty
 			CurrentDifficulty::put(self.initial_difficulty);
+
+			// Store the initial difficulty in storage because we will need it
+			// during the first DIFFICULTY_ADJUSTMENT_WINDOW blocks (see todo below).
+			InitialDifficulty::put(self.initial_difficulty);
 		}
 	}
 
@@ -120,6 +131,8 @@ pub mod pallet {
 			}
 
 			let mut diff_sum = U256::zero();
+			//TODO Could we just initialize every array cell to the initial difficulty to not need the
+			// separate storage item?
 			for i in 0..(DIFFICULTY_ADJUST_WINDOW as usize) {
 				let diff = match data[i].map(|d| d.difficulty) {
 					Some(diff) => diff,
@@ -148,7 +161,7 @@ pub mod pallet {
 									 diff_sum * U256::from(T::TargetBlockTime::get()) / U256::from(adj_ts)));
 
 			<PastDifficultiesAndTimestamps<T>>::put(data);
-			<CurrentDifficulty>::put(difficulty);
+			<CurrentDifficulty<T>>::put(difficulty);
 		}
 	}
 }

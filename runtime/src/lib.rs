@@ -16,6 +16,7 @@ use sp_runtime::{
 	generic,
 	MultiSignature,
 	traits::{
+		AccountIdLookup,
 		BlakeTwo256,
 		Block as BlockT,
 		IdentifyAccount,
@@ -71,9 +72,6 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
-/// Digest item type.
-pub type DigestItem = generic::DigestItem<Hash>;
-
 /// The UTXO pallet in `./utxo.rs`
 pub mod utxo;
 
@@ -122,6 +120,8 @@ pub fn native_version() -> NativeVersion {
 		can_author_with: Default::default(),
 	}
 }
+
+const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 
 parameter_types! {
 	pub const Version: RuntimeVersion = VERSION;

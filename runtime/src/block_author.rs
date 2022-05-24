@@ -1,7 +1,7 @@
 use sp_core::sr25519;
 use sp_std::vec::Vec;
 use sp_runtime::RuntimeString;
-use sp_inherents::{InherentIdentifier, ProvideInherent, IsFatalError};
+use sp_inherents::{InherentIdentifier, IsFatalError};
 #[cfg(feature = "std")]
 use sp_inherents::ProvideInherentData;
 use parity_scale_codec::{Encode, Decode};
@@ -19,7 +19,8 @@ pub mod pallet {
 	#[pallet::pallet]
 	pub struct Pallet<T>(PhantomData<T>);
 	/// The pallet's configuration trait. Nothing to configure.
-	pub trait Config: frame_system::Trait {}
+	#[pallet::config]
+	pub trait Config: frame_system::Config {}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -35,12 +36,14 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 
 		/// Inherent to set the author of a block
-		#[weight = 1_000_000]
-		fn set_author(origin: OriginFor<T>, author: sr25519::Public) {
+		#[pallet::weight(1_000_000)]
+		pub fn set_author(origin: OriginFor<T>, author: sr25519::Public) -> DispatchResult {
 			ensure_none(origin)?;
-			ensure!(Author::get().is_none(), Error::<T>::AuthorAlreadySet);
+			ensure!(Author::<T>::get().is_none(), Error::<T>::AuthorAlreadySet);
 
-			<Self as Store>::Author::put(author);
+			Author::<T>::put(author);
+
+			Ok(())
 		}
 	}
 	
@@ -48,7 +51,7 @@ pub mod pallet {
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_initialize() -> Weight {
 			// Reset the author to None at the beginning of the block
-			<Self as Store>::Author::kill();
+			Author::<T>::kill();
 
 			// Return zero weight because we are not using weight-based
 			// transaction fees.
@@ -100,9 +103,9 @@ impl BlockAuthor for () {
 	}
 }
 
-impl<T: Trait> BlockAuthor for Pallet<T> {
+impl<T: Config> BlockAuthor for Pallet<T> {
 	fn block_author() -> Option<sr25519::Public> {
-		Author::get()
+		Author::<T>::get()
 	}
 }
 
