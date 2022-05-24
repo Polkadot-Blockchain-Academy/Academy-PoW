@@ -1,6 +1,5 @@
 use parity_scale_codec::{Decode, Encode};
 use frame_support::{
-	decl_event, decl_module, decl_storage,
 	dispatch::{DispatchResult, Vec},
 	ensure,
 };
@@ -18,17 +17,6 @@ use sp_runtime::{
 	transaction_validity::{TransactionLongevity, ValidTransaction},
 };
 use super::{block_author::BlockAuthor, issuance::Issuance};
-
-pub trait Config: frame_system::Config {
-	/// The ubiquitous Event type
-	type Event: From<Event> + Into<<Self as frame_system::Config>::Event>;
-
-	/// A source to determine the block author
-	type BlockAuthor: BlockAuthor;
-
-	/// A source to determine the issuance portion of the block reward
-	type Issuance: Issuance<<Self as frame_system::Config>::BlockNumber, Value>;
-}
 
 pub type Value = u128;
 
@@ -68,42 +56,72 @@ pub struct TransactionOutput {
 	pub pubkey: H256,
 }
 
-decl_storage! {
-	trait Store for Module<T: Trait> as Utxo {
-		/// All valid unspent transaction outputs are stored in this map.
-		/// Initial set of UTXO is populated from the list stored in genesis.
-		/// We use the identity hasher here because the cryptographic hashing is
-		/// done explicitly. TODO In the future we should remove the explicit hashing,
-		/// and use blake2_128_concat here. I'm deferring that so as not to break
-		/// the workshop inputs.
-		UtxoStore build(|config: &GenesisConfig| {
-			config.genesis_utxos
-				.iter()
-				.cloned()
-				.map(|u| (BlakeTwo256::hash_of(&u), u))
-				.collect::<Vec<_>>()
-		}): map hasher(identity) H256 => Option<TransactionOutput>;
+pub use pallet::*;
 
-		/// Total reward value to be redistributed among authorities.
-		/// It is accumulated from transactions during block execution
-		/// and then dispersed to validators on block finalization.
-		pub RewardTotal get(fn reward_total): Value;
+#[frame_support::pallet]
+pub mod pallet {
+	use frame_support::pallet_prelude::*;
+	use frame_system::pallet_prelude::*;
+
+	#[pallet::config]
+	pub trait Config: frame_system::Config {
+		/// The ubiquitous Event type
+		type Event: From<Event> + IsType<<Self as frame_system::Config>::Event>;
+	
+		/// A source to determine the block author
+		type BlockAuthor: BlockAuthor;
+	
+		/// A source to determine the issuance portion of the block reward
+		type Issuance: Issuance<<Self as frame_system::Config>::BlockNumber, Value>;
 	}
 
-	add_extra_genesis {
-		config(genesis_utxos): Vec<TransactionOutput>;
-	}
-}
+	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+	pub struct Pallet<T>(_);
 
-// External functions: callable by the end user
-decl_module! {
-	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-		fn deposit_event() = default;
+	/// All valid unspent transaction outputs are stored in this map.
+	/// Initial set of UTXO is populated from the list stored in genesis.
+	/// We use the identity hasher here because the cryptographic hashing is
+	/// done explicitly. TODO In the future we should remove the explicit hashing,
+	/// and use blake2_128_concat here. I'm deferring that so as not to break
+	/// the workshop inputs.
+	#[pallet::storage]
+	pub type UtxoStore =
+		StorageMap<_, Identity, H256, TransactionOutput>;
+
+	/// Total reward value to be redistributed to the miner.
+	/// It is accumulated from transactions during block execution
+	/// and then allocated to the miner at the end of the block.
+	#[pallet::storage]
+	#[pallet::getter(fn reward_total)]
+	pub type RewardTotal = StorageValue<_, Value>;
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		genesis_utxos: Vec<TransactionOutput>,
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			GenesisConfig { genesis_utxos: Default::default() }
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			for u in self.utxos {
+				UtxoStore::insert(BlakeTwo256::hash_of(&u), u);
+			}
+		}
+	}
+
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
 
 		/// Dispatch a single transaction and update UTXO set accordingly
 		#[weight = 1_000_000] //TODO weight should be proportional to number of inputs + outputs
-		pub fn spend(_origin, transaction: Transaction) -> DispatchResult {
-									// TransactionValidity{}
+		pub fn spend(_origin: OriginFor<T>, transaction: Transaction) -> DispatchResult {
 			let transaction_validity = Self::validate_transaction(&transaction)?;
 			ensure!(transaction_validity.requires.is_empty(), "missing inputs");
 
@@ -113,9 +131,12 @@ decl_module! {
 
 			Ok(())
 		}
+	}
 
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		/// Handler called by the system on block finalization
-		fn on_finalize() {
+		fn on_finalize(_n: T::BlockNumber) {
 			match T::BlockAuthor::block_author() {
 				// Block author did not provide key to claim reward
 				None => Self::deposit_event(Event::RewardsWasted),
@@ -124,9 +145,9 @@ decl_module! {
 			}
 		}
 	}
-}
 
-decl_event!(
+	#[pallet::event]
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event {
 		/// Transaction was executed successfully
 		TransactionSuccess(Transaction),
@@ -135,10 +156,10 @@ decl_event!(
 		/// Rewards were wasted
 		RewardsWasted,
 	}
-);
+}
 
 // "Internal" functions, callable by code.
-impl<T: Trait> Module<T> {
+impl<T: Config> Module<T> {
 
 	/// Check transaction for validity, errors, & race conditions
 	/// Called by both transaction pool and runtime execution
