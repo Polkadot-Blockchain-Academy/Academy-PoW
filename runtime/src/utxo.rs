@@ -201,7 +201,7 @@ impl<T: Config> Pallet<T> {
 
 		// Check that inputs are valid
 		for input in transaction.inputs.iter() {
-			if let Some(input_utxo) = <UtxoStore>::get(&input.outpoint) {
+			if let Some(input_utxo) = <UtxoStore<T>>::get(&input.outpoint) {
 				ensure!(sp_io::crypto::sr25519_verify(
 					&Signature::from_raw(*input.sigscript.as_fixed_bytes()),
 					&simple_transaction,
@@ -218,7 +218,7 @@ impl<T: Config> Pallet<T> {
 			ensure!(output.value > 0, "output value must be nonzero");
 			let hash = BlakeTwo256::hash_of(&(&transaction.encode(), output_index));
 			output_index = output_index.checked_add(1).ok_or("output index overflow")?;
-			ensure!(!<UtxoStore>::contains_key(hash), "output already exists");
+			ensure!(!<UtxoStore<T>>::contains_key(hash), "output already exists");
 			total_output = total_output.checked_add(output.value).ok_or("output value overflow")?;
 			new_utxos.push(hash.as_fixed_bytes().to_vec());
 		}
@@ -250,14 +250,14 @@ impl<T: Config> Pallet<T> {
 
 		// Removing spent UTXOs
 		for input in &transaction.inputs {
-			<UtxoStore>::remove(input.outpoint);
+			<UtxoStore<T>>::remove(input.outpoint);
 		}
 
 		let mut index: u64 = 0;
 		for output in &transaction.outputs {
 			let hash = BlakeTwo256::hash_of(&(&transaction.encode(), index));
 			index = index.checked_add(1).ok_or("output index overflow")?;
-			<UtxoStore>::insert(hash, output);
+			<UtxoStore<T>>::insert(hash, output);
 		}
 
 		Ok(())
@@ -275,7 +275,7 @@ impl<T: Config> Pallet<T> {
 		let hash = BlakeTwo256::hash_of(&(&utxo,
 					<frame_system::Pallet<T>>::block_number().saturated_into::<u64>()));
 
-		<UtxoStore>::insert(hash, utxo);
+		<UtxoStore<T>>::insert(hash, utxo);
 		Self::deposit_event(Event::RewardsIssued(reward, hash));
 	}
 
@@ -296,7 +296,7 @@ impl<T: Config> Pallet<T> {
 	pub fn get_missing_utxos(transaction: &Transaction) -> Vec<&H256> {
 		let mut missing_utxos = Vec::new();
 		for input in transaction.inputs.iter() {
-			if <UtxoStore>::get(&input.outpoint).is_none() {
+			if <UtxoStore<T>>::get(&input.outpoint).is_none() {
 				missing_utxos.push(&input.outpoint);
 			}
 		}
