@@ -6,8 +6,6 @@
 //! Some ideas: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3410460
 
 use core::cmp::{min, max};
-use sp_runtime::traits::UniqueSaturatedInto;
-use frame_support::{decl_storage, decl_module, traits::{Get, Time}};
 use parity_scale_codec::{Encode, Decode};
 use sp_core::U256;
 
@@ -27,46 +25,72 @@ pub fn clamp(actual: u128, goal: u128, clamp_factor: u128) -> u128 {
 	max(goal / clamp_factor, min(actual, goal * clamp_factor))
 }
 
-/// Pallet's configuration trait.
-/// Tightly coupled to the timestamp trait because we need it's timestamp information
-pub trait Config: frame_system::Trait {
-	/// A Source for timestamp data
-	type TimeProvider: Time;
-	/// The block time that the DAA will attempt to maintain
-	type TargetBlockTime: Get<u128>;
-	/// Dampening factor to use for difficulty adjustment
-	type DampFactor: Get<u128>;
-	/// Clamp factor to use for difficulty adjustment
-	/// Limit value to within this factor of goal. Recommended value: 2
-	type ClampFactor: Get<u128>;
-	/// The maximum difficulty allowed. Recommended to use u128::max_value()
-	type MaxDifficulty: Get<u128>;
-	/// Minimum difficulty, enforced in difficulty retargetting
-	/// avoids getting stuck when trying to increase difficulty subject to dampening
-	/// Recommended to use same value as DampFactor
-	type MinDifficulty: Get<u128>;
-}
-
 const DIFFICULTY_ADJUST_WINDOW: u128 = 60;
 type Difficulty = U256;
 
-decl_storage! {
-	trait Store for Module<T: Trait> as Difficulty {
-		/// Past difficulties and timestamps, from earliest to latest.
-		PastDifficultiesAndTimestamps:
-		[Option<DifficultyAndTimestamp<<<T as Trait>::TimeProvider as Time>::Moment>>; 60]
-			= [None; DIFFICULTY_ADJUST_WINDOW as usize];
-		/// Current difficulty.
-		pub CurrentDifficulty get(fn difficulty) build(|config: &GenesisConfig| {
-			config.initial_difficulty
-		}): Difficulty;
-		/// Initial difficulty.
-		pub InitialDifficulty config(initial_difficulty): Difficulty;
-	}
-}
+pub use pallet::*;
 
-decl_module! {
-	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
+#[frame_support::pallet]
+pub mod pallet {
+	use frame_support::pallet_prelude::*;
+	use frame_system::pallet_prelude::*;
+
+	/// Pallet's configuration trait.
+	/// Tightly coupled to the timestamp trait because we need it's timestamp information
+	pub trait Config: frame_system::Trait {
+		/// A Source for timestamp data
+		type TimeProvider: Time;
+		/// The block time that the DAA will attempt to maintain
+		type TargetBlockTime: Get<u128>;
+		/// Dampening factor to use for difficulty adjustment
+		type DampFactor: Get<u128>;
+		/// Clamp factor to use for difficulty adjustment
+		/// Limit value to within this factor of goal. Recommended value: 2
+		type ClampFactor: Get<u128>;
+		/// The maximum difficulty allowed. Recommended to use u128::max_value()
+		type MaxDifficulty: Get<u128>;
+		/// Minimum difficulty, enforced in difficulty retargetting
+		/// avoids getting stuck when trying to increase difficulty subject to dampening
+		/// Recommended to use same value as DampFactor
+		type MinDifficulty: Get<u128>;
+	}
+
+	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+	pub struct Pallet<T>(_);
+
+	/// Past difficulties and timestamps, from earliest to latest.
+	#[pallet::storage]
+	pub type PastDifficultiesAndTimestamps<T>: StorageValue<
+		_,
+		[Option<DifficultyAndTimestamp<<<T as Trait>::TimeProvider as Time>::Moment>>; 60],
+		ValueQuery
+	>;
+	
+	
+	/// Current difficulty.
+	#[pallet::storage]
+	#[pallet::getter(fn difficulty)]
+	pub type CurrentDifficulty = StorageValue<_, Difficulty, ValueQuery>;
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub initial_difficulty: Difficlty,
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			// Initialize the past data to all NONE
+			PastDifficultiesAndTimestamps::put([None; DIFFICULTY_ADJUST_WINDOW as usize]);
+
+			// Store the intial difficulty
+			CurrentDifficulty::put(self.initial_difficulty);
+		}
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn on_finalize(_n: T::BlockNumber) {
 			let mut data = PastDifficultiesAndTimestamps::<T>::get();
 
