@@ -300,7 +300,7 @@ impl_runtime_apis! {
 
 	impl sp_api::Metadata<Block> for Runtime {
 		fn metadata() -> OpaqueMetadata {
-			Runtime::metadata().into()
+			OpaqueMetadata::new(Runtime::metadata().into())
 		}
 	}
 
@@ -329,6 +329,7 @@ impl_runtime_apis! {
 		fn validate_transaction(
 			source: TransactionSource,
 			tx: <Block as BlockT>::Extrinsic,
+			block_hash: <Block as BlockT>::Hash,
 		) -> TransactionValidity {
 			// Extrinsics representing UTXO transaction need some special handling
 			if let Some(&utxo::Call::spend{ref transaction}) = IsSubType::<<Utxo as Callable<Runtime>>::Call>::is_sub_type(&tx.function) {
@@ -344,7 +345,7 @@ impl_runtime_apis! {
 			}
 
 			// Fall back to default logic for non UTXO-spending extrinsics
-			Executive::validate_transaction(source, tx)
+			Executive::validate_transaction(source, tx, block_hash)
 		}
 	}
 
