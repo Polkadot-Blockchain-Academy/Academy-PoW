@@ -8,7 +8,7 @@
 use core::cmp::{min, max};
 use sp_runtime::traits::UniqueSaturatedInto;
 use frame_support::{decl_storage, decl_module, traits::{Get, Time}};
-use codec::{Encode, Decode};
+use parity_scale_codec::{Encode, Decode};
 use sp_core::U256;
 
 #[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, Debug)]
@@ -29,7 +29,7 @@ pub fn clamp(actual: u128, goal: u128, clamp_factor: u128) -> u128 {
 
 /// Pallet's configuration trait.
 /// Tightly coupled to the timestamp trait because we need it's timestamp information
-pub trait Trait: frame_system::Trait {
+pub trait Config: frame_system::Trait {
 	/// A Source for timestamp data
 	type TimeProvider: Time;
 	/// The block time that the DAA will attempt to maintain

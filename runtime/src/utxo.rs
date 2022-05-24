@@ -1,4 +1,4 @@
-use codec::{Decode, Encode};
+use parity_scale_codec::{Decode, Encode};
 use frame_support::{
 	decl_event, decl_module, decl_storage,
 	dispatch::{DispatchResult, Vec},
@@ -7,7 +7,7 @@ use frame_support::{
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::{
-	crypto::Public as _,
+	crypto::Public as _, // Might only need this in std???
 	H256,
 	H512,
 	sr25519::{Public, Signature},
@@ -19,15 +19,15 @@ use sp_runtime::{
 };
 use super::{block_author::BlockAuthor, issuance::Issuance};
 
-pub trait Trait: frame_system::Trait {
+pub trait Config: frame_system::Config {
 	/// The ubiquitous Event type
-	type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
+	type Event: From<Event> + Into<<Self as frame_system::Config>::Event>;
 
 	/// A source to determine the block author
 	type BlockAuthor: BlockAuthor;
 
 	/// A source to determine the issuance portion of the block reward
-	type Issuance: Issuance<<Self as frame_system::Trait>::BlockNumber, Value>;
+	type Issuance: Issuance<<Self as frame_system::Config>::BlockNumber, Value>;
 }
 
 pub type Value = u128;
@@ -243,7 +243,7 @@ impl<T: Trait> Module<T> {
 
 	/// Redistribute combined reward value to block Author
 	fn disperse_reward(author: &Public) {
-		let reward = RewardTotal::take() + T::Issuance::issuance(frame_system::Module::<T>::block_number());
+		let reward = RewardTotal::take() + T::Issuance::issuance(frame_system::Pallet::<T>::block_number());
 
 		let utxo = TransactionOutput {
 			value: reward,
@@ -251,7 +251,7 @@ impl<T: Trait> Module<T> {
 		};
 
 		let hash = BlakeTwo256::hash_of(&(&utxo,
-					<frame_system::Module<T>>::block_number().saturated_into::<u64>()));
+					<frame_system::Pallet<T>>::block_number().saturated_into::<u64>()));
 
 		<UtxoStore>::insert(hash, utxo);
 		Self::deposit_event(Event::RewardsIssued(reward, hash));
@@ -304,7 +304,7 @@ mod tests {
 			pub const MaximumBlockLength: u32 = 2 * 1024;
 			pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 	}
-	impl frame_system::Trait for Test {
+	impl frame_system::Config for Test {
 		type BaseCallFilter = ();
 		type Origin = Origin;
 		type Call = ();

@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use sp_core::sr25519;
 use sp_std::vec::Vec;
 use sp_runtime::RuntimeString;
@@ -11,10 +9,10 @@ use frame_system::ensure_none;
 use sp_inherents::{InherentIdentifier, InherentData, ProvideInherent, IsFatalError};
 #[cfg(feature = "std")]
 use sp_inherents::ProvideInherentData;
-use codec::{Encode, Decode};
+use parity_scale_codec::{Encode, Decode};
 
 /// The pallet's configuration trait. Nothing to configure.
-pub trait Trait: frame_system::Trait {}
+pub trait Config: frame_system::Trait {}
 
 decl_error! {
 	pub enum Error for Module<T: Trait> {

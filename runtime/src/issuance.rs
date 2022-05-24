@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 /// A trait for types that can provide the amount of issuance to award to the block
 /// author for the given block number.
 pub trait Issuance<BlockNumber, Balance> {
