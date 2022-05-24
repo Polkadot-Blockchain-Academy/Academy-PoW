@@ -6,106 +6,43 @@ name = 'utxo-runtime'
 repository = 'https://github.com/substrate-developers-hub/utxo-workshop'
 version = '2.0.0-rc6'
 
-[dependencies.balances]
-default-features = false
-package = 'pallet-balances'
-version = '2.0.0-rc6'
+[dependencies]
+parity-scale-codec = {version = "3.1.2", default-features = false, features = ["derive"] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 
-[dependencies.codec]
-default-features = false
-features = ['derive']
-package = 'parity-scale-codec'
-version = '1.2.0'
-
-[dependencies.frame-executive]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.frame-support]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.serde]
-features = ['derive']
-optional = true
-version = '1.0.101'
-
-[dependencies.sp-api]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-block-builder]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-consensus-pow]
-default-features = false
-version = '0.8.0-rc6'
-
-[dependencies.sp-core]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-inherents]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-io]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-offchain]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-runtime]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-session]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-std]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-transaction-pool]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sp-version]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.sudo]
-default-features = false
-package = 'pallet-sudo'
-version = '2.0.0-rc6'
-
-[dependencies.frame-system]
-default-features = false
-version = '2.0.0-rc6'
-
-[dependencies.timestamp]
-default-features = false
-package = 'pallet-timestamp'
-version = '2.0.0-rc6'
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+pallet-sudo = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+frame-executive = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-api = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-consensus-pow = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-offchain = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-session = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sp-version = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 
 [dev-dependencies]
-hex-literal = "0.2.1"
+hex-literal = "0.3.4"
 
 [build-dependencies]
-substrate-wasm-builder-runner = '1.0.5'
+substrate-wasm-builder = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 
 [features]
 default = ['std']
 std = [
-    'balances/std',
-    'codec/std',
+    'pallet-balances/std',
+    'parity-scale-codec/std',
     'frame-executive/std',
     'frame-support/std',
-    'serde',
+#    'serde',
     'sp-api/std',
     'sp-block-builder/std',
     'sp-consensus-pow/std',
@@ -118,7 +55,7 @@ std = [
     'sp-std/std',
     'sp-transaction-pool/std',
     'sp-version/std',
-    'sudo/std',
+    'pallet-sudo/std',
     'frame-system/std',
-    'timestamp/std',
+    'pallet-timestamp/std',
 ]
