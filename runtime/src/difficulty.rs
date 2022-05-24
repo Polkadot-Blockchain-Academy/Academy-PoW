@@ -9,6 +9,7 @@ use core::cmp::{min, max};
 use parity_scale_codec::{Encode, Decode};
 use sp_core::U256;
 use frame_support::traits::Time;
+use sp_runtime::traits::UniqueSaturatedInto;
 
 #[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, Debug)]
 pub struct DifficultyAndTimestamp<M> {
@@ -62,14 +63,23 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+	type DifficultyList<T: Config> = [Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60];
+
 	/// Past difficulties and timestamps, from earliest to latest.
 	#[pallet::storage]
 	pub type PastDifficultiesAndTimestamps<T> = StorageValue<
 		_,
-		[Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60],
-		OptionQuery
+		DifficultyList<T>,
+		ValueQuery,
+		EmptyList<T>,
 	>;
 	
+	struct EmptyList<T: Config>(PhantomData<T>);
+	impl<T: Config> Get<DifficultyList<T>> for EmptyList<T> {
+		fn get() -> DifficultyList<T> {
+			[None; DIFFICULTY_ADJUST_WINDOW as usize]
+		}
+	}
 	
 	/// Current difficulty.
 	#[pallet::storage]
@@ -88,9 +98,6 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
-			// Initialize the past data to all NONE
-			PastDifficultiesAndTimestamps::put([None; DIFFICULTY_ADJUST_WINDOW as usize]);
-
 			// Initialize the Current difficulty
 			CurrentDifficulty::put(self.initial_difficulty);
 
@@ -136,7 +143,7 @@ pub mod pallet {
 			for i in 0..(DIFFICULTY_ADJUST_WINDOW as usize) {
 				let diff = match data[i].map(|d| d.difficulty) {
 					Some(diff) => diff,
-					None => InitialDifficulty::get(),
+					None => InitialDifficulty::<T>::get(),
 				};
 				diff_sum += diff;
 			}
