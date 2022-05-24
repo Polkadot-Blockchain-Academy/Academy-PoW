@@ -67,7 +67,7 @@ pub mod pallet {
 	pub type PastDifficultiesAndTimestamps<T> = StorageValue<
 		_,
 		[Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60],
-		ValueQuery
+		OptionQuery
 	>;
 	
 	

@@ -49,7 +49,7 @@ pub mod pallet {
 	
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-		fn on_initialize() -> Weight {
+		fn on_initialize(_n: T::BlockNumber) -> Weight {
 			// Reset the author to None at the beginning of the block
 			Author::<T>::kill();
 

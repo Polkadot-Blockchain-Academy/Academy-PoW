@@ -6,7 +6,10 @@ use frame_support::{
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::{
-	crypto::Public as _, // Might only need this in std???
+	crypto::{
+		Public as _, // Might only need this in std???
+		ByteArray,
+	},
 	H256,
 	H512,
 	sr25519::{Public, Signature},
@@ -95,7 +98,7 @@ pub mod pallet {
 	/// and then allocated to the miner at the end of the block.
 	#[pallet::storage]
 	#[pallet::getter(fn reward_total)]
-	pub type RewardTotal<T> = StorageValue<_, Value>;
+	pub type RewardTotal<T> = StorageValue<_, Value, ValueQuery>;
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		genesis_utxos: Vec<TransactionOutput>,
@@ -243,10 +246,10 @@ impl<T: Config> Pallet<T> {
 	/// Where each utxo key is a hash of the entire transaction and its order in the TransactionOutputs vector
 	fn update_storage(transaction: &Transaction, reward: Value) -> DispatchResult {
 		// Calculate new reward total
-		let new_total = <RewardTotal>::get()
+		let new_total = <RewardTotal<T>>::get()
 			.checked_add(reward)
 			.ok_or("Reward overflow")?;
-		<RewardTotal>::put(new_total);
+		<RewardTotal<T>>::put(new_total);
 
 		// Removing spent UTXOs
 		for input in &transaction.inputs {
@@ -265,7 +268,7 @@ impl<T: Config> Pallet<T> {
 
 	/// Redistribute combined reward value to block Author
 	fn disperse_reward(author: &Public) {
-		let reward = RewardTotal::take() + T::Issuance::issuance(frame_system::Pallet::<T>::block_number());
+		let reward = <RewardTotal<T>>::take() + T::Issuance::issuance(frame_system::Pallet::<T>::block_number());
 
 		let utxo = TransactionOutput {
 			value: reward,
