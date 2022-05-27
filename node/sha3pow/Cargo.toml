@@ -6,9 +6,8 @@ version = '3.0.0'
 
 [dependencies]
 parity-scale-codec = '3.1.2'
-#TODO Hopefully these are easy and safe to update
-sha3 = "0.8"
-rand = { version = "0.7", features = ["small_rng"] }
+sha3 = "0.10.1"
+rand = { version = "0.8.5", features = ["small_rng"] }
 
 sc-consensus = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sc-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }

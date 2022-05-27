@@ -7,8 +7,7 @@ repository = 'https://github.com/substrate-developer-hub/utxo-workshop'
 version = '3.0.0'
 
 [build-dependencies]
-#TODO Do we still need this?
-#substrate-build-script-utils = '2.0.0-rc6'
+substrate-build-script-utils = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 
 [dependencies.utxo-runtime]
 path = '../runtime'
@@ -19,9 +18,8 @@ futures = '0.3.1'
 log = '0.4.8'
 structopt = '0.3.8'
 parity-scale-codec = '3.1.2'
-#TODO
-sha3 = "0.8"
-rand = { version = "0.7", features = ["small_rng"] }
+sha3 = "0.10.1"
+rand = { version = "0.8.5", features = ["small_rng"] }
 
 sc-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sc-basic-authorship = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
