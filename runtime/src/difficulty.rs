@@ -6,12 +6,13 @@
 //! Some ideas: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3410460
 
 use core::cmp::{min, max};
-use parity_scale_codec::{Encode, Decode};
+use parity_scale_codec::{Encode, Decode, MaxEncodedLen};
+use scale_info::TypeInfo;
 use sp_core::U256;
 use frame_support::traits::Time;
 use sp_runtime::traits::UniqueSaturatedInto;
 
-#[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, Debug, MaxEncodedLen, TypeInfo)]
 pub struct DifficultyAndTimestamp<M> {
 	pub difficulty: Difficulty,
 	pub timestamp: M,
