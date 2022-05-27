@@ -101,22 +101,22 @@ pub mod pallet {
 	#[pallet::getter(fn reward_total)]
 	pub type RewardTotal<T> = StorageValue<_, Value, ValueQuery>;
 	#[pallet::genesis_config]
-	pub struct GenesisConfig<T: Config> {
+	pub struct GenesisConfig {
 		genesis_utxos: Vec<TransactionOutput>,
 	}
 
 	#[cfg(feature = "std")]
-	impl<T: Config> Default for GenesisConfig<T> {
+	impl Default for GenesisConfig {
 		fn default() -> Self {
 			GenesisConfig { genesis_utxos: Default::default() }
 		}
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
-			for u in self.utxos {
-				UtxoStore::insert(BlakeTwo256::hash_of(&u), u);
+			for u in self.genesis_utxos {
+				UtxoStore::<T>::insert(BlakeTwo256::hash_of(&u), u);
 			}
 		}
 	}

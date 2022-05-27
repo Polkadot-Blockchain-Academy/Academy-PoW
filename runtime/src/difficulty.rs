@@ -92,19 +92,26 @@ pub mod pallet {
 	pub type InitialDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
 
 	#[pallet::genesis_config]
-	pub struct GenesisConfig<T: Config> {
+	pub struct GenesisConfig {
 		pub initial_difficulty: Difficulty,
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
 			// Initialize the Current difficulty
-			CurrentDifficulty::put(self.initial_difficulty);
+			CurrentDifficulty::<T>::put(self.initial_difficulty);
 
 			// Store the initial difficulty in storage because we will need it
 			// during the first DIFFICULTY_ADJUSTMENT_WINDOW blocks (see todo below).
-			InitialDifficulty::put(self.initial_difficulty);
+			InitialDifficulty::<T>::put(self.initial_difficulty);
+		}
+	}
+
+	#[cfg(feature = "std")]
+	impl Default for GenesisConfig {
+		fn default() -> Self {
+			GenesisConfig { initial_difficulty: 4_000_000.into() }
 		}
 	}
 
