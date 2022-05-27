@@ -5289,7 +5289,7 @@ dependencies = [
 
 [[package]]
 name = "sha3pow"
-version = "2.0.0-rc6"
+version = "3.0.0"
 dependencies = [
  "parity-scale-codec",
  "rand 0.7.3",
@@ -6725,7 +6725,7 @@ dependencies = [
 
 [[package]]
 name = "utxo-runtime"
-version = "2.0.0-rc6"
+version = "3.0.0"
 dependencies = [
  "frame-executive",
  "frame-support",
@@ -6753,7 +6753,7 @@ dependencies = [
 
 [[package]]
 name = "utxo-workshop"
-version = "2.0.0-rc6"
+version = "3.0.0"
 dependencies = [
  "futures 0.3.21",
  "hex",
