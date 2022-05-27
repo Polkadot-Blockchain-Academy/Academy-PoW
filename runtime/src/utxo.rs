@@ -7,10 +7,7 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::{
-	crypto::{
-		// Public as _, // Might only need this in std???
-		ByteArray,
-	},
+	crypto::ByteArray,
 	H256,
 	H512,
 	sr25519::{Public, Signature},
