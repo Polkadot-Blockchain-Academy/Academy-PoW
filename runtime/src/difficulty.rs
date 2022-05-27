@@ -64,7 +64,7 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	type DifficultyList<T: Config> = [Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60];
+	type DifficultyList<T> = [Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60];
 
 	/// Past difficulties and timestamps, from earliest to latest.
 	#[pallet::storage]
@@ -75,7 +75,7 @@ pub mod pallet {
 		EmptyList<T>,
 	>;
 	
-	struct EmptyList<T: Config>(PhantomData<T>);
+	pub struct EmptyList<T: Config>(PhantomData<T>);
 	impl<T: Config> Get<DifficultyList<T>> for EmptyList<T> {
 		fn get() -> DifficultyList<T> {
 			[None; DIFFICULTY_ADJUST_WINDOW as usize]
