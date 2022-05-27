@@ -115,7 +115,7 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
-			for u in self.genesis_utxos {
+			for u in &self.genesis_utxos {
 				UtxoStore::<T>::insert(BlakeTwo256::hash_of(&u), u);
 			}
 		}
