@@ -6727,6 +6727,7 @@ dependencies = [
 name = "utxo-runtime"
 version = "3.0.0"
 dependencies = [
+ "async-trait",
  "frame-executive",
  "frame-support",
  "frame-system",
@@ -6736,6 +6737,7 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
+ "serde",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-pow",

@@ -2,8 +2,6 @@ use sp_core::sr25519;
 use sp_std::vec::Vec;
 use sp_runtime::RuntimeString;
 use sp_inherents::{InherentIdentifier, IsFatalError};
-#[cfg(feature = "std")]
-use sp_inherents::ProvideInherentData;
 use parity_scale_codec::{Encode, Decode};
 
 
