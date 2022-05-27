@@ -1,8 +1,9 @@
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchResult, Vec},
 	ensure,
 };
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::{
@@ -25,7 +26,7 @@ pub type Value = u128;
 
 /// Single transaction to be dispatched
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct Transaction {
 	/// UTXOs to be used as inputs for current transaction
 	pub inputs: Vec<TransactionInput>,
@@ -36,7 +37,7 @@ pub struct Transaction {
 
 /// Single transaction input that refers to one UTXO
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, MaxEncodedLen, TypeInfo)]
 pub struct TransactionInput {
 	/// Reference to an UTXO to be spent
 	pub outpoint: H256,
@@ -48,7 +49,7 @@ pub struct TransactionInput {
 
 /// Single transaction output to create upon transaction dispatch
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, MaxEncodedLen, TypeInfo)]
 pub struct TransactionOutput {
 	/// Value associated with this output
 	pub value: Value,
