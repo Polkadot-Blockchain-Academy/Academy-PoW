@@ -8,7 +8,7 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::{
 	crypto::{
-		Public as _, // Might only need this in std???
+		// Public as _, // Might only need this in std???
 		ByteArray,
 	},
 	H256,
