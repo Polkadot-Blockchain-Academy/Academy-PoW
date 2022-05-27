@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 use sc_client_api::ExecutorProvider;
+use sp_inherents::CreateInherentDataProviders;
 use utxo_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_executor::NativeElseWasmExecutor;
@@ -27,25 +28,6 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 
 //TODO We'll need the mining worker. Can probably copy from recipes
 
-// TODO This will need to be reworked significantly
-pub fn build_inherent_data_providers(sr25519_public_key: sr25519::Public) -> Result<InherentDataProviders, ServiceError> {
-	let providers = InherentDataProviders::new();
-
-	providers
-		.register_provider(sp_timestamp::InherentDataProvider)
-		.map_err(Into::into)
-		.map_err(sp_consensus::error::Error::InherentData)?;
-
-	providers
-		.register_provider(utxo_runtime::block_author::InherentDataProvider(
-			sr25519_public_key.encode(),
-		))
-		.map_err(Into::into)
-		.map_err(sp_consensus::error::Error::InherentData)?;
-
-	Ok(providers)
-}
-
 type FullClient = sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
@@ -67,14 +49,13 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 				FullSelectChain,
 				Sha3Algorithm<FullClient>,
 				impl sp_consensus::CanAuthorWith<Block>,
+				impl CreateInherentDataProviders<Block, ()>,
 			>,
 			Option<Telemetry>,
 		),
 	>,
 	ServiceError,
 > {
-	//let inherent_data_providers = build_inherent_data_providers(sr25519_public_key)?;
-
 	let telemetry = config
 		.telemetry_endpoints
 		.clone()
@@ -120,7 +101,16 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		Sha3Algorithm::new(client.clone()),
 		0, // check inherents starting at block 0
 		Some(select_chain.clone()),
-		inherent_data_providers.clone(),
+		move |_, ()| async move {
+			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+			let author =
+				utxo_runtime::block_author::InherentDataProvider(
+					sr25519_public_key.encode(),
+				);
+
+			Ok((timestamp, author))
+		},
 		can_author_with,
 	);
 
@@ -214,7 +204,6 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			// Choosing not to supply a select_chain means we will use the client's
 			// possibly-outdated metadata when fetching the block to mine on
 			Some(select_chain),
-			inherent_data_providers,
 			can_author_with,
 		);
 	}
