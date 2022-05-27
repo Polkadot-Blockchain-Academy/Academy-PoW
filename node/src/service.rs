@@ -17,6 +17,8 @@ pub struct ExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 
+	type ExtendHostFunctions = ();
+
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
 		utxo_runtime::api::dispatch(method, data)
 	}
@@ -88,7 +90,7 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		config.transaction_pool.clone(),
 		config.role.is_authority().into(),
 		config.prometheus_registry(),
-		task_manager.spawn_handle(),
+		task_manager.spawn_essential_handle(),
 		client.clone(),
 	);
 
