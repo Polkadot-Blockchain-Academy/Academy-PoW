@@ -29,6 +29,7 @@ sc-consensus = {git = "https://github.com/paritytech/substrate.git", branch = "p
 sc-executor = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sc-network = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sc-service = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
+sc-telemetry = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sc-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }
 sp-blockchain = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.20" }

@@ -6712,6 +6712,7 @@ dependencies = [
  "sc-executor",
  "sc-network",
  "sc-service",
+ "sc-telemetry",
  "sc-transaction-pool",
  "sha3 0.10.1",
  "sha3pow",
