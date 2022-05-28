@@ -148,7 +148,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 		backend,
 		mut task_manager,
 		import_queue,
-		mut keystore_container,
+		keystore_container,
 		select_chain,
 		transaction_pool,
 		other: (pow_block_import, mut telemetry),
@@ -174,7 +174,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 		keystore: keystore_container.sync_keystore(),
 		task_manager: &mut task_manager,
 		transaction_pool: transaction_pool.clone(),
-		rpc_extensions_builder: Box::new(|_, _| Ok(())),
+		rpc_builder: Box::new(|_, _| Ok(jsonrpsee::RpcModule::new(()))),
 		backend,
 		system_rpc_tx,
 		config,
@@ -192,27 +192,35 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			telemetry.as_ref().map(|x| x.handle()),
 		);
 
-		// The number of rounds of mining to try in a single call
-		let rounds = 500;
-
 		let can_author_with =
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-		//TODO I think this needs to be re-worked.
-		sc_consensus_pow::start_mine(
+			let (worker, worker_task) = sc_consensus_pow::start_mining_worker(
 			Box::new(pow_block_import),
 			client.clone(),
+			select_chain,
 			Sha3Algorithm::new(client.clone()),
 			proposer,
-			None, // No preruntime digests
-			rounds,
+			network.clone(),
 			network,
-			std::time::Duration::new(2, 0),
-			// Choosing not to supply a select_chain means we will use the client's
-			// possibly-outdated metadata when fetching the block to mine on
-			Some(select_chain),
+			None,
+			// This code is copied from above. Would be better to not repeat it.
+			move |_, ()| async move {
+				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+	
+				let author =
+					utxo_runtime::block_author::InherentDataProvider(
+						sr25519_public_key.encode(),
+					);
+	
+				Ok((timestamp, author))
+			},
+			std::time::Duration::from_secs(10),
+			std::time::Duration::from_secs(5),
 			can_author_with,
 		);
+
+		//TODO
 	}
 
 	network_starter.start_network();
