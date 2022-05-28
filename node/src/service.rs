@@ -195,7 +195,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 		let can_author_with =
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-			let (worker, worker_task) = sc_consensus_pow::start_mining_worker(
+			let (mining_worker, mining_worker_task) = sc_consensus_pow::start_mining_worker(
 			Box::new(pow_block_import),
 			client.clone(),
 			select_chain,
@@ -220,7 +220,38 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			can_author_with,
 		);
 
-		//TODO
+		task_manager
+			.spawn_essential_handle()
+			.spawn_blocking("pow-miner", Some("pow-mining"), mining_worker_task);
+
+		// Start Mining
+		//TODO Some of this should move into the sha3pow crate.
+		use sp_core::U256;
+		use sha3pow::{Compute, hash_meets_difficulty};
+		let mut nonce: U256 = U256::from(0);
+		std::thread::spawn(move || loop {
+			let worker = mining_worker.clone();
+			let metadata = worker.metadata();
+			if let Some(metadata) = metadata {
+				let compute = Compute {
+					difficulty: metadata.difficulty,
+					pre_hash: metadata.pre_hash,
+					nonce,
+				};
+				let seal = compute.compute();
+				if hash_meets_difficulty(&seal.work, seal.difficulty) {
+					nonce = U256::from(0);
+					let _ = futures::executor::block_on(worker.submit(seal.encode()));
+				} else {
+					nonce = nonce.saturating_add(U256::from(1));
+					if nonce == U256::MAX {
+						nonce = U256::from(0);
+					}
+				}
+			} else {
+				std::thread::sleep(std::time::Duration::from_secs(1));
+			}
+		});
 	}
 
 	network_starter.start_network();
