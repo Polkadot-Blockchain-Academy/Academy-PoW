@@ -99,7 +99,7 @@ pub mod pallet {
 	pub type RewardTotal<T> = StorageValue<_, Value, ValueQuery>;
 	#[pallet::genesis_config]
 	pub struct GenesisConfig {
-		genesis_utxos: Vec<TransactionOutput>,
+		pub genesis_utxos: Vec<TransactionOutput>,
 	}
 
 	#[cfg(feature = "std")]
