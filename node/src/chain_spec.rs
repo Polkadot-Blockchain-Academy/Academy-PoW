@@ -1,4 +1,4 @@
-use sp_core::{Pair, Public, sr25519, H256};
+use sp_core::{Pair, Public, sr25519, H256, ByteArray};
 use utxo_runtime::{
 	AccountId, BalancesConfig, GenesisConfig, DifficultyAdjustmentConfig,
 	SudoConfig, SystemConfig, WASM_BINARY, Signature, UtxoConfig,
@@ -29,12 +29,15 @@ pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId where
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
-pub fn development_config() -> ChainSpec {
-	ChainSpec::from_genesis(
+pub fn development_config() -> Result<ChainSpec, String> {
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+	Ok(ChainSpec::from_genesis(
 		"Development",
 		"dev",
 		sc_service::ChainType::Development,
 		|| testnet_genesis(
+			wasm_binary,
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 			vec![
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -53,16 +56,20 @@ pub fn development_config() -> ChainSpec {
 		None,
 		None,
 		None,
-		None
-	)
+		None,
+		None,
+	))
 }
 
-pub fn local_testnet_config() -> ChainSpec {
-	ChainSpec::from_genesis(
+pub fn local_testnet_config() -> Result<ChainSpec, String> {
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
+
+	Ok(ChainSpec::from_genesis(
 		"Local Testnet",
 		"local_testnet",
 		sc_service::ChainType::Local,
 		|| testnet_genesis(
+			wasm_binary,
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 			vec![
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -89,11 +96,13 @@ pub fn local_testnet_config() -> ChainSpec {
 		None,
 		None,
 		None,
-		None
-	)
+		None,
+		None,
+	))
 }
 
 fn testnet_genesis(
+	wasm_binary: &[u8],
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	endowed_utxos: Vec<sr25519::Public>,
@@ -107,20 +116,19 @@ fn testnet_genesis(
 	println!("NEW UTXO HASH in UTXOStore onchain: 0xdbc75ab8ee9b83dcbcea4695f9c42754d94e92c3c397d63b1bc627c2a2ef94e6\n");
 
 	GenesisConfig {
-		frame_system: Some(SystemConfig {
-			code: WASM_BINARY.to_vec(),
-			changes_trie_config: Default::default(),
-		}),
-		balances: Some(BalancesConfig {
+		system: SystemConfig {
+			code: wasm_binary.to_vec(),
+		},
+		balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
-		}),
-		sudo: Some(SudoConfig {
-			key: root_key,
-		}),
-		difficulty: Some(DifficultyAdjustmentConfig {
+		},
+		sudo: SudoConfig {
+			key: Some(root_key),
+		},
+		difficulty_adjustment: DifficultyAdjustmentConfig {
 			initial_difficulty: 4_000_000.into(),
-		}),
-		utxo: Some(UtxoConfig {
+		},
+		utxo: UtxoConfig {
 		  genesis_utxos: endowed_utxos
 			.iter()
 			.map(|x|
@@ -130,6 +138,6 @@ fn testnet_genesis(
 				}
 			)
 			.collect()
-		}),
+		},
 	}
 }
