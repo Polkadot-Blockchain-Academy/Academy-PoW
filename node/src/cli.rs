@@ -49,4 +49,8 @@ pub enum Subcommand {
 
 	/// Revert the chain to a previous state.
 	Revert(sc_cli::RevertCmd),
+
+	// TODO Enable this after updating Substrate to polkadot-v0.9.22
+	// /// Db meta columns information.
+	// ChainInfo(sc_cli::ChainInfoCmd),
 }

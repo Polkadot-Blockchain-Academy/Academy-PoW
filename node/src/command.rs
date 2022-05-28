@@ -16,14 +16,14 @@
 
 use crate::service;
 use crate::chain_spec;
-use crate::cli::Cli;
-use sc_cli::{SubstrateCli, RuntimeVersion, Role, ChainSpec};
+use crate::cli::{Cli, Subcommand};
+use sc_cli::{SubstrateCli, RuntimeVersion, ChainSpec};
 use sc_service::PartialComponents;
-use crate::service::new_partial;
+use utxo_runtime::Block;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Substrate Node".into()
+		"UTXO Node".into()
 	}
 
 	fn impl_version() -> String {
@@ -47,13 +47,13 @@ impl SubstrateCli for Cli {
 	}
 
 	fn copyright_start_year() -> i32 {
-		2017
+		2019
 	}
 
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
 		Ok(match id {
-			"dev" => Box::new(chain_spec::development_config()),
-			"" | "local" => Box::new(chain_spec::local_testnet_config()),
+			"dev" => Box::new(chain_spec::development_config()?),
+			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
 			path => Box::new(chain_spec::ChainSpec::from_json_file(
 				std::path::PathBuf::from(path),
 			)?),
@@ -71,20 +71,58 @@ pub fn run() -> sc_cli::Result<()> {
 	let default_sr25519_public_key = sp_core::sr25519::Public::from_raw([0; 32]);
 
 	match &cli.subcommand {
-		Some(subcommand) => {
-			let runner = cli.create_runner(subcommand)?;
-			runner.run_subcommand(subcommand, |config| {
-				let PartialComponents { client, backend, task_manager, import_queue, .. }
-					= new_partial(&config, default_sr25519_public_key)?;
-				Ok((client, backend, import_queue, task_manager))
+		Some(Subcommand::CheckBlock(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.async_run(|config| {
+				let PartialComponents { client, task_manager, import_queue, .. } =
+					service::new_partial(&config, default_sr25519_public_key)?;
+				Ok((cmd.run(client, import_queue), task_manager))
 			})
 		},
+		Some(Subcommand::ExportBlocks(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.async_run(|config| {
+				let PartialComponents { client, task_manager, .. } = service::new_partial(&config, default_sr25519_public_key)?;
+				Ok((cmd.run(client, config.database), task_manager))
+			})
+		},
+		Some(Subcommand::ExportState(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.async_run(|config| {
+				let PartialComponents { client, task_manager, .. } = service::new_partial(&config, default_sr25519_public_key)?;
+				Ok((cmd.run(client, config.chain_spec), task_manager))
+			})
+		},
+		Some(Subcommand::ImportBlocks(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.async_run(|config| {
+				let PartialComponents { client, task_manager, import_queue, .. } =
+					service::new_partial(&config, default_sr25519_public_key)?;
+				Ok((cmd.run(client, import_queue), task_manager))
+			})
+		},
+		Some(Subcommand::PurgeChain(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.sync_run(|config| cmd.run(config.database))
+		},
+		Some(Subcommand::Revert(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.async_run(|config| {
+				let PartialComponents { client, task_manager, backend, .. } =
+					service::new_partial(&config, default_sr25519_public_key)?;
+				Ok((cmd.run(client, backend, None), task_manager))
+			})
+		},
+		// TODO Enable this after updating Substrate to polkadot-v0.9.22
+		// Some(Subcommand::ChainInfoCmd(cmd)) => {
+		// 	let runner = cli.create_runner(cmd)?;
+		// 	runner.sync_run(|config| cmd.run::<Block>(&config))
+		// },
 		None => {
 			let sr25519_public_key = cli.run.sr25519_public_key.unwrap_or(default_sr25519_public_key);
 			let runner = cli.create_runner(&cli.run.base)?;
-			runner.run_node_until_exit(|config| match config.role {
-				Role::Light => service::new_light(config, sr25519_public_key),
-				_ => service::new_full(config, sr25519_public_key),
+			runner.run_node_until_exit(|config| async move {
+				service::new_full(config, sr25519_public_key).map_err(sc_cli::Error::Service)
 			})
 		},
 	}
