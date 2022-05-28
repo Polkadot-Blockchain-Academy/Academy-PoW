@@ -84,6 +84,11 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		)?;
 	let client = Arc::new(client);
 
+	let telemetry = telemetry.map(|(worker, telemetry)| {
+		task_manager.spawn_handle().spawn("telemetry", None, worker.run());
+		telemetry
+	});
+
 	let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
 	let transaction_pool = sc_transaction_pool::BasicPool::new_full(
@@ -102,7 +107,7 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		client.clone(),
 		Sha3Algorithm::new(client.clone()),
 		0, // check inherents starting at block 0
-		Some(select_chain.clone()),
+		select_chain.clone(),
 		move |_, ()| async move {
 			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
