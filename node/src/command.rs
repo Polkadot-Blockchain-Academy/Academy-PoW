@@ -71,6 +71,10 @@ pub fn run() -> sc_cli::Result<()> {
 	let default_sr25519_public_key = sp_core::sr25519::Public::from_raw([0; 32]);
 
 	match &cli.subcommand {
+		Some(Subcommand::BuildSpec(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
+		},
 		Some(Subcommand::CheckBlock(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
@@ -113,11 +117,10 @@ pub fn run() -> sc_cli::Result<()> {
 				Ok((cmd.run(client, backend, None), task_manager))
 			})
 		},
-		// TODO Enable this after updating Substrate to polkadot-v0.9.22
-		// Some(Subcommand::ChainInfoCmd(cmd)) => {
-		// 	let runner = cli.create_runner(cmd)?;
-		// 	runner.sync_run(|config| cmd.run::<Block>(&config))
-		// },
+		Some(Subcommand::ChainInfo(cmd)) => {
+			let runner = cli.create_runner(cmd)?;
+			runner.sync_run(|config| cmd.run::<Block>(&config))
+		},
 		None => {
 			let sr25519_public_key = cli.run.sr25519_public_key.unwrap_or(default_sr25519_public_key);
 			let runner = cli.create_runner(&cli.run.base)?;
