@@ -174,7 +174,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 		keystore: keystore_container.sync_keystore(),
 		task_manager: &mut task_manager,
 		transaction_pool: transaction_pool.clone(),
-		rpc_extensions_builder: Box::new(|_, _| ()),
+		rpc_extensions_builder: Box::new(|_, _| Ok(())),
 		backend,
 		system_rpc_tx,
 		config,
