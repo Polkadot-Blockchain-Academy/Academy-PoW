@@ -120,7 +120,7 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		Box::new(pow_block_import.clone()),
 		None,
 		Sha3Algorithm::new(client.clone()),
-		&task_manager.spawn_handle(),
+		&task_manager.spawn_essential_handle(),
 		config.prometheus_registry(),
 	)?;
 
