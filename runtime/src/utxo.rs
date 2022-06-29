@@ -317,10 +317,11 @@ mod tests {
 	use sp_runtime::{testing::Header, traits::IdentityLookup, Perbill};
 	use sp_core::testing::SR25519;
 	use sp_keystore::testing::KeyStore;
-	use sp_keystore::KeystoreExt;
+	use sp_keystore::{KeystoreExt, SyncCryptoStore};
 
 	type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 	type Block = frame_system::mocking::MockBlock<Test>;
+	use std::sync::Arc;
 
 	// Configure a mock runtime to test the pallet.
 	construct_runtime!(
@@ -387,27 +388,29 @@ mod tests {
 	fn new_test_ext() -> sp_io::TestExternalities {
 
 		let keystore = KeyStore::new(); // a key storage to store new key pairs during testing
-		let alice_pub_key = keystore.write().sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+		let alice_pub_key = keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
 		let mut t = frame_system::GenesisConfig::default()
 			.build_storage::<Test>()
 			.expect("Frame system builds valid default genesis config");
 
-		super::GenesisConfig {
-			genesis_utxos: vec![
-				TransactionOutput {
-					value: 100,
-					pubkey: H256::from(alice_pub_key),
-				}
-			],
-			..Default::default()
-		}
-		.assimilate_storage(&mut t)
+		GenesisBuild::<Test>::assimilate_storage(
+			&super::GenesisConfig {
+				genesis_utxos: vec![
+					TransactionOutput {
+						value: 100,
+						pubkey: H256::from(alice_pub_key),
+					}
+				],
+				..Default::default()
+			},
+			&mut t
+		)
 		.expect("UTXO Pallet storage can be assimilated");
 
 		// Build the externalities
 		let mut ext = sp_io::TestExternalities::from(t);
-		ext.register_extension(KeystoreExt(keystore));
+		ext.register_extension(KeystoreExt(Arc::new(keystore)));
 		ext.execute_with(|| System::set_block_number(1));
 		ext
 	}
@@ -415,28 +418,31 @@ mod tests {
 	fn new_test_ext_and_keys() -> (sp_io::TestExternalities, Public, Public) {
 
 		let keystore = KeyStore::new(); // a key storage to store new key pairs during testing
-		let alice_pub_key = keystore.write().sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
-		let karl_pub_key = keystore.write().sr25519_generate_new(SR25519, Some(KARL_PHRASE)).unwrap();
+		let alice_pub_key = keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+		let karl_pub_key = keystore.sr25519_generate_new(SR25519, Some(KARL_PHRASE)).unwrap();
 
 		let mut t = frame_system::GenesisConfig::default()
 			.build_storage::<Test>()
 			.unwrap();
 
-		super::GenesisConfig {
-			genesis_utxos: vec![
-				TransactionOutput {
-					value: 100,
-					pubkey: H256::from(alice_pub_key),
-				}
-			],
-			..Default::default()
-		}
-		.assimilate_storage(&mut t)
+		
+		GenesisBuild::<Test>::assimilate_storage(
+			&super::GenesisConfig {
+				genesis_utxos: vec![
+					TransactionOutput {
+						value: 100,
+						pubkey: H256::from(alice_pub_key),
+					}
+				],
+				..Default::default()
+			},
+			&mut t
+		)
 		.expect("UTXO Pallet storage can be assimilated");
 
 		// Print the values to get GENESIS_UTXO
 		let mut ext = sp_io::TestExternalities::from(t);
-		ext.register_extension(KeystoreExt(keystore));
+		ext.register_extension(KeystoreExt(Arc::new(keystore)));
 		(ext, alice_pub_key, karl_pub_key)
 	}
 
