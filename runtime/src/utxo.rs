@@ -310,27 +310,44 @@ impl<T: Config> Pallet<T> {
 mod tests {
 	use super::*;
 
-	use frame_support::{assert_ok, assert_noop, impl_outer_origin, parameter_types, weights::Weight};
+	use frame_support::{
+		assert_ok, assert_noop, construct_runtime, parameter_types, weights::Weight,
+		traits::{ConstU16, ConstU64, GenesisBuild}
+	};
 	use sp_runtime::{testing::Header, traits::IdentityLookup, Perbill};
-	use sp_core::testing::{KeyStore, SR25519};
-	use sp_core::traits::KeystoreExt;
+	use sp_core::testing::SR25519;
+	use sp_keystore::testing::KeyStore;
+	use sp_keystore::KeystoreExt;
 
-	impl_outer_origin! {
-		pub enum Origin for Test {}
-	}
+	type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
+	type Block = frame_system::mocking::MockBlock<Test>;
 
-	#[derive(Clone, Eq, PartialEq)]
-	pub struct Test;
+	// Configure a mock runtime to test the pallet.
+	construct_runtime!(
+		pub enum Test where
+			Block = Block,
+			NodeBlock = Block,
+			UncheckedExtrinsic = UncheckedExtrinsic,
+		{
+			System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+			Utxo: super::{Pallet, Call, Config, Storage, Event},
+		}
+	);
+
 	parameter_types! {
 			pub const BlockHashCount: u64 = 250;
 			pub const MaximumBlockWeight: Weight = 1024;
 			pub const MaximumBlockLength: u32 = 2 * 1024;
 			pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 	}
+
 	impl frame_system::Config for Test {
-		type BaseCallFilter = ();
+		type BaseCallFilter = frame_support::traits::Everything;
+		type BlockWeights = ();
+		type BlockLength = ();
+		type DbWeight = ();
 		type Origin = Origin;
-		type Call = ();
+		type Call = Call;
 		type Index = u64;
 		type BlockNumber = u64;
 		type Hash = H256;
@@ -338,30 +355,24 @@ mod tests {
 		type AccountId = u64;
 		type Lookup = IdentityLookup<Self::AccountId>;
 		type Header = Header;
-		type Event = ();
-		type BlockHashCount = BlockHashCount;
-		type MaximumBlockWeight = MaximumBlockWeight;
-		type DbWeight = ();
-		type BlockExecutionWeight = ();
-		type ExtrinsicBaseWeight = ();
-		type MaximumExtrinsicWeight = MaximumBlockWeight;
-		type MaximumBlockLength = MaximumBlockLength;
-		type AvailableBlockRatio = AvailableBlockRatio;
+		type Event = Event;
+		type BlockHashCount = ConstU64<250>;
 		type Version = ();
-		type ModuleToIndex = ();
+		type PalletInfo = PalletInfo;
 		type AccountData = ();
 		type OnNewAccount = ();
 		type OnKilledAccount = ();
 		type SystemWeightInfo = ();
+		type SS58Prefix = ConstU16<42>;
+		type OnSetCode = ();
+		type MaxConsumers = frame_support::traits::ConstU32<16>;
 	}
 
-	impl Trait for Test {
-		type Event = ();
+	impl Config for Test {
+		type Event = Event;
 		type BlockAuthor = ();
 		type Issuance = ();
 	}
-
-	type Utxo = Module<Test>;
 
 	// need to manually import this crate since its no include by default
 	use hex_literal::hex;
@@ -380,26 +391,24 @@ mod tests {
 
 		let mut t = frame_system::GenesisConfig::default()
 			.build_storage::<Test>()
-			.unwrap();
+			.expect("Frame system builds valid default genesis config");
 
-		t.top.extend(
-			GenesisConfig {
-				genesis_utxos: vec![
-					TransactionOutput {
-						value: 100,
-						pubkey: H256::from(alice_pub_key),
-					}
-				],
-				..Default::default()
-			}
-			.build_storage()
-			.unwrap()
-			.top,
-		);
+		super::GenesisConfig {
+			genesis_utxos: vec![
+				TransactionOutput {
+					value: 100,
+					pubkey: H256::from(alice_pub_key),
+				}
+			],
+			..Default::default()
+		}
+		.assimilate_storage(&mut t)
+		.expect("UTXO Pallet storage can be assimilated");
 
-		// Print the values to get GENESIS_UTXO
+		// Build the externalities
 		let mut ext = sp_io::TestExternalities::from(t);
 		ext.register_extension(KeystoreExt(keystore));
+		ext.execute_with(|| System::set_block_number(1));
 		ext
 	}
 
@@ -413,20 +422,17 @@ mod tests {
 			.build_storage::<Test>()
 			.unwrap();
 
-		t.top.extend(
-			GenesisConfig {
-				genesis_utxos: vec![
-					TransactionOutput {
-						value: 100,
-						pubkey: H256::from(alice_pub_key),
-					}
-				],
-				..Default::default()
-			}
-			.build_storage()
-			.unwrap()
-			.top,
-		);
+		super::GenesisConfig {
+			genesis_utxos: vec![
+				TransactionOutput {
+					value: 100,
+					pubkey: H256::from(alice_pub_key),
+				}
+			],
+			..Default::default()
+		}
+		.assimilate_storage(&mut t)
+		.expect("UTXO Pallet storage can be assimilated");
 
 		// Print the values to get GENESIS_UTXO
 		let mut ext = sp_io::TestExternalities::from(t);
@@ -456,9 +462,9 @@ mod tests {
 			let new_utxo_hash = BlakeTwo256::hash_of(&(&transaction.encode(), 0 as u64));
 
 			assert_ok!(Utxo::spend(Origin::signed(0), transaction));
-			assert!(!UtxoStore::contains_key(H256::from(GENESIS_UTXO)));
-			assert!(UtxoStore::contains_key(new_utxo_hash));
-			assert_eq!(50, UtxoStore::get(new_utxo_hash).unwrap().value);
+			assert!(!UtxoStore::<Test>::contains_key(H256::from(GENESIS_UTXO)));
+			assert!(UtxoStore::<Test>::contains_key(new_utxo_hash));
+			assert_eq!(50, UtxoStore::<Test>::get(new_utxo_hash).unwrap().value);
 		});
 	}
 

@@ -31,6 +31,7 @@ sp-std = { default-features = false, git = "https://github.com/paritytech/substr
 sp-transaction-pool = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 sp-version = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 pallet-timestamp = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
+#sp-keystore = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.23" }
 
 [dev-dependencies]
 hex-literal = "0.3.4"
@@ -62,4 +63,5 @@ std = [
     'frame-system/std',
     'pallet-timestamp/std',
     'async-trait',
+#    'sp-keystore/std',
 ]
