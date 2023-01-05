@@ -24,8 +24,6 @@ use sp_runtime::{
 	},
 	transaction_validity::{
 		TransactionValidity,
-		TransactionValidityError,
-		InvalidTransaction,
 		TransactionSource,
 	},
 };
@@ -72,9 +70,6 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
-/// The UTXO pallet in `./utxo.rs`
-pub mod utxo;
-
 /// The BlockAuthor trait in `./block_author.rs`
 pub mod block_author;
 
@@ -103,8 +98,8 @@ pub mod opaque {
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("utxo"),
-	impl_name: create_runtime_str!("utxo"),
+	spec_name: create_runtime_str!("academy-pow"),
+	impl_name: create_runtime_str!("academy-pow"),
 	authoring_version: 1,
 	spec_version: 1,
 	impl_version: 1,
@@ -237,12 +232,6 @@ impl difficulty::Config for Runtime {
 
 impl block_author::Config for Runtime {}
 
-impl utxo::Config for Runtime {
-	type Event = Event;
-	type BlockAuthor = BlockAuthor;
-	type Issuance = issuance::BitcoinHalving;
-}
-
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -251,13 +240,10 @@ construct_runtime!(
 	{
 		System: frame_system,
 		Timestamp: pallet_timestamp,
-		//TODO Should we remove balance pallet? It isn't necessary and might be confusing
-		// alongside the UTXO tokens. But it is darn convenient for testing a quick transaction.
 		Balances: pallet_balances,
 		Sudo: pallet_sudo,
 		DifficultyAdjustment: difficulty,
 		BlockAuthor: block_author,
-		Utxo: utxo,
 	}
 );
 
@@ -337,20 +323,6 @@ impl_runtime_apis! {
 			tx: <Block as BlockT>::Extrinsic,
 			block_hash: <Block as BlockT>::Hash,
 		) -> TransactionValidity {
-			// Extrinsics representing UTXO transaction need some special handling
-			if let Some(&utxo::Call::spend{ref transaction}) = IsSubType::<<Utxo as Callable<Runtime>>::Call>::is_sub_type(&tx.function) {
-				match Utxo::validate_transaction(&transaction) {
-					// Transaction verification failed
-					Err(e) => {
-						sp_runtime::print(e);
-						return Err(TransactionValidityError::Invalid(InvalidTransaction::Custom(1)));
-					}
-					// Race condition, or Transaction is good to go
-					Ok(tv) => { return Ok(tv); }
-				}
-			}
-
-			// Fall back to default logic for non UTXO-spending extrinsics
 			Executive::validate_transaction(source, tx, block_hash)
 		}
 	}

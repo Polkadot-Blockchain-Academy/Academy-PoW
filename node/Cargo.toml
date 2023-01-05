@@ -2,14 +2,13 @@
 authors = ['Anonymous']
 build = 'build.rs'
 edition = '2021'
-name = 'utxo-workshop'
-repository = 'https://github.com/substrate-developer-hub/utxo-workshop'
+name = 'academy-pow'
 version = '3.0.0'
 
 [build-dependencies]
 substrate-build-script-utils = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.24" }
 
-[dependencies.utxo-runtime]
+[dependencies.academy-pow-runtime]
 path = '../runtime'
 version = '3.0.0'
 
@@ -45,4 +44,4 @@ sha3pow = {path = './sha3pow'}
 hex = "0.4"
 
 [[bin]]
-name = 'utxo-workshop'
+name = 'academy-pow'

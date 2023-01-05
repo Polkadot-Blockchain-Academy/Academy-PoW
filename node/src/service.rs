@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use sc_client_api::ExecutorProvider;
 use sp_inherents::CreateInherentDataProviders;
-use utxo_runtime::{self, opaque::Block, RuntimeApi};
+use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_executor::NativeElseWasmExecutor;
 use sha3pow::Sha3Algorithm;
@@ -20,11 +20,11 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		utxo_runtime::api::dispatch(method, data)
+		academy_pow_runtime::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
-		utxo_runtime::native_version()
+		academy_pow_runtime::native_version()
 	}
 }
 
@@ -112,7 +112,7 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
 			let author =
-				utxo_runtime::block_author::InherentDataProvider(
+				academy_pow_runtime::block_author::InherentDataProvider(
 					sr25519_public_key.encode(),
 				);
 
@@ -209,7 +209,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 	
 				let author =
-					utxo_runtime::block_author::InherentDataProvider(
+					academy_pow_runtime::block_author::InherentDataProvider(
 						sr25519_public_key.encode(),
 					);
 	

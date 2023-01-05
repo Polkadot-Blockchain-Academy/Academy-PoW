@@ -19,11 +19,11 @@ use crate::chain_spec;
 use crate::cli::{Cli, Subcommand};
 use sc_cli::{SubstrateCli, RuntimeVersion, ChainSpec};
 use sc_service::PartialComponents;
-use utxo_runtime::Block;
+use academy_pow_runtime::Block;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"UTXO Node".into()
+		"Academy PoW Chain".into()
 	}
 
 	fn impl_version() -> String {
@@ -61,7 +61,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		&utxo_runtime::VERSION
+		&academy_pow_runtime::VERSION
 	}
 }
 

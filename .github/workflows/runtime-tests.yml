@@ -84,4 +84,4 @@ jobs:
         default: true
 
     - name: Execute Runtime Tests
-      run: cargo test -p utxo-runtime
+      run: cargo test -p academy-pow-runtime

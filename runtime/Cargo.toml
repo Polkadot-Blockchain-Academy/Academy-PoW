@@ -2,8 +2,7 @@
 authors = ['Parity Technologies <admin@parity.io>', 'Joshy Orndorff']
 edition = '2021'
 homepage = 'https://substrate.dev'
-name = 'utxo-runtime'
-repository = 'https://github.com/substrate-developers-hub/utxo-workshop'
+name = 'academy-pow-runtime'
 version = '3.0.0'
 
 [dependencies]
