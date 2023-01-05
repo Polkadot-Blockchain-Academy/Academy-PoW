@@ -1,3 +1,8 @@
+//! This pallet allows block authors to self-identify by providing an sr25519 public key
+//! 
+//! The included trait allows other pallets to fetch the author's account as long as the
+//! runtime's AccountId type can be created from an sr25519 public key.
+
 use sp_core::sr25519;
 use sp_std::vec::Vec;
 use sp_runtime::RuntimeString;
@@ -18,7 +23,9 @@ pub mod pallet {
 	pub struct Pallet<T>(PhantomData<T>);
 	/// The pallet's configuration trait. Nothing to configure.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {}
+	pub trait Config: frame_system::Config {
+		fn on_author_set(_author_account: Self::AccountId) {}
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -31,15 +38,25 @@ pub mod pallet {
 	pub type Author<T: Config> = StorageValue<_, sr25519::Public, OptionQuery>;
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T>
+	where
+			<T as frame_system::Config>::AccountId: From<sp_core::sr25519::Public>
+	{
 
 		/// Inherent to set the author of a block
 		#[pallet::weight(1_000_000)]
-		pub fn set_author(origin: OriginFor<T>, author: sr25519::Public) -> DispatchResult {
+		pub fn set_author(origin: OriginFor<T>, author: sr25519::Public) -> DispatchResult
+		
+		{
 			ensure_none(origin)?;
 			ensure!(Author::<T>::get().is_none(), Error::<T>::AuthorAlreadySet);
 
-			Author::<T>::put(author);
+			// Store the author in case other pallets want to fetch it and to let
+			// offchain tools inspect it
+			Author::<T>::put(&author);
+
+			// Call the hook
+			T::on_author_set(author.into());
 
 			Ok(())
 		}
@@ -58,7 +75,10 @@ pub mod pallet {
 	}
 
 	#[pallet::inherent]
-	impl<T:Config> ProvideInherent for Pallet<T> {
+	impl<T:Config> ProvideInherent for Pallet<T>
+	where
+			<T as frame_system::Config>::AccountId: From<sp_core::sr25519::Public>
+	{
 		type Call = Call<T>;
 		type Error = InherentError;
 		const INHERENT_IDENTIFIER: InherentIdentifier = INHERENT_IDENTIFIER;
@@ -89,21 +109,23 @@ pub mod pallet {
 	}
 }
 
-//TODO maybe make the trait generic over the "account" type
 /// A trait to find the author (miner) of the block.
-pub trait BlockAuthor {
-	fn block_author() -> Option<sr25519::Public>;
+pub trait BlockAuthor<AccountId: From<sr25519::Public>> {
+	fn block_author() -> Option<AccountId>;
 }
 
-impl BlockAuthor for () {
-	fn block_author() -> Option<sr25519::Public> {
+impl<AccountId: From<sr25519::Public>> BlockAuthor<AccountId> for () {
+	fn block_author() -> Option<AccountId> {
 		None
 	}
 }
 
-impl<T: Config> BlockAuthor for Pallet<T> {
-	fn block_author() -> Option<sr25519::Public> {
-		Author::<T>::get()
+impl<T: Config> BlockAuthor<T::AccountId> for Pallet<T> 
+where
+	<T as frame_system::Config>::AccountId: From<sp_core::sr25519::Public>
+{
+	fn block_author() -> Option<T::AccountId> {
+		Author::<T>::get().map(|a| a.into())
 	}
 }
 

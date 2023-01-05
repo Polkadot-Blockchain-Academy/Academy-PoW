@@ -8,6 +8,8 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use frame_support::traits::Currency;
+use issuance::Issuance;
 use sp_std::prelude::*;
 use sp_core::{OpaqueMetadata, U256};
 use sp_runtime::{
@@ -230,7 +232,19 @@ impl difficulty::Config for Runtime {
 	type MinDifficulty = DampFactor;
 }
 
-impl block_author::Config for Runtime {}
+impl block_author::Config for Runtime {
+	// Issue some new tokens to the block author
+	fn on_author_set(author_account: Self::AccountId) {
+		let block = System::block_number();
+		let issuance = <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
+		// 12 decimals... right?
+		let issuance = issuance * 1_000_000_000_000;
+		sp_std::if_std!{
+			println!("Depositing {issuance} into {author_account}");
+		}
+		let _ = Balances::deposit_creating(&author_account, issuance);
+	}
+}
 
 construct_runtime!(
 	pub enum Runtime where
