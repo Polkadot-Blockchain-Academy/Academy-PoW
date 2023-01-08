@@ -1,7 +1,8 @@
 use parity_scale_codec::{Decode, Encode};
+use sc_client_api::HeaderBackend;
 use sc_consensus_pow::{Error, PowAlgorithm};
 use sha3::{Digest, Sha3_256};
-use sp_api::ProvideRuntimeApi;
+use sp_api::{ProvideRuntimeApi, HeaderT};
 use sp_consensus_pow::{DifficultyApi, Seal as RawSeal};
 use sp_core::{H256, U256};
 use sp_runtime::generic::BlockId;
@@ -74,20 +75,39 @@ impl<B: BlockT<Hash = H256>, C> PowAlgorithm<B> for Sha3Algorithm<C>
 where
 	C: ProvideRuntimeApi<B>,
 	C::Api: DifficultyApi<B, U256>,
+	C: HeaderBackend<B>,
 {
 	type Difficulty = U256;
 
 	fn difficulty(&self, parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
 		let parent_id = BlockId::<B>::hash(parent);
-		self.client
-			.runtime_api()
-			.difficulty(&parent_id)
-			.map_err(|err| {
-				sc_consensus_pow::Error::Environment(format!(
-					"Fetching difficulty from runtime failed: {:?}",
-					err
-				))
-			})
+
+		let parent_header = self.client
+			.header(parent_id)
+			.expect("parent header should be present in the db")
+			.expect("WTF is there also an option??");
+
+		let parent_number = parent_header.number();
+
+		// As a test for the general concept of basing difficulty on the block height,
+		// let's make even blocks hard and odd blocks easy.
+		Ok(U256::from(
+			if *parent_number % 2u32.into() == 0u32.into() {
+				1_000_000
+			} else {
+				10_000_000
+			}
+		))
+
+		// self.client
+		// 	.runtime_api()
+		// 	.difficulty(&parent_id)
+		// 	.map_err(|err| {
+		// 		sc_consensus_pow::Error::Environment(format!(
+		// 			"Fetching difficulty from runtime failed: {:?}",
+		// 			err
+		// 		))
+		// 	})
 	}
 
 	fn verify(
