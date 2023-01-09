@@ -81,6 +81,9 @@ pub mod issuance;
 /// The Difficulty Adjustment Algorithm in `./difficulty.rs`
 pub mod difficulty;
 
+/// The faucet to allow users to claim free tokens
+pub mod faucet;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -232,6 +235,14 @@ impl difficulty::Config for Runtime {
 	type MinDifficulty = DampFactor;
 }
 
+impl faucet::Config for Runtime {
+	// type Event = Event;
+	type Currency = Balances;
+
+	// Each drip of the faucet give 5 tokens (with 12 decimals)
+	type DripAmount = ConstU128<5_000_000_000_000>;
+}
+
 impl block_author::Config for Runtime {
 	// Issue some new tokens to the block author
 	fn on_author_set(author_account: Self::AccountId) {
@@ -258,6 +269,7 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		DifficultyAdjustment: difficulty,
 		BlockAuthor: block_author,
+		Faucet: faucet,
 	}
 );
 
