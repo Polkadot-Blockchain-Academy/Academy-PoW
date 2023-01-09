@@ -40,7 +40,6 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	/// Pallet's configuration trait.
-	/// Tightly coupled to the timestamp trait because we need it's timestamp information
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		/// A Source for timestamp data
