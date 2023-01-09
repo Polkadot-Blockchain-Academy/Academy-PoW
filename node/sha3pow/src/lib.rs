@@ -84,15 +84,15 @@ where
 
 		let parent_header = self.client
 			.header(parent_id)
-			.expect("parent header should be present in the db")
-			.expect("WTF is there also an option??");
+			.expect("Database should perform lookup successfully")
+			.expect("parent header should be present in the db");
 
-		let parent_number = parent_header.number();
+		let parent_number = *parent_header.number();
 
 		// As a test for the general concept of basing difficulty on the block height,
 		// let's make even blocks hard and odd blocks easy.
 		Ok(U256::from(
-			if *parent_number % 2u32.into() == 0u32.into() {
+			if parent_number % 2u32.into() == 0u32.into() {
 				1_000_000
 			} else {
 				10_000_000
