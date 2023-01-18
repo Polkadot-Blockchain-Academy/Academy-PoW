@@ -250,9 +250,9 @@ impl block_author::Config for Runtime {
 		let issuance = <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
 		// 12 decimals... right?
 		let issuance = issuance * 1_000_000_000_000;
-		sp_std::if_std!{
-			println!("Depositing {issuance} into {author_account}");
-		}
+		// sp_std::if_std!{
+		// 	println!("Depositing {issuance} into {author_account}");
+		// }
 		let _ = Balances::deposit_creating(&author_account, issuance);
 	}
 }
