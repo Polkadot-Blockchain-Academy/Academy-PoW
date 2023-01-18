@@ -90,25 +90,26 @@ where
 		let parent_number = *parent_header.number();
 
 		// Start with a simple hard-coded difficulty
-		let difficulty = U256::from(100_000_000);
+		// let difficulty = U256::from(100_000_000);
 		
 		// Sketch out the possibility for difficulty-based hard forks
-		// let difficulty = if parent_number < TODO{
-		// 		U256::from(WHATEVER)
-		// 	}
-		// 	else if parent_number < TODO {
-		// 		U256::from(WHATEVER)
-		// 	} else {
-		// 		self.client
-		// 	.runtime_api()
-		// 	.difficulty(&parent_id)
-		// 	.map_err(|err| {
-		// 		sc_consensus_pow::Error::Environment(format!(
-		// 			"Fetching difficulty from runtime failed: {:?}",
-		// 			err
-		// 		))
-		// 	})
-		// };
+		let difficulty = if parent_number < 2400u32.into() {
+				U256::from(100_000_000)
+			}
+			else /*parent_number < TODO*/ {
+				U256::from(1_000_000_000)
+			// }
+			// else {
+			// 	self.client
+			// .runtime_api()
+			// .difficulty(&parent_id)
+			// .map_err(|err| {
+			// 	sc_consensus_pow::Error::Environment(format!(
+			// 		"Fetching difficulty from runtime failed: {:?}",
+			// 		err
+			// 	))
+			// })
+		};
 
 		Ok(difficulty)
 	}
