@@ -1,7 +1,7 @@
 use sp_core::{Pair, Public, sr25519};
 use academy_pow_runtime::{
 	AccountId, BalancesConfig, GenesisConfig, DifficultyAdjustmentConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature,
+	/*SudoConfig,*/ SystemConfig, WASM_BINARY, Signature,
 };
 use sc_service;
 use sp_runtime::traits::{Verify, IdentifyAccount};
@@ -103,9 +103,9 @@ fn testnet_genesis(
 		balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
 		},
-		sudo: SudoConfig {
-			key: Some(root_key),
-		},
+		// sudo: SudoConfig {
+		// 	key: Some(root_key),
+		// },
 		difficulty_adjustment: DifficultyAdjustmentConfig {
 			initial_difficulty: 4_000_000.into(),
 		},

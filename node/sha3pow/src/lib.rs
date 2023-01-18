@@ -89,17 +89,17 @@ where
 
 		let parent_number = *parent_header.number();
 
-		// As a test for the general concept of basing difficulty on the block height,
-		// let's make even blocks hard and odd blocks easy.
-		Ok(U256::from(
-			if parent_number % 2u32.into() == 0u32.into() {
-				1_000_000
-			} else {
-				10_000_000
-			}
-		))
-
-		// self.client
+		// Start with a simple hard-coded difficulty
+		let difficulty = U256::from(100_000_000);
+		
+		// Sketch out the possibility for difficulty-based hard forks
+		// let difficulty = if parent_number < TODO{
+		// 		U256::from(WHATEVER)
+		// 	}
+		// 	else if parent_number < TODO {
+		// 		U256::from(WHATEVER)
+		// 	} else {
+		// 		self.client
 		// 	.runtime_api()
 		// 	.difficulty(&parent_id)
 		// 	.map_err(|err| {
@@ -108,6 +108,9 @@ where
 		// 			err
 		// 		))
 		// 	})
+		// };
+
+		Ok(difficulty)
 	}
 
 	fn verify(

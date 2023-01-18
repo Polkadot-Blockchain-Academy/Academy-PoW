@@ -213,10 +213,10 @@ impl pallet_balances::Config for Runtime {
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 
-impl pallet_sudo::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-}
+// impl pallet_sudo::Config for Runtime {
+// 	type Event = Event;
+// 	type Call = Call;
+// }
 
 parameter_types! {
 	pub const TargetBlockTime: u128 = 3_000;
@@ -266,7 +266,7 @@ construct_runtime!(
 		System: frame_system,
 		Timestamp: pallet_timestamp,
 		Balances: pallet_balances,
-		Sudo: pallet_sudo,
+		// Sudo: pallet_sudo,
 		DifficultyAdjustment: difficulty,
 		BlockAuthor: block_author,
 		Faucet: faucet,
