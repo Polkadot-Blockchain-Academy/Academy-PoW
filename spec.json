@@ -3,7 +3,7 @@
   "id": "academy_pow",
   "chainType": "Local",
   "bootNodes": [
-    "/ip4/143.198.231.26/tcp/30333/p2p/12D3KooWRNsKGnk6DvB6xuTzcaPS6U7DPht8BwacFx2j3fpZf2AL"
+    "/ip4/143.198.231.26/tcp/30333/p2p/12D3KooWA1bmtbGzX5uScDp25PRFB9TCf4hvzFiohRAjv9UKf8EC"
   ],
   "telemetryEndpoints": [
     ["/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F", 0]
