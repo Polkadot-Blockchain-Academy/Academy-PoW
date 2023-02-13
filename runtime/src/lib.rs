@@ -264,6 +264,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		System: frame_system,
+		// TODO remove timestamp silly
 		Timestamp: pallet_timestamp,
 		Balances: pallet_balances,
 		// Sudo: pallet_sudo,
