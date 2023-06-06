@@ -50,7 +50,6 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 				FullClient,
 				FullSelectChain,
 				Sha3Algorithm<FullClient>,
-				impl sp_consensus::CanAuthorWith<Block>,
 				impl CreateInherentDataProviders<Block, ()>,
 			>,
 			Option<Telemetry>,
@@ -99,9 +98,6 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		client.clone(),
 	);
 
-	let can_author_with =
-			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
-
 	let pow_block_import = sc_consensus_pow::PowBlockImport::new(
 		client.clone(),
 		client.clone(),
@@ -118,7 +114,6 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 
 			Ok((timestamp, author))
 		},
-		can_author_with,
 	);
 
 	let import_queue = sc_consensus_pow::import_queue(
@@ -154,7 +149,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 		other: (pow_block_import, mut telemetry),
 	} = new_partial(&config, sr25519_public_key)?;
 
-	let (network, system_rpc_tx, network_starter) =
+	let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &config,
 			client: client.clone(),
@@ -162,7 +157,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			spawn_handle: task_manager.spawn_handle(),
 			import_queue,
 			block_announce_validator_builder: None,
-			warp_sync: None,
+			warp_sync_params: None,
 		})?;
 
 	let role = config.role.clone();
@@ -171,12 +166,14 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		network: network.clone(),
 		client: client.clone(),
-		keystore: keystore_container.sync_keystore(),
+		keystore: keystore_container.keystore(),
 		task_manager: &mut task_manager,
 		transaction_pool: transaction_pool.clone(),
 		rpc_builder: Box::new(|_, _| Ok(jsonrpsee::RpcModule::new(()))),
 		backend,
 		system_rpc_tx,
+		tx_handler_controller,
+		sync_service: sync_service.clone(),
 		config,
 		telemetry: telemetry.as_mut(),
 	})?;
@@ -192,16 +189,13 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			telemetry.as_ref().map(|x| x.handle()),
 		);
 
-		let can_author_with =
-			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
-
-			let (mining_worker, mining_worker_task) = sc_consensus_pow::start_mining_worker(
+		let (mining_worker, mining_worker_task) = sc_consensus_pow::start_mining_worker(
 			Box::new(pow_block_import),
 			client.clone(),
 			select_chain,
 			Sha3Algorithm::new(client.clone()),
 			proposer,
-			network.clone(),
+			sync_service.clone(),
 			network,
 			None,
 			// This code is copied from above. Would be better to not repeat it.
@@ -217,7 +211,6 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			},
 			std::time::Duration::from_secs(10),
 			std::time::Duration::from_secs(5),
-			can_author_with,
 		);
 
 		task_manager
