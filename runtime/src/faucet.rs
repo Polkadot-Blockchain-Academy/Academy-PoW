@@ -4,7 +4,7 @@ use frame_support::traits::Currency;
 
 pub use pallet::*;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;

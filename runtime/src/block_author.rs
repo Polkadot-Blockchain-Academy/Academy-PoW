@@ -12,7 +12,7 @@ use parity_scale_codec::{Encode, Decode};
 
 pub use pallet::*;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
@@ -70,7 +70,7 @@ pub mod pallet {
 
 			// Return zero weight because we are not using weight-based
 			// transaction fees.
-			0
+			Weight::zero()
 		}
 	}
 
@@ -167,7 +167,7 @@ pub struct InherentDataProvider(pub InherentType);
 #[cfg(feature = "std")]
 #[async_trait::async_trait]
 impl sp_inherents::InherentDataProvider for InherentDataProvider {
-	fn provide_inherent_data(
+	async fn provide_inherent_data(
 		&self,
 		inherent_data: &mut InherentData,
 	) -> Result<(), sp_inherents::Error> {

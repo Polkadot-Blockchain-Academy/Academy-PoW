@@ -33,7 +33,7 @@ type Difficulty = U256;
 
 pub use pallet::*;
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
@@ -60,7 +60,6 @@ pub mod pallet {
 	}
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
 	type DifficultyList<T> = [Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60];
