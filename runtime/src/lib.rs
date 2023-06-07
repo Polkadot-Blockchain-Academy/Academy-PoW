@@ -36,7 +36,8 @@ use sp_version::NativeVersion;
 // Frontier
 use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTransaction};
 use pallet_evm::{
-    Account as EVMAccount, EnsureAccountId20, FeeCalculator, IdentityAddressMapping, Runner,
+    Account as EVMAccount, EnsureAddressNever, FeeCalculator, IdentityAddressMapping, Runner,
+	AddressMapping,
 };
 use fp_evm::weight_per_gas;
 
@@ -45,7 +46,7 @@ use fp_evm::weight_per_gas;
 pub use sp_runtime::BuildStorage;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
-pub use sp_runtime::{ConsensusEngineId, Permill, Perbill};
+pub use sp_runtime::{AccountId32, ConsensusEngineId, Permill, Perbill};
 pub use frame_support::{
 	StorageValue, construct_runtime, parameter_types,
 	dispatch::Callable,
@@ -304,20 +305,6 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_evm_chain_id::Config for Runtime {}
 
-pub struct FindAuthorTruncated<F>(PhantomData<F>);
-impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
-    fn find_author<'a, I>(digests: I) -> Option<H160>
-    where
-        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
-    {
-        if let Some(author_index) = F::find_author(digests) {
-            let authority_id = Aura::authorities()[author_index as usize].clone();
-            return Some(H160::from_slice(&authority_id.to_raw_vec()[4..24]));
-        }
-        None
-    }
-}
-
 const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 
 parameter_types! {
@@ -325,14 +312,21 @@ parameter_types! {
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
+pub struct TmpAddressMapping;
+impl AddressMapping<AccountId32> for TmpAddressMapping {
+    fn into_account_id(address: H160) -> AccountId32 {
+		AccountId32::new([0; 32])
+    }
+}
+
 impl pallet_evm::Config for Runtime {
     type FeeCalculator = BaseFee;
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-    type CallOrigin = EnsureAccountId20;
-    type WithdrawOrigin = EnsureAccountId20;
-    type AddressMapping = IdentityAddressMapping;
+    type CallOrigin = EnsureAddressNever<Self::AccountId>;
+    type WithdrawOrigin = EnsureAddressNever<Self::AccountId>;
+    type AddressMapping = TmpAddressMapping;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
     type PrecompilesType = ();
@@ -342,7 +336,7 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
     type OnCreate = ();
-    type FindAuthor = FindAuthorTruncated<Aura>;
+    type FindAuthor = ();
     type Timestamp = Timestamp;
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
 }
@@ -375,6 +369,7 @@ construct_runtime!(
 		EVM: pallet_evm,
 		EVMChainId: pallet_evm_chain_id,
 		BaseFee: pallet_base_fee,
+		Ethereum: pallet_ethereum,
 	}
 );
 

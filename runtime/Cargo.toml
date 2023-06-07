@@ -73,5 +73,6 @@ std = [
     'pallet-evm/std',
     'pallet-evm-chain-id/std',
     'pallet-ethereum/std',
+    'pallet-base-fee/std',
     'fp-evm/std',
 ]

@@ -109,5 +109,10 @@ fn testnet_genesis(
 		difficulty_adjustment: DifficultyAdjustmentConfig {
 			initial_difficulty: 4_000_000.into(),
 		},
+
+		evm: Default::default(),
+		evm_chain_id: Default::default(),
+		ethereum: Default::default(),
+		base_fee: Default::default(),
 	}
 }
