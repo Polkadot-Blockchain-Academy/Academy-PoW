@@ -15,7 +15,7 @@ pub struct RunCmd {
 	pub base: sc_cli::RunCmd,
 
 	/// Miner's SR25519 public key for block rewards
-	#[clap(long, parse(try_from_str = parse_sr25519_public_key))]
+	#[clap(long, value_parser = parse_sr25519_public_key)]
 	pub sr25519_public_key: Option<sp_core::sr25519::Public>,
 }
 

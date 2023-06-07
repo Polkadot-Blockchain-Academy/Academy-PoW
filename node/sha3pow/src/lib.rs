@@ -80,10 +80,8 @@ where
 	type Difficulty = U256;
 
 	fn difficulty(&self, parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
-		let parent_id = BlockId::<B>::hash(parent);
-
 		let parent_header = self.client
-			.header(parent_id)
+			.header(parent)
 			.expect("Database should perform lookup successfully")
 			.expect("parent header should be present in the db");
 
