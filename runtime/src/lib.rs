@@ -11,7 +11,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use frame_support::traits::Currency;
 use issuance::Issuance;
 use sp_std::prelude::*;
-use sp_core::{OpaqueMetadata, U256};
+use sp_core::{OpaqueMetadata, H160, U256};
 use sp_runtime::{
 	ApplyExtrinsicResult,
 	create_runtime_str,
@@ -33,19 +33,26 @@ use sp_api::impl_runtime_apis;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
+// Frontier
+use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTransaction};
+use pallet_evm::{
+    Account as EVMAccount, EnsureAccountId20, FeeCalculator, IdentityAddressMapping, Runner,
+};
+use fp_evm::weight_per_gas;
 
 // A few exports that help ease life for downstream crates.
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
-pub use sp_runtime::{Permill, Perbill};
+pub use sp_runtime::{ConsensusEngineId, Permill, Perbill};
 pub use frame_support::{
 	StorageValue, construct_runtime, parameter_types,
 	dispatch::Callable,
-	traits::{IsSubType, ConstU128, ConstU32},
+	pallet_prelude::*,
+	traits::{IsSubType, ConstU128, ConstU32, FindAuthor},
 	weights::{
-		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND},
+		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND, WEIGHT_REF_TIME_PER_MILLIS},
 		Weight,
 	},
 };
@@ -123,6 +130,12 @@ pub fn native_version() -> NativeVersion {
 }
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+/// We allow for 2000ms of compute with a 6 second average block time.
+pub const WEIGHT_MILLISECS_PER_BLOCK: u64 = 2000;
+pub const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
+    WEIGHT_MILLISECS_PER_BLOCK * WEIGHT_REF_TIME_PER_MILLIS,
+    u64::MAX,
+);
 
 parameter_types! {
 	pub const BlockHashCount: BlockNumber = 2400;
@@ -264,6 +277,87 @@ impl block_author::Config for Runtime {
 	}
 }
 
+parameter_types! {
+    pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
+    pub DefaultElasticity: Permill = Permill::from_parts(125_000);
+}
+
+pub struct BaseFeeThreshold;
+impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
+    fn lower() -> Permill {
+        Permill::zero()
+    }
+    fn ideal() -> Permill {
+        Permill::from_parts(500_000)
+    }
+    fn upper() -> Permill {
+        Permill::from_parts(1_000_000)
+    }
+}
+
+impl pallet_base_fee::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Threshold = BaseFeeThreshold;
+    type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
+    type DefaultElasticity = DefaultElasticity;
+}
+
+impl pallet_evm_chain_id::Config for Runtime {}
+
+pub struct FindAuthorTruncated<F>(PhantomData<F>);
+impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
+    fn find_author<'a, I>(digests: I) -> Option<H160>
+    where
+        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+    {
+        if let Some(author_index) = F::find_author(digests) {
+            let authority_id = Aura::authorities()[author_index as usize].clone();
+            return Some(H160::from_slice(&authority_id.to_raw_vec()[4..24]));
+        }
+        None
+    }
+}
+
+const BLOCK_GAS_LIMIT: u64 = 75_000_000;
+
+parameter_types! {
+    pub BlockGasLimit: U256 = U256::from(BLOCK_GAS_LIMIT);
+    pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
+}
+
+impl pallet_evm::Config for Runtime {
+    type FeeCalculator = BaseFee;
+    type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
+    type WeightPerGas = WeightPerGas;
+    type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
+    type CallOrigin = EnsureAccountId20;
+    type WithdrawOrigin = EnsureAccountId20;
+    type AddressMapping = IdentityAddressMapping;
+    type Currency = Balances;
+    type RuntimeEvent = RuntimeEvent;
+    type PrecompilesType = ();
+    type PrecompilesValue = ();
+    type ChainId = EVMChainId;
+    type BlockGasLimit = BlockGasLimit;
+    type Runner = pallet_evm::runner::stack::Runner<Self>;
+    type OnChargeTransaction = ();
+    type OnCreate = ();
+    type FindAuthor = FindAuthorTruncated<Aura>;
+    type Timestamp = Timestamp;
+    type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
+    pub const PostBlockAndTxnHashes: PostLogContent = PostLogContent::BlockAndTxnHashes;
+}
+
+impl pallet_ethereum::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
+    type PostLogContent = PostBlockAndTxnHashes;
+    type ExtraDataLength = ConstU32<30>;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -278,6 +372,9 @@ construct_runtime!(
 		DifficultyAdjustment: difficulty,
 		BlockAuthor: block_author,
 		Faucet: faucet,
+		EVM: pallet_evm,
+		EVMChainId: pallet_evm_chain_id,
+		BaseFee: pallet_base_fee,
 	}
 );
 
