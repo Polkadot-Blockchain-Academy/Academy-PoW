@@ -228,67 +228,90 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 		let proposer = sc_basic_authorship::ProposerFactory::new(
 			task_manager.spawn_handle(),
 			client.clone(),
-			transaction_pool,
+			transaction_pool.clone(),
 			prometheus_registry.as_ref(),
 			telemetry.as_ref().map(|x| x.handle()),
 		);
 
-		let (mining_worker, mining_worker_task) = sc_consensus_pow::start_mining_worker(
-			Box::new(pow_block_import),
-			client.clone(),
-			select_chain,
-			Sha3Algorithm::new(client.clone()),
-			proposer,
-			sync_service.clone(),
-			sync_service.clone(),
-			None,
-			// This code is copied from above. Would be better to not repeat it.
-			move |_, ()| async move {
-				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-	
-				let author =
-					academy_pow_runtime::block_author::InherentDataProvider(
-						sr25519_public_key.encode(),
-					);
-	
-				Ok((timestamp, author))
-			},
-			std::time::Duration::from_secs(10),
-			std::time::Duration::from_secs(5),
-		);
+		// If instant seal is requested, we just start it. Otherwise, we do the full PoW setup.
+		if instant_seal {
 
-		task_manager
-			.spawn_essential_handle()
-			.spawn_blocking("pow-miner", Some("pow-mining"), mining_worker_task);
+			let params = sc_consensus_manual_seal::InstantSealParams {
+				block_import: client.clone(),
+				env: proposer,
+				client,
+				pool: transaction_pool,
+				select_chain,
+				consensus_data_provider: None,
+				create_inherent_data_providers: move |_, ()| async move {
+					Ok(sp_timestamp::InherentDataProvider::from_system_time())
+				},
+			};
 
-		// Start Mining
-		//TODO Some of this should move into the sha3pow crate.
-		use sp_core::U256;
-		use sha3pow::{Compute, hash_meets_difficulty};
-		let mut nonce: U256 = U256::from(0);
-		std::thread::spawn(move || loop {
-			let worker = mining_worker.clone();
-			let metadata = worker.metadata();
-			if let Some(metadata) = metadata {
-				let compute = Compute {
-					difficulty: metadata.difficulty,
-					pre_hash: metadata.pre_hash,
-					nonce,
-				};
-				let seal = compute.compute();
-				if hash_meets_difficulty(&seal.work, seal.difficulty) {
-					nonce = U256::from(0);
-					let _ = futures::executor::block_on(worker.submit(seal.encode()));
-				} else {
-					nonce = nonce.saturating_add(U256::from(1));
-					if nonce == U256::MAX {
+			let authorship_future = sc_consensus_manual_seal::run_instant_seal(params);
+
+			task_manager
+				.spawn_essential_handle()
+				.spawn_blocking("instant-seal", None, authorship_future);
+		} else {
+
+			let (mining_worker, mining_worker_task) = sc_consensus_pow::start_mining_worker(
+				Box::new(pow_block_import),
+				client.clone(),
+				select_chain,
+				Sha3Algorithm::new(client.clone()),
+				proposer,
+				sync_service.clone(),
+				sync_service.clone(),
+				None,
+				// This code is copied from above. Would be better to not repeat it.
+				move |_, ()| async move {
+					let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+		
+					let author =
+						academy_pow_runtime::block_author::InherentDataProvider(
+							sr25519_public_key.encode(),
+						);
+		
+					Ok((timestamp, author))
+				},
+				std::time::Duration::from_secs(10),
+				std::time::Duration::from_secs(5),
+			);
+
+			task_manager
+				.spawn_essential_handle()
+				.spawn_blocking("pow-miner", Some("pow-mining"), mining_worker_task);
+
+			// Start Mining
+			//TODO Some of this should move into the sha3pow crate.
+			use sp_core::U256;
+			use sha3pow::{Compute, hash_meets_difficulty};
+			let mut nonce: U256 = U256::from(0);
+			std::thread::spawn(move || loop {
+				let worker = mining_worker.clone();
+				let metadata = worker.metadata();
+				if let Some(metadata) = metadata {
+					let compute = Compute {
+						difficulty: metadata.difficulty,
+						pre_hash: metadata.pre_hash,
+						nonce,
+					};
+					let seal = compute.compute();
+					if hash_meets_difficulty(&seal.work, seal.difficulty) {
 						nonce = U256::from(0);
+						let _ = futures::executor::block_on(worker.submit(seal.encode()));
+					} else {
+						nonce = nonce.saturating_add(U256::from(1));
+						if nonce == U256::MAX {
+							nonce = U256::from(0);
+						}
 					}
+				} else {
+					std::thread::sleep(std::time::Duration::from_secs(1));
 				}
-			} else {
-				std::thread::sleep(std::time::Duration::from_secs(1));
-			}
-		});
+			});
+		}
 	}
 
 	network_starter.start_network();
