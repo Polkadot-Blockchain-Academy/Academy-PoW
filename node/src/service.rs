@@ -3,8 +3,6 @@
 use std::sync::Arc;
 use sc_consensus::LongestChain;
 use sp_api::TransactionFor;
-use sp_consensus::SelectChain;
-use sp_inherents::CreateInherentDataProviders;
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_executor::NativeElseWasmExecutor;
@@ -128,7 +126,7 @@ where
 pub fn build_manual_seal_import_queue(
 	client: Arc<FullClient>,
 	config: &Configuration,
-	select_chain: &FullSelectChain,
+	_select_chain: &FullSelectChain,
 	task_manager: &TaskManager,
 ) -> Result<(BasicImportQueue, BoxBlockImport), ServiceError> {
 	Ok((
