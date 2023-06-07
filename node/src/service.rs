@@ -1,6 +1,9 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use std::sync::Arc;
+use sc_consensus::LongestChain;
+use sp_api::TransactionFor;
+use sp_consensus::SelectChain;
 use sp_inherents::CreateInherentDataProviders;
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
@@ -33,29 +36,39 @@ type FullClient = sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecu
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
+type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
+type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
+
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain
-pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) -> Result<
+pub fn new_partial<BIQ>(config: &Configuration, build_import_queue: BIQ) -> Result<
 	PartialComponents<
 		FullClient,
 		FullBackend,
 		FullSelectChain,
-		sc_consensus::DefaultImportQueue<Block, FullClient>,
+		BasicImportQueue,
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
-			sc_consensus_pow::PowBlockImport<
-				Block,
-				Arc<FullClient>,
-				FullClient,
-				FullSelectChain,
-				Sha3Algorithm<FullClient>,
-				impl CreateInherentDataProviders<Block, ()>,
-			>,
+			BoxBlockImport,
 			Option<Telemetry>,
 		),
 	>,
 	ServiceError,
-> {
+>
+where
+	BIQ: FnOnce(
+		Arc<FullClient>,
+		&Configuration,
+		&FullSelectChain,
+		&TaskManager,
+	) -> Result<
+		(
+			BasicImportQueue,
+			BoxBlockImport,
+		),
+		ServiceError,
+	>
+{
 	let telemetry = config
 		.telemetry_endpoints
 		.clone()
@@ -82,7 +95,7 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		telemetry
 	});
 
-	let select_chain = sc_consensus::LongestChain::new(backend.clone());
+	let select_chain = LongestChain::new(backend.clone());
 
 	let transaction_pool = sc_transaction_pool::BasicPool::new_full(
 		config.transaction_pool.clone(),
@@ -92,6 +105,49 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		client.clone(),
 	);
 
+	let (import_queue, block_import) = build_import_queue(
+		client.clone(),
+		config,
+		&select_chain,
+		&task_manager,
+	)?;
+
+	Ok(PartialComponents {
+		client,
+		backend,
+		task_manager,
+		import_queue,
+		keystore_container,
+		select_chain,
+		transaction_pool,
+		other: (block_import, telemetry),
+	})
+}
+
+/// Build the import queue for the manual seal service.
+pub fn build_manual_seal_import_queue(
+	client: Arc<FullClient>,
+	config: &Configuration,
+	select_chain: &FullSelectChain,
+	task_manager: &TaskManager,
+) -> Result<(BasicImportQueue, BoxBlockImport), ServiceError> {
+	Ok((
+		sc_consensus_manual_seal::import_queue(
+			Box::new(client.clone()),
+			&task_manager.spawn_essential_handle(),
+			config.prometheus_registry(),
+		),
+		Box::new(client),
+	))
+}
+
+/// Build the import queue for the pow service
+pub fn build_pow_import_queue(
+	client: Arc<FullClient>,
+	config: &Configuration,
+	select_chain: &FullSelectChain,
+	task_manager: &TaskManager,
+) -> Result<(BasicImportQueue, BoxBlockImport), ServiceError> {
 	let pow_block_import = sc_consensus_pow::PowBlockImport::new(
 		client.clone(),
 		client.clone(),
@@ -101,10 +157,8 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		move |_, ()| async move {
 			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-			let author =
-				academy_pow_runtime::block_author::InherentDataProvider(
-					sr25519_public_key.encode(),
-				);
+			// We don't need the current mining key to check inherents, so we just use a default.
+			let author = academy_pow_runtime::block_author::InherentDataProvider(Default::default());
 
 			Ok((timestamp, author))
 		},
@@ -118,20 +172,18 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		config.prometheus_registry(),
 	)?;
 
-	Ok(PartialComponents {
-		client,
-		backend,
-		task_manager,
-		import_queue,
-		keystore_container,
-		select_chain,
-		transaction_pool,
-		other: (pow_block_import, telemetry),
-	})
+	Ok((import_queue, Box::new(pow_block_import)))
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> Result<TaskManager, ServiceError> {
+pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, instant_seal: bool) -> Result<TaskManager, ServiceError> {
+
+	let build_import_queue = if instant_seal {
+		build_manual_seal_import_queue
+	} else {
+		build_pow_import_queue
+	};
+
 	let sc_service::PartialComponents {
 		client,
 		backend,
@@ -141,7 +193,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 		select_chain,
 		transaction_pool,
 		other: (pow_block_import, mut telemetry),
-	} = new_partial(&config, sr25519_public_key)?;
+	} = new_partial(&config, build_import_queue)?;
 
 	let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
