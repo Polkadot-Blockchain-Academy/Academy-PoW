@@ -1,7 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use std::sync::Arc;
-use sc_client_api::ExecutorProvider;
 use sp_inherents::CreateInherentDataProviders;
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
@@ -68,12 +67,7 @@ pub fn new_partial(config: &Configuration, sr25519_public_key: sr25519::Public) 
 		})
 		.transpose()?;
 
-	let executor = NativeElseWasmExecutor::<ExecutorDispatch>::new(
-		config.wasm_method,
-		config.default_heap_pages,
-		config.max_runtime_instances,
-		config.runtime_cache_size,
-	);
+		let executor = sc_service::new_native_or_wasm_executor(&config);
 
 	let (client, backend, keystore_container, task_manager) =
 		sc_service::new_full_parts::<Block, RuntimeApi, _>(
@@ -196,7 +190,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public) -> R
 			Sha3Algorithm::new(client.clone()),
 			proposer,
 			sync_service.clone(),
-			network,
+			sync_service.clone(),
 			None,
 			// This code is copied from above. Would be better to not repeat it.
 			move |_, ()| async move {
