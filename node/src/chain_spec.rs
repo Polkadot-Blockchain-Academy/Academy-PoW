@@ -111,7 +111,6 @@ fn testnet_genesis(
 		},
 
 		evm: Default::default(),
-		evm_chain_id: Default::default(),
 		ethereum: Default::default(),
 		base_fee: Default::default(),
 	}

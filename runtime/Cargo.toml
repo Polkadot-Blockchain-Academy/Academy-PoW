@@ -35,7 +35,6 @@ sp-keystore = { optional = true, git = "https://github.com/paritytech/substrate.
 # Frontier
 pallet-base-fee = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-pallet-evm-chain-id = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-ethereum = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 
@@ -71,7 +70,6 @@ std = [
     'async-trait',
     'sp-keystore',
     'pallet-evm/std',
-    'pallet-evm-chain-id/std',
     'pallet-ethereum/std',
     'pallet-base-fee/std',
     'fp-evm/std',
