@@ -1,6 +1,6 @@
 use sp_core::{Pair, Public, sr25519};
 use academy_pow_runtime::{
-	AccountId, BalancesConfig, GenesisConfig, DifficultyAdjustmentConfig,
+	AccountId, BalancesConfig, GenesisConfig, DifficultyAdjustmentConfig, EVMChainIdConfig,
 	/*SudoConfig,*/ SystemConfig, WASM_BINARY, Signature,
 };
 use sc_service;
@@ -111,7 +111,9 @@ fn testnet_genesis(
 		},
 
 		evm: Default::default(),
-		evm_chain_id: Default::default(),
+		evm_chain_id: EVMChainIdConfig {
+			chain_id: 4242,
+		},
 		ethereum: Default::default(),
 		base_fee: Default::default(),
 	}
