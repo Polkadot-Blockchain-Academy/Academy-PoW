@@ -303,12 +303,13 @@ impl pallet_base_fee::Config for Runtime {
     type DefaultElasticity = DefaultElasticity;
 }
 
+impl pallet_evm_chain_id::Config for Runtime {}
+
 const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 
 parameter_types! {
     pub BlockGasLimit: U256 = U256::from(BLOCK_GAS_LIMIT);
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
-	pub const EVM_CHAIN_ID: u64 = 42;
 }
 
 pub struct TmpAddressMapping;
@@ -330,7 +331,7 @@ impl pallet_evm::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type PrecompilesType = ();
     type PrecompilesValue = ();
-    type ChainId = EVM_CHAIN_ID;
+    type ChainId = EVMChainId;
     type BlockGasLimit = BlockGasLimit;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
@@ -366,6 +367,7 @@ construct_runtime!(
 		BlockAuthor: block_author,
 		Faucet: faucet,
 		EVM: pallet_evm,
+		EVMChainId: pallet_evm_chain_id,
 		BaseFee: pallet_base_fee,
 		Ethereum: pallet_ethereum,
 	}
