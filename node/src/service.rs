@@ -222,6 +222,75 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 		telemetry: telemetry.as_mut(),
 	})?;
 
+    // for ethereum-compatibility rpc.
+    config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider));
+	let overrides = crate::rpc::overrides_handle(client.clone());
+    let eth_rpc_params = crate::rpc::EthDeps {
+        client: client.clone(),
+        pool: transaction_pool.clone(),
+        graph: transaction_pool.pool().clone(),
+        converter: None,
+        is_authority: config.role.is_authority(),
+        enable_dev_signer: eth_config.enable_dev_signer,
+        network: network.clone(),
+        sync: sync_service.clone(),
+        frontier_backend: frontier_backend.clone(),
+		overrides,
+        block_data_cache: Arc::new(fc_rpc::EthBlockDataCacheTask::new(
+            task_manager.spawn_handle(),
+            eth_config.eth_log_block_cache,
+            eth_config.eth_statuses_cache,
+            prometheus_registry.clone(),
+        )),
+        filter_pool: filter_pool.clone(),
+        max_past_logs: eth_config.max_past_logs,
+        fee_history_cache: fee_history_cache.clone(),
+        fee_history_cache_limit,
+        execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
+        forced_parent_hashes: None,
+    };
+
+    let rpc_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+        let pubsub_notification_sinks = pubsub_notification_sinks.clone();
+
+        Box::new(move |deny_unsafe, subscription_task_executor| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+                deny_unsafe,
+                command_sink: if sealing.is_some() {
+                    Some(command_sink.clone())
+                } else {
+                    None
+                },
+                eth: eth_rpc_params.clone(),
+            };
+
+            crate::rpc::create_full(
+                deps,
+                subscription_task_executor,
+                pubsub_notification_sinks.clone(),
+            )
+            .map_err(Into::into)
+        })
+    };
+
+    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        config,
+        client: client.clone(),
+        backend: backend.clone(),
+        task_manager: &mut task_manager,
+        keystore: keystore_container.keystore(),
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder,
+        network: network.clone(),
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        telemetry: telemetry.as_mut(),
+    })?;
 
 
 	if role.is_authority() {
