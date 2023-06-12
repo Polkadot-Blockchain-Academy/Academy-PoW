@@ -2,7 +2,7 @@ use academy_pow_runtime::{
     AccountId, BalancesConfig, DifficultyAdjustmentConfig, GenesisConfig, Signature,
     /*SudoConfig,*/ SystemConfig, WASM_BINARY,
 };
-use sc_service;
+
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
@@ -97,7 +97,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 
 fn testnet_genesis(
     wasm_binary: &[u8],
-    root_key: AccountId,
+    _root_key: AccountId,
     endowed_accounts: Vec<AccountId>,
     _enable_println: bool,
 ) -> GenesisConfig {
