@@ -4,7 +4,7 @@ use futures::{channel::mpsc, prelude::*};
 use std::sync::Arc;
 use sc_consensus::LongestChain;
 use sp_api::TransactionFor;
-use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
+use academy_pow_runtime::{self, opaque::Block, RuntimeApi, TransactionConverter};
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_executor::NativeElseWasmExecutor;
 use sha3pow::Sha3Algorithm;
@@ -234,7 +234,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 	let frontier_backend = Arc::new(FrontierBackend::open(
         client.clone(),
         &config.database,
-        &db_config_dir(config),
+        &db_config_dir(&config),
     )?);
 
     // for ethereum-compatibility rpc.
@@ -244,7 +244,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
         client: client.clone(),
         pool: transaction_pool.clone(),
         graph: transaction_pool.pool().clone(),
-        converter: None,
+        converter: Some(TransactionConverter),
         is_authority: config.role.is_authority(),
         enable_dev_signer: eth_config.enable_dev_signer,
         network: network.clone(),
@@ -253,6 +253,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 		overrides,
         block_data_cache: Arc::new(fc_rpc::EthBlockDataCacheTask::new(
             task_manager.spawn_handle(),
+			overrides,
             eth_config.eth_log_block_cache,
             eth_config.eth_statuses_cache,
             prometheus_registry.clone(),

@@ -107,7 +107,7 @@ where
 
 pub fn spawn_frontier_tasks<RuntimeApi, Executor>(
 	task_manager: &TaskManager,
-	client: Arc<FullClient<RuntimeApi, Executor>>,
+	client: Arc<FullClient>,
 	backend: Arc<FullBackend>,
 	frontier_backend: Arc<FrontierBackend>,
 	filter_pool: Option<FilterPool>,
@@ -121,7 +121,7 @@ pub fn spawn_frontier_tasks<RuntimeApi, Executor>(
 		>,
 	>,
 ) where
-	RuntimeApi: ConstructRuntimeApi<Block, FullClient<RuntimeApi, Executor>>,
+	RuntimeApi: ConstructRuntimeApi<Block, FullClient>,
 	RuntimeApi: Send + Sync + 'static,
 	RuntimeApi::RuntimeApi:
 		EthCompatRuntimeApiCollection<StateBackend = StateBackendFor<FullBackend, Block>>,

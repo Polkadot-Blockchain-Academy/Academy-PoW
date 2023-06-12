@@ -129,7 +129,7 @@ pub fn run() -> sc_cli::Result<()> {
 			let instant_seal = cli.run.base.is_dev()?;
 			let runner = cli.create_runner(&cli.run.base)?;
 			runner.run_node_until_exit(|config| async move {
-				service::new_full(config, sr25519_public_key, instant_seal).map_err(sc_cli::Error::Service)
+				service::new_full(config, sr25519_public_key, instant_seal, &cli.eth).map_err(sc_cli::Error::Service)
 			})
 		},
 	}
