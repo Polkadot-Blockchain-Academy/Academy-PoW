@@ -91,11 +91,6 @@ pub fn create_eth<C, BE, P, A, CT, B, EC: EthConfig<B, C>>(
 	mut io: RpcModule<()>,
 	deps: EthDeps<C, P, A, CT, B>,
 	subscription_task_executor: SubscriptionTaskExecutor,
-	pubsub_notification_sinks: Arc<
-		fc_mapping_sync::EthereumBlockNotificationSinks<
-			fc_mapping_sync::EthereumBlockNotification<B>,
-		>,
-	>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	B: BlockT,
@@ -109,8 +104,8 @@ where
 	CT: ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
 {
 	use fc_rpc::{
-		Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer, EthPubSub,
-		EthPubSubApiServer, EthSigner, Net, NetApiServer, Web3, Web3ApiServer,
+		Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer,
+		EthSigner, Net, NetApiServer, Web3, Web3ApiServer,
 	};
 
 	let EthDeps {
@@ -172,18 +167,6 @@ where
 			.into_rpc(),
 		)?;
 	}
-
-	io.merge(
-		EthPubSub::new(
-			pool,
-			client.clone(),
-			sync,
-			subscription_task_executor,
-			overrides,
-			pubsub_notification_sinks,
-		)
-		.into_rpc(),
-	)?;
 
 	io.merge(
 		Net::new(
