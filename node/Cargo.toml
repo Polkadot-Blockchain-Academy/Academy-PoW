@@ -47,6 +47,7 @@ sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "pol
 sp-timestamp = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 substrate-frame-rpc-system = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+fc-consensus = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fc-db = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fc-mapping-sync = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fc-rpc = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }

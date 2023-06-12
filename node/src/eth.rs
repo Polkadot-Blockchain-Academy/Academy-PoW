@@ -20,9 +20,9 @@ use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::{EthTask, OverrideHandle};
 pub use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 // Local
-use frontier_template_runtime::opaque::Block;
+use academy_pow_runtime::opaque::Block;
 
-use crate::client::{FullBackend, FullClient};
+use crate::service::{FullBackend, FullClient};
 
 /// Frontier DB backend type.
 pub type FrontierBackend = fc_db::Backend<Block>;

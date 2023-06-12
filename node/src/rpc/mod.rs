@@ -18,7 +18,7 @@ use sp_api::{CallApiAt, ProvideRuntimeApi};
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_runtime::traits::Block as BlockT;
 // Runtime
-use academy_pow_runtime::{opaque::Block, AccountId, Balance, Hash, Index};
+use academy_pow_runtime::{opaque::Block, AccountId, Hash, Index};
 
 mod eth;
 pub use self::eth::{create_eth, EthDeps};

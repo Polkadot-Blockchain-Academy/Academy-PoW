@@ -7,6 +7,9 @@ pub struct Cli {
 
 	#[clap(flatten)]
 	pub run: RunCmd,
+
+	#[command(flatten)]
+	pub eth: crate::eth::EthConfiguration,
 }
 
 #[derive(Debug, clap::Parser)]

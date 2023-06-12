@@ -11,6 +11,8 @@ use core::clone::Clone;
 use sp_core::sr25519;
 use parity_scale_codec::Encode;
 use sc_telemetry::{Telemetry, TelemetryWorker};
+use fc_storage::overrides_handle;
+use crate::eth::{EthConfiguration, db_config_dir, FrontierBackend, FrontierPartialComponents, new_frontier_partial};
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -30,12 +32,12 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 
 //TODO We'll need the mining worker. Can probably copy from recipes
 
-type FullClient = sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
-type FullBackend = sc_service::TFullBackend<Block>;
-type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
+pub type FullClient = sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
+pub type FullBackend = sc_service::TFullBackend<Block>;
+pub type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
-type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
-type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
+pub type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
+pub type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
 
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain
@@ -174,7 +176,7 @@ pub fn build_pow_import_queue(
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, instant_seal: bool) -> Result<TaskManager, ServiceError> {
+pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, instant_seal: bool, eth_config: &EthConfiguration) -> Result<TaskManager, ServiceError> {
 
 	let build_import_queue = if instant_seal {
 		build_manual_seal_import_queue
@@ -192,6 +194,12 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 		transaction_pool,
 		other: (pow_block_import, mut telemetry),
 	} = new_partial(&config, build_import_queue)?;
+
+	let FrontierPartialComponents {
+        filter_pool,
+        fee_history_cache,
+        fee_history_cache_limit,
+    } = new_frontier_partial(&eth_config)?;
 
 	let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
@@ -222,9 +230,15 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 		telemetry: telemetry.as_mut(),
 	})?;
 
+	let frontier_backend = Arc::new(FrontierBackend::open(
+        client.clone(),
+        &config.database,
+        &db_config_dir(config),
+    )?);
+
     // for ethereum-compatibility rpc.
     config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider));
-	let overrides = crate::rpc::overrides_handle(client.clone());
+	let overrides = overrides_handle(client.clone());
     let eth_rpc_params = crate::rpc::EthDeps {
         client: client.clone(),
         pool: transaction_pool.clone(),
@@ -242,7 +256,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
             eth_config.eth_statuses_cache,
             prometheus_registry.clone(),
         )),
-        filter_pool: filter_pool.clone(),
+        filter_pool: None,
         max_past_logs: eth_config.max_past_logs,
         fee_history_cache: fee_history_cache.clone(),
         fee_history_cache_limit,
@@ -253,14 +267,13 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
     let rpc_builder = {
         let client = client.clone();
         let pool = transaction_pool.clone();
-        let pubsub_notification_sinks = pubsub_notification_sinks.clone();
 
         Box::new(move |deny_unsafe, subscription_task_executor| {
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
                 deny_unsafe,
-                command_sink: if sealing.is_some() {
+                command_sink: if instant_seal {
                     Some(command_sink.clone())
                 } else {
                     None
@@ -271,7 +284,6 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
             crate::rpc::create_full(
                 deps,
                 subscription_task_executor,
-                pubsub_notification_sinks.clone(),
             )
             .map_err(Into::into)
         })
