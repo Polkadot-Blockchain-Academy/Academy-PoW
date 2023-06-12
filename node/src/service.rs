@@ -1,5 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
+use futures::{channel::mpsc, prelude::*};
 use std::sync::Arc;
 use sc_consensus::LongestChain;
 use sp_api::TransactionFor;
@@ -263,6 +264,9 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
         execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
         forced_parent_hashes: None,
     };
+
+	// Channel for the rpc handler to communicate with the authorship task.
+	let (command_sink, commands_stream) = mpsc::channel(1000);
 
     let rpc_builder = {
         let client = client.clone();
