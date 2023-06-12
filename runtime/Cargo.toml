@@ -39,6 +39,7 @@ pallet-evm = { default-features = false, git = "https://github.com/paritytech/fr
 pallet-evm-chain-id = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-ethereum = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+fp-rpc = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 
 [dev-dependencies]
 hex-literal = "0.4.1"
@@ -77,4 +78,5 @@ std = [
     'pallet-ethereum/std',
     'pallet-base-fee/std',
     'fp-evm/std',
+    'fp-rpc/std',
 ]
