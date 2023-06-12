@@ -216,21 +216,6 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
 	let role = config.role.clone();
 	let prometheus_registry = config.prometheus_registry().cloned();
 
-	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-		network: network.clone(),
-		client: client.clone(),
-		keystore: keystore_container.keystore(),
-		task_manager: &mut task_manager,
-		transaction_pool: transaction_pool.clone(),
-		rpc_builder: Box::new(|_, _| Ok(jsonrpsee::RpcModule::new(()))),
-		backend,
-		system_rpc_tx,
-		tx_handler_controller,
-		sync_service: sync_service.clone(),
-		config,
-		telemetry: telemetry.as_mut(),
-	})?;
-
 	let frontier_backend = Arc::new(FrontierBackend::open(
         client.clone(),
         &config.database,
@@ -238,7 +223,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
     )?);
 
     // for ethereum-compatibility rpc.
-    config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider));
+    // config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider)); // TODO: wants mut...
 	let overrides = overrides_handle(client.clone());
     let eth_rpc_params = crate::rpc::EthDeps {
         client: client.clone(),
@@ -250,7 +235,7 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
         network: network.clone(),
         sync: sync_service.clone(),
         frontier_backend: frontier_backend.clone(),
-		overrides,
+		overrides: overrides.clone(),
         block_data_cache: Arc::new(fc_rpc::EthBlockDataCacheTask::new(
             task_manager.spawn_handle(),
 			overrides,
@@ -265,6 +250,21 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
         execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
         forced_parent_hashes: None,
     };
+
+	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+		network: network.clone(),
+		client: client.clone(),
+		keystore: keystore_container.keystore(),
+		task_manager: &mut task_manager,
+		transaction_pool: transaction_pool.clone(),
+		rpc_builder: Box::new(|_, _| Ok(jsonrpsee::RpcModule::new(()))),
+		backend: backend.clone(),
+		system_rpc_tx: system_rpc_tx.clone(),
+		tx_handler_controller,
+		sync_service: sync_service.clone(),
+		config,
+		telemetry: telemetry.as_mut(),
+	})?;
 
 	// Channel for the rpc handler to communicate with the authorship task.
 	let (command_sink, commands_stream) = mpsc::channel(1000);
@@ -290,25 +290,9 @@ pub fn new_full(config: Configuration, sr25519_public_key: sr25519::Public, inst
                 deps,
                 subscription_task_executor,
             )
-            .map_err(Into::into)
+            .map_err(Into::<ServiceError>::into)
         })
     };
-
-    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        config,
-        client: client.clone(),
-        backend: backend.clone(),
-        task_manager: &mut task_manager,
-        keystore: keystore_container.keystore(),
-        transaction_pool: transaction_pool.clone(),
-        rpc_builder,
-        network: network.clone(),
-        system_rpc_tx,
-        tx_handler_controller,
-        sync_service: sync_service.clone(),
-        telemetry: telemetry.as_mut(),
-    })?;
-
 
 	if role.is_authority() {
 		let proposer = sc_basic_authorship::ProposerFactory::new(
