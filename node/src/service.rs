@@ -205,6 +205,8 @@ pub fn new_full(
     let role = config.role.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
 
+    //TODO : build rpc
+
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         network,
         client: client.clone(),
