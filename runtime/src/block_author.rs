@@ -49,7 +49,7 @@ pub mod pallet {
 
             // Store the author in case other pallets want to fetch it and to let
             // offchain tools inspect it
-            Author::<T>::put(&author);
+            Author::<T>::put(author);
 
             // Call the hook
             T::on_author_set(author.into());

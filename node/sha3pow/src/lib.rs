@@ -94,9 +94,9 @@ where
         // Sketch out the possibility for difficulty-based hard forks
         let difficulty = if parent_number < 2400u32.into() {
             U256::from(100_000_000)
-        } else
-        /*parent_number < TODO*/
-        {
+        } else {
+            /*parent_number < TODO*/
+
             U256::from(1_000_000_000)
             // }
             // else {

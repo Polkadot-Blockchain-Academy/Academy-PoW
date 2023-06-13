@@ -40,6 +40,7 @@ type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullCli
 
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain
+#[allow(clippy::type_complexity)]
 pub fn new_partial<BIQ>(
     config: &Configuration,
     build_import_queue: BIQ,
@@ -73,11 +74,11 @@ where
         })
         .transpose()?;
 
-    let executor = sc_service::new_native_or_wasm_executor(&config);
+    let executor = sc_service::new_native_or_wasm_executor(config);
 
     let (client, backend, keystore_container, task_manager) =
         sc_service::new_full_parts::<Block, RuntimeApi, _>(
-            &config,
+            config,
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
             executor,
         )?;
@@ -159,7 +160,7 @@ pub fn build_pow_import_queue(
     let import_queue = sc_consensus_pow::import_queue(
         Box::new(pow_block_import.clone()),
         None,
-        Sha3Algorithm::new(client.clone()),
+        Sha3Algorithm::new(client),
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
     )?;
@@ -205,7 +206,7 @@ pub fn new_full(
     let prometheus_registry = config.prometheus_registry().cloned();
 
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        network: network.clone(),
+        network,
         client: client.clone(),
         keystore: keystore_container.keystore(),
         task_manager: &mut task_manager,
@@ -254,10 +255,10 @@ pub fn new_full(
                 Box::new(pow_block_import),
                 client.clone(),
                 select_chain,
-                Sha3Algorithm::new(client.clone()),
+                Sha3Algorithm::new(client),
                 proposer,
                 sync_service.clone(),
-                sync_service.clone(),
+                sync_service,
                 None,
                 // This code is copied from above. Would be better to not repeat it.
                 move |_, ()| async move {
