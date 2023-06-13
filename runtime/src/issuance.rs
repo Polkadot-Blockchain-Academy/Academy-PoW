@@ -1,18 +1,20 @@
 /// A trait for types that can provide the amount of issuance to award to the block
 /// author for the given block number.
 pub trait Issuance<BlockNumber, Balance> {
-	fn issuance(block: BlockNumber) -> Balance;
+    fn issuance(block: BlockNumber) -> Balance;
 }
 
 // Minimal implementations for when you don't actually want any issuance
 impl Issuance<u32, u128> for () {
-	fn issuance(_block: u32) -> u128 {
-		0
-	}
+    fn issuance(_block: u32) -> u128 {
+        0
+    }
 }
 
 impl Issuance<u64, u128> for () {
-	fn issuance(_block: u64) -> u128 { 0 }
+    fn issuance(_block: u64) -> u128 {
+        0
+    }
 }
 
 /// A type that provides block issuance according to bitcoin's rules
@@ -27,16 +29,15 @@ const HALVING_INTERVAL: u32 = 210_000;
 const INITIAL_ISSUANCE: u32 = 50;
 
 impl Issuance<u32, u128> for BitcoinHalving {
+    fn issuance(block: u32) -> u128 {
+        let halvings = block / HALVING_INTERVAL;
+        // Force block reward to zero when right shift is undefined.
+        if halvings >= 64 {
+            return 0;
+        }
 
-	fn issuance(block: u32) -> u128 {
-		let halvings = block / HALVING_INTERVAL;
-		// Force block reward to zero when right shift is undefined.
-		if halvings >= 64 {
-			return 0;
-		}
-
-		// Subsidy is cut in half every 210,000 blocks which will occur
-		// approximately every 4 years.
-		(INITIAL_ISSUANCE >> halvings).into()
-	}
+        // Subsidy is cut in half every 210,000 blocks which will occur
+        // approximately every 4 years.
+        (INITIAL_ISSUANCE >> halvings).into()
+    }
 }
