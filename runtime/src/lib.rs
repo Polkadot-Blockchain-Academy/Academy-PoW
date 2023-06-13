@@ -338,12 +338,9 @@ impl pallet_contracts::Config for Runtime {
     type WeightPrice = pallet_transaction_payment::Pallet<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
     type ChainExtension = ();
-    // type DeletionQueueDepth = DeletionQueueDepth;
-    // type DeletionWeightLimit = DeletionWeightLimit;
     type Schedule = Schedule;
     type CallStack = [pallet_contracts::Frame<Self>; 16];
     type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
-    // type MaxCodeLen = ConstU32<{ 128 * 1024 }>;
     type MaxCodeLen = MaxCodeLen;
     type MaxStorageKeyLen = ConstU32<128>;
     type UnsafeUnstableInterface = ConstBool<false>;
@@ -359,11 +356,9 @@ construct_runtime!(
     {
         System: frame_system,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
-        // TODO remove timestamp silly
         Timestamp: pallet_timestamp,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
-        // Sudo: pallet_sudo,
         DifficultyAdjustment: difficulty,
         BlockAuthor: block_author,
         Faucet: faucet,
