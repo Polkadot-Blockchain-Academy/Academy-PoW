@@ -24,19 +24,12 @@ pub use frame_support::{
 };
 use frame_support::{
     sp_runtime::Perquintill,
-    traits::{
-        ConstBool, ConstU128, ConstU32, ConstU8, EqualPrivilegeOnly, SortedMembers,
-        U128CurrencyToVote, WithdrawReasons,
-    },
-    weights::constants::WEIGHT_REF_TIME_PER_MILLIS,
-    PalletId,
+    traits::{ConstBool, ConstU128, ConstU32, ConstU8},
 };
 use issuance::Issuance;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
-use pallet_transaction_payment::{
-    ConstFeeMultiplier, CurrencyAdapter, Multiplier, TargetedFeeAdjustment,
-};
+use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
 use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, U256};
 // A few exports that help ease life for downstream crates.

@@ -3,7 +3,6 @@
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use core::clone::Clone;
 use parity_scale_codec::Encode;
-use sc_client_api::BlockBackend;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
