@@ -21,8 +21,10 @@ jobs:
 
     steps:
 
-      - name: Install protoc
-        run: apt-get install protobuf-compiler
+      - name: Install protoc compiler
+        shell: bash
+        run: |
+          sudo apt-get install -y protobuf-compiler
 
       - name: Checkout Source code
         uses: actions/checkout@v3
