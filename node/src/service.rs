@@ -1,10 +1,9 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use core::clone::Clone;
-use std::sync::Arc;
-
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
+use core::clone::Clone;
 use parity_scale_codec::Encode;
+use sc_client_api::BlockBackend;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
@@ -12,6 +11,7 @@ use sc_telemetry::{Telemetry, TelemetryWorker};
 use sha3pow::Sha3Algorithm;
 use sp_api::TransactionFor;
 use sp_core::sr25519;
+use std::sync::Arc;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -205,7 +205,19 @@ pub fn new_full(
     let role = config.role.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
 
-    //TODO : build rpc
+    let rpc_extensions_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+
+        Box::new(move |deny_unsafe, _| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+                deny_unsafe,
+            };
+            crate::rpc::create_full(deps).map_err(Into::into)
+        })
+    };
 
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         network,
@@ -213,7 +225,7 @@ pub fn new_full(
         keystore: keystore_container.keystore(),
         task_manager: &mut task_manager,
         transaction_pool: transaction_pool.clone(),
-        rpc_builder: Box::new(|_, _| Ok(jsonrpsee::RpcModule::new(()))),
+        rpc_builder: rpc_extensions_builder,
         backend,
         system_rpc_tx,
         tx_handler_controller,
