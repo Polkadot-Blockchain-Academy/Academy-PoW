@@ -2,6 +2,7 @@ use academy_pow_runtime::{
     AccountId, BalancesConfig, DifficultyAdjustmentConfig, GenesisConfig, Signature,
     /*SudoConfig,*/ SystemConfig, WASM_BINARY,
 };
+
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 

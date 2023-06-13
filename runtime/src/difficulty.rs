@@ -147,8 +147,8 @@ pub mod pallet {
             let mut diff_sum = U256::zero();
             //TODO Could we just initialize every array cell to the initial difficulty to not need the
             // separate storage item?
-            for i in 0..(DIFFICULTY_ADJUST_WINDOW as usize) {
-                let diff = match data[i].map(|d| d.difficulty) {
+            for item in data.iter().take(DIFFICULTY_ADJUST_WINDOW as usize) {
+                let diff = match item.map(|d| d.difficulty) {
                     Some(diff) => diff,
                     None => InitialDifficulty::<T>::get(),
                 };
