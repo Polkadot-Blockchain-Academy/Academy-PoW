@@ -222,6 +222,11 @@ impl pallet_balances::Config for Runtime {
     type MaxHolds = ();
 }
 
+// impl pallet_sudo::Config for Runtime {
+// 	type Event = Event;
+// 	type Call = Call;
+// }
+
 parameter_types! {
     pub const TargetBlockTime: u128 = 3_000;
     pub const DampFactor: u128 = 3;

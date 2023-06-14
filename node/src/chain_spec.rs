@@ -108,6 +108,9 @@ fn testnet_genesis(
                 .map(|k| (k, 1 << 60))
                 .collect(),
         },
+        // sudo: SudoConfig {
+        //     key: Some(root_key),
+        // },
         difficulty_adjustment: DifficultyAdjustmentConfig {
             initial_difficulty: 4_000_000.into(),
         },
