@@ -249,7 +249,7 @@ impl faucet::Config for Runtime {
     type Currency = Balances;
 
     // Each drip of the faucet gives 5 tokens (with 12 decimals)
-    type DripAmount = ConstU128<5_000_000_000_000>;
+    type DripAmount = ConstU128<{ 5 * TOKEN }>;
 }
 
 impl block_author::Config for Runtime {
@@ -258,11 +258,7 @@ impl block_author::Config for Runtime {
         let block = System::block_number();
         let issuance =
             <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
-        // 12 decimals... right?
-        let issuance = issuance * 1_000_000_000_000;
-        // sp_std::if_std!{
-        // 	println!("Depositing {issuance} into {author_account}");
-        // }
+        let issuance = issuance * TOKEN;
         let _ = Balances::deposit_creating(&author_account, issuance);
     }
 }
@@ -351,6 +347,7 @@ construct_runtime!(
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
         Balances: pallet_balances,
+        // Sudo: pallet_sudo
         TransactionPayment: pallet_transaction_payment,
         DifficultyAdjustment: difficulty,
         BlockAuthor: block_author,
