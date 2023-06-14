@@ -9,7 +9,7 @@ on:
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -44,13 +44,10 @@ jobs:
         uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
 
       - name: Run fmt
-        shell: bash
         run: make fmt
 
       - name: Run clippy
-        shell: bash
         run: make clippy
 
       - name: Run tests
-        shell: bash
         run: make test
