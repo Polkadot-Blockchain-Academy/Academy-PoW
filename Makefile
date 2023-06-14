@@ -1,8 +1,11 @@
 clippy:
-	WASM_BUILD_WORKSPACE_HINT=${PWD} CARGO_TARGET_DIR=/tmp/target/ cargo clippy
+	WASM_BUILD_WORKSPACE_HINT=${PWD} CARGO_TARGET_DIR=/tmp/target/ cargo clippy --all-targets -- --no-deps -D warnings
 
 fmt:
-	cargo fmt
+	cargo fmt --all
+
+test:
+	cargo test --verbose
 
 watch:
 	cargo watch -s 'WASM_BUILD_WORKSPACE_HINT=${PWD} CARGO_TARGET_DIR=/tmp/target/ cargo check' -c
