@@ -309,7 +309,6 @@ parameter_types! {
     // Maximum size of the lazy deletion queue of terminated contracts.
     pub const DeletionQueueDepth: u32 = 128;
     pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
-    pub const MaxCodeLen: u32 = 128 * 1024;
     // Fallback value to limit the storage deposit if it's not being set by the caller
     pub const DefaultDepositLimit: Balance = CONTRACT_DEPOSIT_PER_BYTE * 128 * 1024;
 }
@@ -330,7 +329,7 @@ impl pallet_contracts::Config for Runtime {
     type Schedule = Schedule;
     type CallStack = [pallet_contracts::Frame<Self>; 16];
     type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
-    type MaxCodeLen = MaxCodeLen;
+    type MaxCodeLen = ConstU32<{ 25 * 1024 }>;
     type MaxStorageKeyLen = ConstU32<128>;
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
