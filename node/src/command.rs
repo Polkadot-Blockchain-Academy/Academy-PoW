@@ -150,7 +150,7 @@ pub fn run() -> sc_cli::Result<()> {
             let sr25519_public_key = cli
                 .run
                 .sr25519_public_key
-                .unwrap_or(sp_core::sr25519::Public::from_raw([0; 32]));
+                .unwrap_or_else(|| sp_core::sr25519::Public::from_raw([0; 32]));
             let instant_seal = cli.run.base.is_dev()?;
             let runner = cli.create_runner(&cli.run.base)?;
             runner.run_node_until_exit(|config| async move {
