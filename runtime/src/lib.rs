@@ -32,7 +32,7 @@ use pallet_evm::{
     Account as EVMAccount, AddressMapping, EnsureAddressNever, FeeCalculator,
     IdentityAddressMapping, Runner,
 };
-use pallet_managed_address_mapping::EVMAddressMapping;
+use pallet_managed_address_mapping::{EVMAddressMapping, EnsureAddressMapped};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -318,8 +318,8 @@ impl pallet_evm::Config for Runtime {
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-    type CallOrigin = EnsureAddressNever<Self::AccountId>;
-    type WithdrawOrigin = EnsureAddressNever<Self::AccountId>;
+    type CallOrigin = EnsureAddressMapped<Runtime>;
+    type WithdrawOrigin = EnsureAddressMapped<Runtime>;
     type AddressMapping = EVMAddressMapping<Runtime>;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
