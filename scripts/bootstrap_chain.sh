@@ -7,23 +7,23 @@ set -eo pipefail
 export NODE_BINARY=/tmp/academy-pow/target/release/academy-pow
 
 # Sr25519 key for block mining
-
 OUTPUT=$($NODE_BINARY key generate --scheme Sr25519 --output-type json)
 PUBLIC_KEY=$(echo $OUTPUT | jq -r .publicKey)
 PUBLIC_KEY=$(echo $PUBLIC_KEY | sed s/"0x"//)
+# ACCOUNT_ID=$(echo $OUTPUT | jq -r .ss58PublicKey)
 
 echo "Node public key $PUBLIC_KEY"
+# echo "Node AccountId $ACCOUNT_ID"
 
-# generate P2P key
+# P2P key for networking
 OUTPUT=$($NODE_BINARY key generate --scheme Ed25519 --output-type json)
 P2P_KEY_SEED=$(echo $OUTPUT | jq -r .secretSeed)
 P2P_KEY_SEED=$(echo $P2P_KEY_SEED | sed s/"0x"//)
 
 echo "P2P key seed: $P2P_KEY_SEED"
-# 12D3KooWC2Q5RggT5nFCdJRzoZiknQ599NKYAsDW6bY5WpRqw9R5
 
-# TODO alter command to allow passing osme more custom args
 # generate chainspec
+# TODO alter the default command to allow passing some custom args like chain-id
 $NODE_BINARY build-spec --disable-default-bootnode --chain 'local' > /tmp/academy-pow/chainspec.academy.json
 
 head /tmp/academy-pow/chainspec.academy.json
