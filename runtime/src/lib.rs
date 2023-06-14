@@ -8,23 +8,28 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::traits::Currency;
 pub use frame_support::{
-    construct_runtime,
-    dispatch::Callable,
-    parameter_types,
-    traits::{ConstU128, ConstU32, IsSubType},
+    construct_runtime, log, parameter_types,
+    traits::{
+        Currency, EstimateNextNewSession, Imbalance, KeyOwnerProofSystem, LockIdentifier, Nothing,
+        OnUnbalanced, Randomness, ValidatorSet,
+    },
     weights::{
         constants::{
             BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
         },
-        Weight,
+        IdentityFee, Weight,
     },
     StorageValue,
+};
+use frame_support::{
+    sp_runtime::Perquintill,
+    traits::{ConstBool, ConstU128, ConstU32, ConstU8},
 };
 use issuance::Issuance;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
+use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
 use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, U256};
 // A few exports that help ease life for downstream crates.
@@ -32,11 +37,13 @@ use sp_core::{OpaqueMetadata, U256};
 pub use sp_runtime::BuildStorage;
 use sp_runtime::{
     create_runtime_str, generic,
-    traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+    traits::{
+        AccountIdLookup, BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify,
+    },
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, MultiSignature,
 };
-pub use sp_runtime::{Perbill, Permill};
+pub use sp_runtime::{FixedPointNumber, Perbill, Permill};
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -115,6 +122,9 @@ pub fn native_version() -> NativeVersion {
 }
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+// native chain currency
+pub const TOKEN_DECIMALS: u32 = 12;
+pub const TOKEN: u128 = 10u128.pow(TOKEN_DECIMALS);
 
 parameter_types! {
     pub const BlockHashCount: BlockNumber = 2400;
@@ -238,8 +248,8 @@ impl faucet::Config for Runtime {
     // type Event = Event;
     type Currency = Balances;
 
-    // Each drip of the faucet give 5 tokens (with 12 decimals)
-    type DripAmount = ConstU128<5_000_000_000_000>;
+    // Each drip of the faucet gives 5 tokens (with 12 decimals)
+    type DripAmount = ConstU128<{ 5 * TOKEN }>;
 }
 
 impl block_author::Config for Runtime {
@@ -248,13 +258,82 @@ impl block_author::Config for Runtime {
         let block = System::block_number();
         let issuance =
             <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
-        // 12 decimals... right?
-        let issuance = issuance * 1_000_000_000_000;
-        // sp_std::if_std!{
-        // 	println!("Depositing {issuance} into {author_account}");
-        // }
+        let issuance = issuance * TOKEN;
         let _ = Balances::deposit_creating(&author_account, issuance);
     }
+}
+
+parameter_types! {
+    // This value increases the priority of `Operational` transactions by adding
+    // a "virtual tip" that's equal to the `OperationalFeeMultiplier * final_fee`.
+    // follows polkadot : https://github.com/paritytech/polkadot/blob/9ce5f7ef5abb1a4291454e8c9911b304d80679f9/runtime/polkadot/src/lib.rs#L369
+    pub const OperationalFeeMultiplier: u8 = 5;
+    // We expect that on average 25% of the normal capacity will be occupied with normal txs.
+    pub const TargetSaturationLevel: Perquintill = Perquintill::from_percent(25);
+    // During 20 blocks the fee may not change more than by 100%. This, together with the
+    // `TargetSaturationLevel` value, results in variability ~0.067. For the corresponding
+    // formulas please refer to Substrate code at `frame/transaction-payment/src/lib.rs`.
+    pub FeeVariability: Multiplier = Multiplier::saturating_from_rational(67, 1000);
+    // Fee should never be lower than the computational cost.
+    pub MinimumMultiplier: Multiplier = Multiplier::one();
+    pub MaximumMultiplier: Multiplier = Bounded::max_value();
+}
+
+impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
+
+parameter_types! {
+    pub FeeMultiplier: Multiplier = Multiplier::one();
+}
+
+impl pallet_transaction_payment::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+    type OperationalFeeMultiplier = ConstU8<5>;
+    type WeightToFee = IdentityFee<Balance>;
+    type LengthToFee = IdentityFee<Balance>;
+    type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
+}
+
+// Prints debug output of the `contracts` pallet to stdout if the node is started with `-lruntime::contracts=debug`.
+const CONTRACTS_DEBUG_OUTPUT: bool = true;
+// The storage per one byte of contract storage: 4*10^{-5} AZERO per byte.
+pub const CONTRACT_DEPOSIT_PER_BYTE: Balance = 4 * (TOKEN / 100_000);
+
+parameter_types! {
+    // Refundable deposit per storage item
+    pub const DepositPerItem: Balance = 32 * CONTRACT_DEPOSIT_PER_BYTE;
+    // Refundable deposit per byte of storage
+    pub const DepositPerByte: Balance = CONTRACT_DEPOSIT_PER_BYTE;
+    // How much weight of each block can be spent on the lazy deletion queue of terminated contracts
+    pub DeletionWeightLimit: Weight = Perbill::from_percent(10) * BlockWeights::get().max_block; // 40ms
+    // Maximum size of the lazy deletion queue of terminated contracts.
+    pub const DeletionQueueDepth: u32 = 128;
+    pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
+    // Fallback value to limit the storage deposit if it's not being set by the caller
+    pub const DefaultDepositLimit: Balance = CONTRACT_DEPOSIT_PER_BYTE * 128 * 1024;
+}
+
+impl pallet_contracts::Config for Runtime {
+    type Time = Timestamp;
+    type Randomness = RandomnessCollectiveFlip;
+    type Currency = Balances;
+    type RuntimeEvent = RuntimeEvent;
+    type RuntimeCall = RuntimeCall;
+    // The safest default is to allow no calls at all. This is unsafe experimental feature with no support in ink!
+    type CallFilter = Nothing;
+    type DepositPerItem = DepositPerItem;
+    type DepositPerByte = DepositPerByte;
+    type WeightPrice = pallet_transaction_payment::Pallet<Self>;
+    type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+    type ChainExtension = ();
+    type Schedule = Schedule;
+    type CallStack = [pallet_contracts::Frame<Self>; 16];
+    type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
+    type MaxCodeLen = ConstU32<{ 25 * 1024 }>;
+    type MaxStorageKeyLen = ConstU32<128>;
+    type UnsafeUnstableInterface = ConstBool<false>;
+    type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
+    type DefaultDepositLimit = DefaultDepositLimit;
 }
 
 construct_runtime!(
@@ -264,13 +343,15 @@ construct_runtime!(
         UncheckedExtrinsic = UncheckedExtrinsic
     {
         System: frame_system,
-        // TODO remove timestamp silly
+        RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
         Balances: pallet_balances,
-        // Sudo: pallet_sudo,
+        // Sudo: pallet_sudo
+        TransactionPayment: pallet_transaction_payment,
         DifficultyAdjustment: difficulty,
         BlockAuthor: block_author,
         Faucet: faucet,
+        Contracts: pallet_contracts,
     }
 );
 
@@ -386,4 +467,120 @@ impl_runtime_apis! {
             DifficultyAdjustment::difficulty()
         }
     }
+
+    impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
+        fn account_nonce(account: AccountId) -> Index {
+            System::account_nonce(account)
+        }
+    }
+
+impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance> for Runtime {
+        fn query_info(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+            TransactionPayment::query_info(uxt, len)
+        }
+        fn query_fee_details(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
+            TransactionPayment::query_fee_details(uxt, len)
+        }
+        fn query_weight_to_fee(weight: Weight) -> Balance {
+            TransactionPayment::weight_to_fee(weight)
+        }
+        fn query_length_to_fee(length: u32) -> Balance {
+            TransactionPayment::length_to_fee(length)
+        }
+    }
+
+impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block, Balance, RuntimeCall>
+        for Runtime
+    {
+        fn query_call_info(
+            call: RuntimeCall,
+            len: u32,
+        ) -> pallet_transaction_payment::RuntimeDispatchInfo<Balance> {
+            TransactionPayment::query_call_info(call, len)
+        }
+        fn query_call_fee_details(
+            call: RuntimeCall,
+            len: u32,
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
+            TransactionPayment::query_call_fee_details(call, len)
+        }
+        fn query_weight_to_fee(weight: Weight) -> Balance {
+            TransactionPayment::weight_to_fee(weight)
+        }
+        fn query_length_to_fee(length: u32) -> Balance {
+            TransactionPayment::length_to_fee(length)
+        }
+    }
+
+    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>
+        for Runtime
+    {
+        fn call(
+            origin: AccountId,
+            dest: AccountId,
+            value: Balance,
+            gas_limit: Option<Weight>,
+            storage_deposit_limit: Option<Balance>,
+            input_data: Vec<u8>,
+        ) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+            let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+            Contracts::bare_call(
+                origin,
+                dest,
+                value,
+                gas_limit,
+                storage_deposit_limit,
+                input_data,
+                CONTRACTS_DEBUG_OUTPUT,
+                pallet_contracts::Determinism::Enforced,
+            )
+        }
+
+        fn instantiate(
+            origin: AccountId,
+            value: Balance,
+            gas_limit: Option<Weight>,
+            storage_deposit_limit: Option<Balance>,
+            code: pallet_contracts_primitives::Code<Hash>,
+            data: Vec<u8>,
+            salt: Vec<u8>,
+        ) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance>
+        {
+            let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+            Contracts::bare_instantiate(
+                origin,
+                value,
+                gas_limit,
+                storage_deposit_limit,
+                code,
+                data,
+                salt,
+                CONTRACTS_DEBUG_OUTPUT
+            )
+        }
+
+        fn upload_code(
+            origin: AccountId,
+            code: Vec<u8>,
+            storage_deposit_limit: Option<Balance>,
+            determinism: pallet_contracts::Determinism,
+        ) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+        {
+            Contracts::bare_upload_code(origin, code, storage_deposit_limit, determinism)
+        }
+
+        fn get_storage(
+            address: AccountId,
+            key: Vec<u8>,
+        ) -> pallet_contracts_primitives::GetStorageResult {
+            Contracts::get_storage(address, key)
+        }
+    }
+
 }
