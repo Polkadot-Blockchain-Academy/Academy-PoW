@@ -29,6 +29,10 @@ fn parse_sr25519_public_key(i: &str) -> Result<sp_core::sr25519::Public, String>
 
 #[derive(Debug, clap::Subcommand)]
 pub enum Subcommand {
+    /// Key management cli utilities
+    #[command(subcommand)]
+    Key(sc_cli::KeySubcommand),
+
     /// Build a chain specification.
     BuildSpec(sc_cli::BuildSpecCmd),
 
