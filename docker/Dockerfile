@@ -9,7 +9,6 @@ EXPOSE 30333 30343 9933 9944
 
 WORKDIR node
 
-# COPY target/release/academy-pow-node /usr/local/bin
 COPY academy-pow/target/release/academy-pow /usr/local/bin/academy-pow-node
 RUN chmod +x /usr/local/bin/academy-pow-node
 
