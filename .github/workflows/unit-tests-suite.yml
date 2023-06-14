@@ -14,11 +14,11 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
+# TODO: refactor common steps into a workflow
 jobs:
-  unit-test-suite:
 
+  basic-checks:
     runs-on: ubuntu-latest
-
     steps:
 
       - name: Install protoc compiler
@@ -48,6 +48,32 @@ jobs:
 
       - name: Run clippy
         run: make clippy
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install protoc compiler
+        shell: bash
+        run: |
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Checkout Source code
+        uses: actions/checkout@v3
+
+      - name: Cache cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            /tmp/academy-pow/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
+
+      - name: Install Rust toolchain
+        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
 
       - name: Run tests
         run: make test
