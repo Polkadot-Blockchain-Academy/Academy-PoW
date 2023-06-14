@@ -123,5 +123,6 @@ fn testnet_genesis(
         evm_chain_id: EVMChainIdConfig { chain_id: 4242 },
         ethereum: Default::default(),
         base_fee: Default::default(),
+        managed_address_mapping: Default::default(),
     }
 }

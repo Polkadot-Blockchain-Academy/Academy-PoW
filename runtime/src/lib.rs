@@ -32,6 +32,7 @@ use pallet_evm::{
     Account as EVMAccount, AddressMapping, EnsureAddressNever, FeeCalculator,
     IdentityAddressMapping, Runner,
 };
+use pallet_managed_address_mapping::EVMAddressMapping;
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -303,18 +304,13 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_evm_chain_id::Config for Runtime {}
 
+impl pallet_managed_address_mapping::Config for Runtime {}
+
 const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 
 parameter_types! {
     pub BlockGasLimit: U256 = U256::from(BLOCK_GAS_LIMIT);
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
-}
-
-pub struct TmpAddressMapping;
-impl AddressMapping<AccountId32> for TmpAddressMapping {
-    fn into_account_id(address: H160) -> AccountId32 {
-        AccountId32::new([0; 32])
-    }
 }
 
 impl pallet_evm::Config for Runtime {
@@ -324,7 +320,7 @@ impl pallet_evm::Config for Runtime {
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
     type CallOrigin = EnsureAddressNever<Self::AccountId>;
     type WithdrawOrigin = EnsureAddressNever<Self::AccountId>;
-    type AddressMapping = TmpAddressMapping;
+    type AddressMapping = EVMAddressMapping<Runtime>;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
     type PrecompilesType = ();
@@ -368,6 +364,7 @@ construct_runtime!(
         EVMChainId: pallet_evm_chain_id,
         BaseFee: pallet_base_fee,
         Ethereum: pallet_ethereum,
+        ManagedAddressMapping: pallet_managed_address_mapping,
     }
 );
 

@@ -72,10 +72,13 @@ pub mod pallet {
 
     pub struct EVMAddressMapping<T>(PhantomData<T>);
     impl<T: Config> AddressMapping<T::AccountId> for EVMAddressMapping<T> 
-		where <T as frame_system::Config>::AccountId: std::default::Default
 	{
         fn into_account_id(address: H160) -> T::AccountId {
-            <Mapping<T>>::get(address).unwrap_or_default()
+			// TODO:
+			// AccountId32 doesn't implement Default (although in at least some versions of Substrate it did/does)
+			// The AddressMapping trait doesn't return an Option/Result
+			// ...so what else can we do here?
+            <Mapping<T>>::get(address).expect("fixme")
         }
     }
 }
