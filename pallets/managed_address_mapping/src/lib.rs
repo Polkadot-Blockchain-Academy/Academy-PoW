@@ -41,7 +41,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         H160,
-        H256, // TODO: make generic
+        T::AccountId,
         OptionQuery,
     >;
 
@@ -71,13 +71,11 @@ pub mod pallet {
     }
 
     pub struct EVMAddressMapping<T>(PhantomData<T>);
-    impl<T: Config> AddressMapping<AccountId32> for EVMAddressMapping<T> {
-        fn into_account_id(address: H160) -> AccountId32 {
-            if let Some(account_id) = <Mapping<T>>::get(address) {
-                AccountId32::new(*account_id.as_fixed_bytes())
-            } else {
-                AccountId32::new([0u8; 32])
-            }
+    impl<T: Config> AddressMapping<T::AccountId> for EVMAddressMapping<T> 
+		where <T as frame_system::Config>::AccountId: std::default::Default
+	{
+        fn into_account_id(address: H160) -> T::AccountId {
+            <Mapping<T>>::get(address).unwrap_or_default()
         }
     }
 }
