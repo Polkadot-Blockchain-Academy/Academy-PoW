@@ -44,8 +44,6 @@ pallet-evm-precompile-modexp = { default-features = false, git = "https://github
 pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 
-pallet-managed-address-mapping = { version = "1.0.0-dev", path = "../pallets/managed_address_mapping", default-features = false }
-
 [dev-dependencies]
 hex-literal = "0.4.1"
 

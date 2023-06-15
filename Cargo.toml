@@ -6,5 +6,4 @@ members = [
     'node',
     'runtime',
     'node/sha3pow',
-    'pallets/managed_address_mapping',
 ]

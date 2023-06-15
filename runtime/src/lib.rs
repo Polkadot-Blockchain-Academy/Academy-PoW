@@ -32,7 +32,7 @@ use pallet_evm::{
     Account as EVMAccount, EnsureAddressNever, FeeCalculator,
     IdentityAddressMapping, Runner,
 };
-use pallet_managed_address_mapping::{EVMAddressMapping, EnsureAddressMapped};
+use address_mapping::{EVMAddressMapping, EnsureAddressMapped};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -93,6 +93,9 @@ pub mod difficulty;
 
 /// The faucet to allow users to claim free tokens
 pub mod faucet;
+
+/// The AddressMapping scheme used for Runtime's AccountId32 and EVM's H160
+pub mod address_mapping;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -308,7 +311,7 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_evm_chain_id::Config for Runtime {}
 
-impl pallet_managed_address_mapping::Config for Runtime {}
+impl address_mapping::Config for Runtime {}
 
 const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 
@@ -385,7 +388,7 @@ construct_runtime!(
         EVMChainId: pallet_evm_chain_id,
         BaseFee: pallet_base_fee,
         Ethereum: pallet_ethereum,
-        ManagedAddressMapping: pallet_managed_address_mapping,
+        ManagedAddressMapping: address_mapping,
     }
 );
 
