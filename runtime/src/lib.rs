@@ -55,6 +55,10 @@ pub use pallet_timestamp::Call as TimestampCall;
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{AccountId32, ConsensusEngineId, Perbill, Permill};
+
+mod precompiles;
+use precompiles::FrontierPrecompiles;
+
 /// An index to a block.
 pub type BlockNumber = u32;
 
@@ -310,6 +314,7 @@ const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 
 parameter_types! {
     pub BlockGasLimit: U256 = U256::from(BLOCK_GAS_LIMIT);
+    pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
@@ -339,8 +344,8 @@ impl pallet_evm::Config for Runtime {
     type AddressMapping = EVMAddressMapping<Runtime>;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
-    type PrecompilesType = ();
-    type PrecompilesValue = ();
+    type PrecompilesType = FrontierPrecompiles<Self>;
+    type PrecompilesValue = PrecompilesValue;
     type ChainId = EVMChainId;
     type BlockGasLimit = BlockGasLimit;
     type Runner = pallet_evm::runner::stack::Runner<Self>;

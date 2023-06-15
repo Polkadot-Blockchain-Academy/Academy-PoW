@@ -40,6 +40,9 @@ pallet-evm-chain-id = { default-features = false, git = "https://github.com/pari
 pallet-ethereum = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-rpc = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 
 pallet-managed-address-mapping = { version = "1.0.0-dev", path = "../pallets/managed_address_mapping", default-features = false }
 
