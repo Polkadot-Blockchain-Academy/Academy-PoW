@@ -29,7 +29,7 @@ use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTransaction};
 use pallet_evm::{
-    Account as EVMAccount, AddressMapping, EnsureAddressNever, FeeCalculator,
+    Account as EVMAccount, EnsureAddressNever, FeeCalculator,
     IdentityAddressMapping, Runner,
 };
 use pallet_managed_address_mapping::{EVMAddressMapping, EnsureAddressMapped};
@@ -313,6 +313,25 @@ parameter_types! {
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
+pub struct FindAuthorMapped<F>(PhantomData<F>);
+impl<F> FindAuthor<H160> for FindAuthorMapped<F>
+where
+    F: FindAuthor<u32>,
+{
+    fn find_author<'a, I>(digests: I) -> Option<H160>
+    where
+        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+    {
+        use crate::block_author::BlockAuthor;
+
+        if let Some(author_id) = <() as BlockAuthor<AccountId>>::block_author() {
+            ManagedAddressMapping::get_mapped_h160(author_id)
+        } else {
+            None
+        }
+    }
+}
+
 impl pallet_evm::Config for Runtime {
     type FeeCalculator = BaseFee;
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
@@ -330,7 +349,7 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
     type OnCreate = ();
-    type FindAuthor = ();
+    type FindAuthor = FindAuthorMapped<()>;
     type Timestamp = Timestamp;
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
 }

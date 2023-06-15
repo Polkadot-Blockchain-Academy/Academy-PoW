@@ -82,6 +82,13 @@ pub mod pallet {
         }
     }
 
+    impl<T: Config> Pallet<T> {
+		/// Retrieve the H160 mapped to the given account_id if there is one, or None otherwise
+		pub fn get_mapped_h160(account_id: T::AccountId) -> Option<H160> {
+			<AccountToH160Mapping<T>>::get(account_id)
+		}
+	}
+
     #[pallet::genesis_config]
     #[derive(Default)]
     pub struct GenesisConfig {}
