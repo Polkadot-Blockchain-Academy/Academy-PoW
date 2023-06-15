@@ -313,11 +313,8 @@ parameter_types! {
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
-pub struct FindAuthorMapped<F>(PhantomData<F>);
-impl<F> FindAuthor<H160> for FindAuthorMapped<F>
-where
-    F: FindAuthor<u32>,
-{
+pub struct FindAuthorMapped;
+impl FindAuthor<H160> for FindAuthorMapped {
     fn find_author<'a, I>(digests: I) -> Option<H160>
     where
         I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
@@ -349,7 +346,7 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
     type OnCreate = ();
-    type FindAuthor = FindAuthorMapped<()>;
+    type FindAuthor = FindAuthorMapped;
     type Timestamp = Timestamp;
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
 }
