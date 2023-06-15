@@ -93,13 +93,30 @@ pub mod pallet {
 
     pub struct EVMAddressMapping<T>(PhantomData<T>);
     impl<T: Config> AddressMapping<T::AccountId> for EVMAddressMapping<T> 
+	where
+		T::AccountId: IsType<AccountId32>,
 	{
         fn into_account_id(address: H160) -> T::AccountId {
-			// TODO:
-			// AccountId32 doesn't implement Default (although in at least some versions of Substrate it did/does)
-			// The AddressMapping trait doesn't return an Option/Result
-			// ...so what else can we do here?
-            <H160ToAccountMapping<T>>::get(address).expect("fixme")
+            if let Some(account_id) = <H160ToAccountMapping<T>>::get(address) {
+				account_id
+			} else {
+				// we use Acala's approach as a fallback by embedding the H160 address within the 32 bytes of
+				// an AccountId32, prefixed with "evm:" to clearly identify these.
+				//
+				// A quick analysis on security:
+				// * it would be easy to find a private key for an AccountId32 which started with b"evm:", so 
+				//   this prefix shouldn't be trusted to come only from an EVM address for which there is no
+				//   corresponding AccountId32 private key
+				// * However, finding a collision such that there is both a private key for the AccountId32 and
+				//   the derived b"evm:" based address should be practically impossible
+				//
+				// In other words: if you see a b"evm:" address, it may have a private key (probably malicously),
+				// but it will not also have a mapped AccountId32 with a private key.
+				let mut data: [u8; 32] = [0u8; 32];
+				data[0..4].copy_from_slice(b"evm:");
+				data[4..24].copy_from_slice(&address[..]);
+				AccountId32::from(data).into()
+			}
         }
     }
 
