@@ -27,7 +27,7 @@ fn parse_sr25519_public_key(i: &str) -> Result<sp_core::sr25519::Public, String>
         .map_err(|e| e.to_string())?
         .as_slice()
         .try_into()
-        .or(Err("invalid length for SR25519 public key".to_string()))
+        .map_err(|_| "invalid length for SR25519 public key".to_string())
 }
 
 #[derive(Debug, clap::Subcommand)]

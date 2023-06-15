@@ -9,16 +9,16 @@ on:
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
 
+# TODO: refactor common steps into a workflow
 jobs:
-  unit-test-suite:
 
+  basic-checks:
     runs-on: ubuntu-latest
-
     steps:
 
       - name: Install protoc compiler
@@ -37,23 +37,43 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            /tmp/academy-pow/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
 
       - name: Install Rust toolchain
         uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
 
       - name: Run fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all
+        run: make fmt
 
       - name: Run clippy
-        uses: actions-rs/cargo@v1
+        run: make clippy
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install protoc compiler
+        shell: bash
+        run: |
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Checkout Source code
+        uses: actions/checkout@v3
+
+      - name: Cache cargo
+        uses: actions/cache@v3
         with:
-          command: clippy
-          args: --all-targets -- --no-deps -D warnings
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            /tmp/academy-pow/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
+
+      - name: Install Rust toolchain
+        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
 
       - name: Run tests
-        run: cargo test --verbose
+        run: make test

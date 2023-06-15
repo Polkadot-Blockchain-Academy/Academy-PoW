@@ -1,13 +1,10 @@
 use academy_pow_runtime::{
-    AccountId, BalancesConfig, DifficultyAdjustmentConfig, EVMChainIdConfig, GenesisConfig,
-    Signature, /*SudoConfig,*/ SystemConfig, WASM_BINARY,
+    AccountId, BalancesConfig, DifficultyAdjustmentConfig, EVMChainIdConfig, GenesisConfig, Signature,
+    SystemConfig, WASM_BINARY,
 };
 use sc_service;
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-
-// Note this is the URL for the telemetry server
-//const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -113,7 +110,7 @@ fn testnet_genesis(
                 .collect(),
         },
         // sudo: SudoConfig {
-        // 	key: Some(root_key),
+        //     key: Some(root_key),
         // },
         difficulty_adjustment: DifficultyAdjustmentConfig {
             initial_difficulty: 4_000_000.into(),
@@ -124,5 +121,6 @@ fn testnet_genesis(
         ethereum: Default::default(),
         base_fee: Default::default(),
         managed_address_mapping: Default::default(),
+        transaction_payment: Default::default(),
     }
 }

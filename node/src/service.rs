@@ -249,7 +249,23 @@ pub fn new_full(
         fee_history_cache_limit,
         execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
         forced_parent_hashes: None,
+	};
+
+    let rpc_extensions_builder = {
+        let client = client.clone();
+        let pool = transaction_pool.clone();
+
+        Box::new(move |deny_unsafe, _| {
+            let deps = crate::rpc::FullDeps {
+                client: client.clone(),
+                pool: pool.clone(),
+                deny_unsafe,
+            };
+            crate::rpc::create_full(deps).map_err(Into::into)
+        })
     };
+
+	// TODO: now missing jsonrpsee
 
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         network: network.clone(),
@@ -257,9 +273,9 @@ pub fn new_full(
         keystore: keystore_container.keystore(),
         task_manager: &mut task_manager,
         transaction_pool: transaction_pool.clone(),
-        rpc_builder: Box::new(|_, _| Ok(jsonrpsee::RpcModule::new(()))),
-        backend: backend.clone(),
-        system_rpc_tx: system_rpc_tx.clone(),
+        rpc_builder: rpc_extensions_builder,
+        backend,
+        system_rpc_tx,
         tx_handler_controller,
         sync_service: sync_service.clone(),
         config,
