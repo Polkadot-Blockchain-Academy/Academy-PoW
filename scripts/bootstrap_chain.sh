@@ -30,28 +30,27 @@ $NODE_BINARY build-spec --disable-default-bootnode --chain 'local' > /tmp/academ
 # purge chain
 rm -rf /tmp/node01/chains/
 
-# reserved_nodes
-
 # run first node
 $NODE_BINARY \
   --sr25519-public-key $PUBLIC_KEY \
+  --validator \
   --base-path /tmp/node01 \
   --chain /tmp/academy-pow/chainspec.academy.json \
   --port 30333 \
   --ws-port 9944 \
   --rpc-port 9933 \
   --rpc-methods Unsafe \
-  --unsafe-ws-external \
-  --rpc-cors all \
   --rpc-external \
+  --rpc-cors all \
   --name Node01 \
   --node-key-file /tmp/node01/p2p_secret.txt \
   --no-prometheus \
   --no-telemetry \
   --enable-log-reloading \
   --allow-private-ip \
-  -lruntime::contracts=debug,sync=trace \
-  --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/$PEER_ID
+  --log runtime::contracts=debug,sync=trace,pow=trace,manual-seal=trace \
+  --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/$PEER_ID \
+  --reserved-nodes /ip4/127.0.0.1/tcp/30333/p2p/$PEER_ID
 
 # TODO generate seconds set of p2p2 & miner keys
 
