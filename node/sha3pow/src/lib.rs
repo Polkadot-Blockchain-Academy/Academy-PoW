@@ -80,7 +80,6 @@ where
     type Difficulty = U256;
 
     fn difficulty(&self, parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
-        // Sketch out the possibility for difficulty-based hard forks
         let difficulty = self
             .client
             .runtime_api()
