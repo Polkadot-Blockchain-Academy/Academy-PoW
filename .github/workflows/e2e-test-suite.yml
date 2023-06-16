@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: academy-pow-node
-          path: /tmp/academy-pow/target//release/academy-pow-node
+          path: /tmp/academy-pow/target/release/academy-pow
           if-no-files-found: error
           retention-days: 3
 
