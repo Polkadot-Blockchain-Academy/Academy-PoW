@@ -16,7 +16,7 @@ env:
 
 jobs:
 
-  build-node-run-e2e:
+  build-node:
     runs-on: ubuntu-latest
     steps:
 
@@ -45,9 +45,6 @@ jobs:
       - name: build release binary
         run: make release
 
-      - name: build release docker image
-        run: make image
-
       - name: Upload binary to GH Artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -56,4 +53,43 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-     # TODO : run chain and e2e
+      - name: Build docker image
+        run: |
+          make image
+          docker save -o academy-pow.tar academy-pow-node:latest
+
+      - name: Upload release docker image
+        uses: actions/upload-artifact@v3
+        with:
+          name: academy-pow-docker
+          path: academy-pow.tar
+          if-no-files-found: error
+          retention-days: 3
+
+
+  build-node-run-e2e:
+    needs: [build-node]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Download artifact with docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: academy-pow-docker
+
+      - name: Load node docker image
+        shell: bash
+        run: docker load -i academy-pow.tar
+
+      - name: Run two node chain
+        shell: bash
+        run: make chain &
+
+      - name: Verify chain responds
+        shell: bash
+        run: |
+           docker run --network host appropriate/curl:latest --retry 10 --retry-delay 3 --retry-connrefused \
+             -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9933

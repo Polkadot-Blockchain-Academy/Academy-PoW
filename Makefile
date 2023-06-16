@@ -21,3 +21,6 @@ image:
 	cp docker/docker_entrypoint.sh /tmp/academy-pow/docker/docker_entrypoint.sh && \
 	docker build --tag academy-pow-node:latest -f ${PWD}/docker/Dockerfile /tmp  && \
 	docker image tag academy-pow-node:latest academy-pow-node:$(shell git rev-parse --short=10 HEAD)
+
+chain:
+	./scripts/bootstrap_chain.sh
