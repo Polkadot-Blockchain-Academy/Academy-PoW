@@ -1,13 +1,9 @@
 use academy_pow_runtime::{
-    AccountId, BalancesConfig, DifficultyAdjustmentConfig, GenesisConfig, Signature,
-    /*SudoConfig,*/ SystemConfig, WASM_BINARY,
+    AccountId, BalancesConfig, DifficultyAdjustmentConfig, GenesisConfig, Signature, SystemConfig,
+    WASM_BINARY,
 };
-
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-
-// Note this is the URL for the telemetry server
-//const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -37,16 +33,15 @@ pub fn development_config() -> Result<ChainSpec, String> {
         "dev",
         sc_service::ChainType::Development,
         || {
-            testnet_genesis(
+            genesis(
                 wasm_binary,
-                get_account_id_from_seed::<sr25519::Public>("Alice"),
                 vec![
                     get_account_id_from_seed::<sr25519::Public>("Alice"),
                     get_account_id_from_seed::<sr25519::Public>("Bob"),
                     get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
                     get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
                 ],
-                true,
+                4_000_000,
             )
         },
         vec![],
@@ -58,17 +53,16 @@ pub fn development_config() -> Result<ChainSpec, String> {
     ))
 }
 
-pub fn local_testnet_config() -> Result<ChainSpec, String> {
+pub fn testnet_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
     Ok(ChainSpec::from_genesis(
-        "Local Testnet",
-        "local_testnet",
+        "Testnet",
+        "testnet",
         sc_service::ChainType::Local,
         || {
-            testnet_genesis(
+            genesis(
                 wasm_binary,
-                get_account_id_from_seed::<sr25519::Public>("Alice"),
                 vec![
                     get_account_id_from_seed::<sr25519::Public>("Alice"),
                     get_account_id_from_seed::<sr25519::Public>("Bob"),
@@ -83,7 +77,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
                     get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
                     get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
                 ],
-                true,
+                4_000_000,
             )
         },
         vec![],
@@ -95,11 +89,32 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     ))
 }
 
-fn testnet_genesis(
-    wasm_binary: &[u8],
-    _root_key: AccountId,
+pub fn custom_config(
+    chain_name: &str,
+    chain_id: &str,
     endowed_accounts: Vec<AccountId>,
-    _enable_println: bool,
+    initial_difficulty: u32,
+) -> Result<ChainSpec, String> {
+    let wasm_binary = WASM_BINARY.ok_or_else(|| "runtime WASM binary not available".to_string())?;
+
+    Ok(ChainSpec::from_genesis(
+        chain_name,
+        chain_id,
+        sc_service::ChainType::Live,
+        move || genesis(wasm_binary, endowed_accounts.clone(), initial_difficulty),
+        vec![],
+        None,
+        None,
+        None,
+        None,
+        None,
+    ))
+}
+
+fn genesis(
+    wasm_binary: &[u8],
+    endowed_accounts: Vec<AccountId>,
+    initial_difficulty: u32,
 ) -> GenesisConfig {
     GenesisConfig {
         system: SystemConfig {
@@ -113,10 +128,11 @@ fn testnet_genesis(
                 .collect(),
         },
         // sudo: SudoConfig {
-        // 	key: Some(root_key),
+        //     key: Some(root_key),
         // },
         difficulty_adjustment: DifficultyAdjustmentConfig {
-            initial_difficulty: 4_000_000.into(),
+            initial_difficulty: initial_difficulty.into(),
         },
+        transaction_payment: Default::default(),
     }
 }

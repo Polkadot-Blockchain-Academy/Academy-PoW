@@ -15,14 +15,17 @@
 // along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
 
 use academy_pow_runtime::Block;
+use log::*;
 use sc_cli::{ChainSpec, CliConfiguration, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
 
 use crate::{
     chain_spec,
-    cli::{Cli, Subcommand},
+    cli::{BuildSpecCmd, Cli, Subcommand},
     service,
 };
+
+const LOG_TARGET: &str = "command";
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
@@ -59,7 +62,7 @@ impl SubstrateCli for Cli {
                 &include_bytes!("../../spec.json")[..],
             )?),
             "dev" => Box::new(chain_spec::development_config()?),
-            "local" => Box::new(chain_spec::local_testnet_config()?),
+            "local" => Box::new(chain_spec::testnet_config()?),
             path => Box::new(chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),
             )?),
@@ -76,9 +79,29 @@ pub fn run() -> sc_cli::Result<()> {
     let cli = Cli::from_args();
 
     match &cli.subcommand {
+        Some(Subcommand::Key(cmd)) => cmd.run(&cli),
         Some(Subcommand::BuildSpec(cmd)) => {
-            let runner = cli.create_runner(cmd)?;
-            runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
+            let BuildSpecCmd {
+                base,
+                chain_name,
+                chain_id,
+                endowed_accounts,
+                initial_difficulty,
+                ..
+            } = cmd;
+
+            let endowed_accounts = endowed_accounts.clone().unwrap_or_default();
+
+            let spec = chain_spec::custom_config(
+                chain_name,
+                chain_id,
+                endowed_accounts,
+                *initial_difficulty,
+            )?;
+
+            let runner = cli.create_runner(base)?;
+
+            runner.sync_run(|config| base.run(Box::new(spec), config.network))
         }
         Some(Subcommand::CheckBlock(cmd)) => {
             let runner = cli.create_runner(cmd)?;
@@ -150,8 +173,13 @@ pub fn run() -> sc_cli::Result<()> {
             let sr25519_public_key = cli
                 .run
                 .sr25519_public_key
-                .unwrap_or(sp_core::sr25519::Public::from_raw([0; 32]));
-            let instant_seal = cli.run.base.is_dev()?;
+                .unwrap_or_else(|| sp_core::sr25519::Public::from_raw([0; 32]));
+
+            let instant_seal = cli.run.base.is_dev()? || cli.run.instant_seal;
+            if instant_seal {
+                debug!(target: LOG_TARGET, "Node will use instant seal.");
+            }
+
             let runner = cli.create_runner(&cli.run.base)?;
             runner.run_node_until_exit(|config| async move {
                 service::new_full(config, sr25519_public_key, instant_seal)
