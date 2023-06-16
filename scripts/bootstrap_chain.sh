@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+# set -x
 set -eo pipefail
 
 # --- CONSTANTS
@@ -47,12 +47,6 @@ echo "Node02 with peer id $NODE02_PEER_ID has $NODE02_ACCOUNT_ID($NODE02_PUBLIC_
 # generate chainspec
 docker run --rm -v $BASE_PATH:/data --entrypoint "/bin/sh" -e RUST_LOG=debug "${NODE_IMAGE}" -c \
        "academy-pow-node build-spec --disable-default-bootnode --chain-name 'Academy PoW Local' --chain-id 'academy_pow_local' --endowed-accounts '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY,5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty,5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw,$NODE01_ACCOUNT_ID,$NODE02_ACCOUNT_ID' --initial-difficulty 1 > /data/chainspec.academy.json"
-
-head $BASE_PATH/chainspec.academy.json
-
-# purge previous session data
-# rm -rf $BASE_PATH/$NODE01_ACCOUNT_ID
-# rm -rf $BASE_PATH/$NODE02_ACCOUNT_ID
 
 export NODE01_ACCOUNT_ID=$NODE01_ACCOUNT_ID
 export NODE01_PUBLIC_KEY=$NODE01_PUBLIC_KEY

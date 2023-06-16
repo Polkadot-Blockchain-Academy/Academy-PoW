@@ -1,0 +1,59 @@
+---
+name: end-to-end tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+
+  build-node-run-e2e:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install protoc compiler
+        shell: bash
+        run: |
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Checkout Source code
+        uses: actions/checkout@v3
+
+      - name: Cache cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            /tmp/academy-pow/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
+
+      - name: Install Rust toolchain
+        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
+
+      - name: build release binary
+        run: make release
+
+      - name: build release docker image
+        run: make image
+
+      - name: Upload binary to GH Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: academy-pow-node
+          path: /tmp/academy-pow/target//release/academy-pow-node
+          if-no-files-found: error
+          retention-days: 3
+
+     # TODO : run chain and e2e
