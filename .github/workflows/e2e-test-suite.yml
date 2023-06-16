@@ -66,8 +66,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-
-  build-node-run-e2e:
+  e2e-tests:
     needs: [build-node]
     runs-on: ubuntu-latest
     steps:
