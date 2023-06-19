@@ -90,5 +90,5 @@ jobs:
       - name: Verify chain responds
         shell: bash
         run: |
-           docker run --network host appropriate/curl:latest --retry 10 --retry-delay 3 --retry-connrefused \
-             -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9933
+           alias curl='docker run -it --rm curlimages/curl'
+           curl --retry 12 --retry-all-errors --retry-delay 3 -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9933
