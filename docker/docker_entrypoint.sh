@@ -9,47 +9,45 @@ if [[ -n "${ENV_FILE:-}" ]] && [[ -f "${ENV_FILE}" ]]; then
   set +o allexport
 fi
 
-# script env variables with defaults
-PURGE_BEFORE_START=${PURGE_BEFORE_START:-}
-ALLOW_PRIVATE_IPV4=${ALLOW_PRIVATE_IPV4:-}
-DISCOVER_LOCAL=${DISCOVER_LOCAL:-}
+# env variables with defaults
 
-# cli options to env variables
-CHAIN=${CHAIN:?'Chain should be specified'}
-NAME=${NAME:?'Name should be specified'}
+PUBLIC_KEY=${PUBLIC_KEY:?'Public key should be specified'}
+NODE_KEY_FILE=${NODE_KEY_FILE:?'Node key file should be specified'}
 BASE_PATH=${BASE_PATH:?'Base path should be specified'}
-RPC_PORT=${RPC_PORT:-9933}
-WS_PORT=${WS_PORT:-9943}
+CHAIN=${CHAIN:?'Chain should be specified'}
 PORT=${PORT:-30333}
+WS_PORT=${WS_PORT:-9944}
+RPC_PORT=${RPC_PORT:-9933}
+NAME=${NAME:?'Name should be specified'}
+
+# booleans
 VALIDATOR=${VALIDATOR:-true}
-WS_MAX_CONNECTIONS=${WS_MAX_CONNECTIONS:-100}
-POOL_LIMIT=${POOL_LIMIT:-1024}
-DB_CACHE=${DB_CACHE:-1024}
-RUNTIME_CACHE_SIZE=${RUNTIME_CACHE_SIZE:-2}
-MAX_RUNTIME_INSTANCES=${MAX_RUNTIME_INSTANCES:-8}
+ALLOW_PRIVATE_IP=${ALLOW_PRIVATE_IP:-true}
+DISCOVER_LOCAL=${DISCOVER_LOCAL:-false}
+INSTANT_SEAL=${INSTANT_SEAL:-false}
 
 ARGS=(
   --execution Native
-  --name "${NAME}"
+  --sr25519-public-key "${PUBLIC_KEY}"
   --base-path "${BASE_PATH}"
-  --pool-limit "${POOL_LIMIT}"
   --chain "${CHAIN}"
-  --node-key-file "${NODE_KEY_PATH}"
-  --rpc-port "${RPC_PORT}"
-  --ws-port "${WS_PORT}"
   --port "${PORT}"
+  --ws-port "${WS_PORT}"
+  --rpc-port "${RPC_PORT}"
+  --rpc-methods Unsafe
+  --rpc-external
   --rpc-cors all
   --no-mdns
-  --ws-max-connections "${WS_MAX_CONNECTIONS}"
-  --unsafe-ws-external --unsafe-rpc-external
-  --enable-log-reloading
-  --db-cache "${DB_CACHE}"
-  --runtime-cache-size "${RUNTIME_CACHE_SIZE}"
-  --max-runtime-instances "${MAX_RUNTIME_INSTANCES}"
-  --detailed-log-output
+  --name "${NAME}"
+  --node-key-file "${NODE_KEY_FILE}"
   --no-prometheus
   --no-telemetry
+  --enable-log-reloading
 )
+
+if [[ "true" == "$VALIDATOR" ]]; then
+  ARGS+=(--validator)
+fi
 
 if [[ -n "${BOOT_NODES:-}" ]]; then
   ARGS+=(--bootnodes ${BOOT_NODES})
@@ -67,12 +65,16 @@ if [[ -n "${PUBLIC_ADDR:-}" ]]; then
   ARGS+=(--public-addr "${PUBLIC_ADDR}")
 fi
 
-if [[ "true" == "$ALLOW_PRIVATE_IPV4" ]]; then
-  ARGS+=(--allow-private-ipv4)
+if [[ "true" == "$ALLOW_PRIVATE_IP" ]]; then
+  ARGS+=(--allow-private-ip)
 fi
 
 if [[ "true" == "$DISCOVER_LOCAL" ]]; then
   ARGS+=(--discover-local)
 fi
 
-echo "${CUSTOM_ARGS}" | xargs aleph-node "${ARGS[@]}"
+if [[ "true" == "$INSTANT_SEAL" ]]; then
+  ARGS+=(--instant-seal)
+fi
+
+echo "${CUSTOM_ARGS}" | xargs academy-pow-node "${ARGS[@]}"

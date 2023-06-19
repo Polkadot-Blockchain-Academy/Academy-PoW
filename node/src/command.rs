@@ -15,6 +15,7 @@
 // along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
 
 use academy_pow_runtime::Block;
+use log::*;
 use sc_cli::{ChainSpec, CliConfiguration, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
 
@@ -23,6 +24,8 @@ use crate::{
     cli::{BuildSpecCmd, Cli, Subcommand},
     service,
 };
+
+const LOG_TARGET: &str = "command";
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
@@ -171,7 +174,12 @@ pub fn run() -> sc_cli::Result<()> {
                 .run
                 .sr25519_public_key
                 .unwrap_or_else(|| sp_core::sr25519::Public::from_raw([0; 32]));
-            let instant_seal = cli.run.base.is_dev()?;
+
+            let instant_seal = cli.run.base.is_dev()? || cli.run.instant_seal;
+            if instant_seal {
+                debug!(target: LOG_TARGET, "Node will use instant seal.");
+            }
+
             let runner = cli.create_runner(&cli.run.base)?;
             runner.run_node_until_exit(|config| async move {
                 service::new_full(config, sr25519_public_key, instant_seal)
