@@ -251,37 +251,6 @@ pub fn new_full(
         forced_parent_hashes: None,
 	};
 
-    let rpc_extensions_builder = {
-        let client = client.clone();
-        let pool = transaction_pool.clone();
-
-        Box::new(move |deny_unsafe, _| {
-            let deps = crate::rpc::FullDeps {
-                client: client.clone(),
-                pool: pool.clone(),
-                deny_unsafe,
-            };
-            crate::rpc::create_full(deps).map_err(Into::into)
-        })
-    };
-
-	// TODO: now missing jsonrpsee
-
-    sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        network: network.clone(),
-        client: client.clone(),
-        keystore: keystore_container.keystore(),
-        task_manager: &mut task_manager,
-        transaction_pool: transaction_pool.clone(),
-        rpc_builder: rpc_extensions_builder,
-        backend,
-        system_rpc_tx,
-        tx_handler_controller,
-        sync_service: sync_service.clone(),
-        config,
-        telemetry: telemetry.as_mut(),
-    })?;
-
     // Channel for the rpc handler to communicate with the authorship task.
     let (command_sink, commands_stream) = mpsc::channel(1000);
 
@@ -306,6 +275,21 @@ pub fn new_full(
                 .map_err(Into::<ServiceError>::into)
         })
     };
+
+    sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        network: network.clone(),
+        client: client.clone(),
+        keystore: keystore_container.keystore(),
+        task_manager: &mut task_manager,
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder,
+        backend,
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        config,
+        telemetry: telemetry.as_mut(),
+    })?;
 
     if role.is_authority() {
         let proposer = sc_basic_authorship::ProposerFactory::new(

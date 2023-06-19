@@ -18,7 +18,7 @@ use sp_api::{CallApiAt, ProvideRuntimeApi};
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_runtime::traits::Block as BlockT;
 // Runtime
-use academy_pow_runtime::{opaque::Block, AccountId, Hash, Index};
+use academy_pow_runtime::{opaque::Block, AccountId, Balance, Hash, Index};
 
 mod eth;
 pub use self::eth::{create_eth, EthDeps};
@@ -57,6 +57,7 @@ pub fn create_full<C, P, BE, A, CT>(
 where
     C: CallApiAt<Block> + ProvideRuntimeApi<Block>,
     C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
+    C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
     C::Api: sp_block_builder::BlockBuilder<Block>,
     C::Api: fp_rpc::ConvertTransactionRuntimeApi<Block>,
     C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
@@ -69,6 +70,7 @@ where
     A: ChainApi<Block = Block> + 'static,
     CT: fp_rpc::ConvertTransaction<<Block as BlockT>::Extrinsic> + Send + Sync + 'static,
 {
+    use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
     use sc_consensus_manual_seal::rpc::{ManualSeal, ManualSealApiServer};
     use substrate_frame_rpc_system::{System, SystemApiServer};
 
@@ -82,6 +84,7 @@ where
     } = deps;
 
     io.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
+    io.merge(TransactionPayment::new(client).into_rpc())?;
 
     if let Some(command_sink) = command_sink {
         io.merge(
