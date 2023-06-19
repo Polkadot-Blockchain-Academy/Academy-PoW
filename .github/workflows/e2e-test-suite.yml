@@ -85,7 +85,7 @@ jobs:
 
       - name: Run two node chain
         shell: bash
-        run: make chain &
+        run: sudo make chain &
 
       - name: Verify chain responds
         shell: bash
