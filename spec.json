@@ -68,9 +68,25 @@
           ]
         ]
       },
+      "transactionPayment": {
+        "multiplier": "1000000000000000000"
+      },
       "difficultyAdjustment": {
         "initialDifficulty": "0x3d0900"
-      }
+      },
+      "evm": {
+        "accounts": {}
+      },
+      "evmChainId": {
+        "chainId": 4242
+      },
+      "baseFee": {
+        "baseFeePerGas": "0x3b9aca00",
+        "elasticity": 125000,
+        "marker": null
+      },
+      "ethereum": {},
+      "managedAddressMapping": {}
     }
   }
 }
