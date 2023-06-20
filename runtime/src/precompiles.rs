@@ -29,6 +29,16 @@ where
 		]
 	}
 }
+
+impl<R> Default for FrontierPrecompiles<R>
+where
+	R: pallet_evm::Config,
+{
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl<R> PrecompileSet for FrontierPrecompiles<R>
 where
 	R: pallet_evm::Config,

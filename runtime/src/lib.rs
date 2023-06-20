@@ -13,11 +13,8 @@ use sp_std::prelude::*;
 // Frontier
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
-use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{
-    Account as EVMAccount, EnsureAddressNever, FeeCalculator,
-    IdentityAddressMapping, Runner,
-};
+use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
+use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner};
 use address_mapping::{EVMAddressMapping, EnsureAddressMapped};
 
 // A few exports that help ease life for downstream crates.
@@ -58,7 +55,6 @@ use sp_runtime::{
     ApplyExtrinsicResult, MultiSignature,
 };
 pub use sp_runtime::{FixedPointNumber, Perbill, Permill};
-use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -330,7 +326,7 @@ parameter_types! {
 
 pub struct FindAuthorMapped;
 impl FindAuthor<H160> for FindAuthorMapped {
-    fn find_author<'a, I>(digests: I) -> Option<H160>
+    fn find_author<'a, I>(_: I) -> Option<H160>
     where
         I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
     {
@@ -730,7 +726,7 @@ impl_runtime_apis! {
         }
 
         fn extrinsic_filter(
-            xts: Vec<<Block as BlockT>::Extrinsic>,
+            _xts: Vec<<Block as BlockT>::Extrinsic>,
         ) -> Vec<EthereumTransaction> {
             /*
             xts.into_iter().filter_map(|xt| match xt.0.function {

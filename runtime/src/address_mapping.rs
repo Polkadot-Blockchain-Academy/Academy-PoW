@@ -20,7 +20,7 @@ pub mod pallet {
 		RawOrigin,
 	};
     use pallet_evm::AddressMapping;
-    use sp_core::{H160, H256};
+    use sp_core::H160;
     use sp_runtime::AccountId32;
 
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
@@ -67,11 +67,11 @@ pub mod pallet {
 
 			// ensure that our account mapping is 1:1 by ensuring entries in both are empty
             ensure!(
-                <H160ToAccountMapping<T>>::get(target) == None,
+                <H160ToAccountMapping<T>>::get(target).is_none(),
                 Error::<T>::AddressAlreadyMapped,
             );
             ensure!(
-                <AccountToH160Mapping<T>>::get(account_id.clone()) == None,
+                <AccountToH160Mapping<T>>::get(account_id.clone()).is_none(),
                 Error::<T>::AddressAlreadyMapped,
             );
 

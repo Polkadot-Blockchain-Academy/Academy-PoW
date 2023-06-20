@@ -7,7 +7,7 @@ use crate::eth::{
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi, TransactionConverter};
 use core::clone::Clone;
 use fc_storage::overrides_handle;
-use futures::{channel::mpsc, prelude::*};
+use futures::channel::mpsc;
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
@@ -42,6 +42,14 @@ pub type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
 pub type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
 pub type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
+pub type ServicePartialComponents = PartialComponents<
+    FullClient,
+    FullBackend,
+    FullSelectChain,
+    BasicImportQueue,
+    sc_transaction_pool::FullPool<Block, FullClient>,
+    (BoxBlockImport, Option<Telemetry>),
+>;
 
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain
@@ -49,14 +57,7 @@ pub fn new_partial<BIQ>(
     config: &Configuration,
     build_import_queue: BIQ,
 ) -> Result<
-    PartialComponents<
-        FullClient,
-        FullBackend,
-        FullSelectChain,
-        BasicImportQueue,
-        sc_transaction_pool::FullPool<Block, FullClient>,
-        (BoxBlockImport, Option<Telemetry>),
-    >,
+    ServicePartialComponents,
     ServiceError,
 >
 where
@@ -78,11 +79,11 @@ where
         })
         .transpose()?;
 
-    let executor = sc_service::new_native_or_wasm_executor(&config);
+    let executor = sc_service::new_native_or_wasm_executor(config);
 
     let (client, backend, keystore_container, task_manager) =
         sc_service::new_full_parts::<Block, RuntimeApi, _>(
-            &config,
+            config,
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
             executor,
         )?;
@@ -164,7 +165,7 @@ pub fn build_pow_import_queue(
     let import_queue = sc_consensus_pow::import_queue(
         Box::new(pow_block_import.clone()),
         None,
-        Sha3Algorithm::new(client.clone()),
+        Sha3Algorithm::new(client),
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
     )?;
@@ -197,10 +198,10 @@ pub fn new_full(
     } = new_partial(&config, build_import_queue)?;
 
     let FrontierPartialComponents {
-        filter_pool,
+        filter_pool: _filter_pool,
         fee_history_cache,
         fee_history_cache_limit,
-    } = new_frontier_partial(&eth_config)?;
+    } = new_frontier_partial(eth_config)?;
 
     let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
@@ -234,7 +235,7 @@ pub fn new_full(
         enable_dev_signer: eth_config.enable_dev_signer,
         network: network.clone(),
         sync: sync_service.clone(),
-        frontier_backend: frontier_backend.clone(),
+        frontier_backend,
         overrides: overrides.clone(),
         block_data_cache: Arc::new(fc_rpc::EthBlockDataCacheTask::new(
             task_manager.spawn_handle(),
@@ -245,14 +246,14 @@ pub fn new_full(
         )),
         filter_pool: None,
         max_past_logs: eth_config.max_past_logs,
-        fee_history_cache: fee_history_cache.clone(),
+        fee_history_cache,
         fee_history_cache_limit,
         execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
         forced_parent_hashes: None,
 	};
 
     // Channel for the rpc handler to communicate with the authorship task.
-    let (command_sink, commands_stream) = mpsc::channel(1000);
+    let (command_sink, _commands_stream) = mpsc::channel(1000);
 
     let rpc_builder = {
         let client = client.clone();
@@ -277,7 +278,7 @@ pub fn new_full(
     };
 
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-        network: network.clone(),
+        network,
         client: client.clone(),
         keystore: keystore_container.keystore(),
         task_manager: &mut task_manager,
@@ -326,10 +327,10 @@ pub fn new_full(
                 Box::new(pow_block_import),
                 client.clone(),
                 select_chain,
-                Sha3Algorithm::new(client.clone()),
+                Sha3Algorithm::new(client),
                 proposer,
                 sync_service.clone(),
-                sync_service.clone(),
+                sync_service,
                 None,
                 // This code is copied from above. Would be better to not repeat it.
                 move |_, ()| async move {

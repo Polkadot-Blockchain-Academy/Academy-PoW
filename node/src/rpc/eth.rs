@@ -90,7 +90,7 @@ impl<C, P, A: ChainApi, CT: Clone, B: BlockT> Clone for EthDeps<C, P, A, CT, B> 
 pub fn create_eth<C, BE, P, A, CT, B, EC: EthConfig<B, C>>(
     mut io: RpcModule<()>,
     deps: EthDeps<C, P, A, CT, B>,
-    subscription_task_executor: SubscriptionTaskExecutor,
+    _subscription_task_executor: SubscriptionTaskExecutor,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     B: BlockT,
@@ -136,12 +136,12 @@ where
     io.merge(
         Eth::new(
             client.clone(),
-            pool.clone(),
+            pool,
             graph,
             converter,
-            sync.clone(),
+            sync,
             vec![],
-            overrides.clone(),
+            overrides,
             frontier_backend.clone(),
             is_authority,
             block_data_cache.clone(),
