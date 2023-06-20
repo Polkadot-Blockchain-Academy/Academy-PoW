@@ -1,7 +1,6 @@
 use academy_pow_runtime::AccountId;
 use sc_service::ChainType;
 use sp_core::crypto::Ss58Codec;
-use std::convert::TryInto;
 
 #[derive(Debug, clap::Parser)]
 pub struct Cli {
@@ -17,9 +16,10 @@ pub struct RunCmd {
     #[clap(flatten)]
     pub base: sc_cli::RunCmd,
 
-    /// Miner's SR25519 public key for block rewards
-    #[clap(long, value_parser = parse_sr25519_public_key)]
-    pub sr25519_public_key: Option<sp_core::sr25519::Public>,
+    /// Miner's AccountId (base58 encoding of an SR25519 public key) for the block rewards
+    /// if not specified defaults to //Alice
+    #[clap(long, alias = "sr25519_public_key", value_parser = parse_account_id, default_value = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")]
+    pub account_id: AccountId,
 
     /// whether to use instant seal
     #[clap(long, default_value = "false")]
@@ -63,14 +63,6 @@ fn parse_chaintype(s: &str) -> Result<ChainType, String> {
 /// Generate AccountId based on string command line argument.
 fn parse_account_id(s: &str) -> Result<AccountId, String> {
     Ok(AccountId::from_string(s).expect("Passed string is not a hex encoding of a public key"))
-}
-
-fn parse_sr25519_public_key(i: &str) -> Result<sp_core::sr25519::Public, String> {
-    hex::decode(i)
-        .map_err(|e| e.to_string())?
-        .as_slice()
-        .try_into()
-        .map_err(|_| "invalid length for SR25519 public key".to_string())
 }
 
 #[derive(Debug, clap::Subcommand)]

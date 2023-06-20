@@ -17,6 +17,7 @@
 use academy_pow_runtime::Block;
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
+use sp_core::sr25519::Public;
 
 use crate::{
     chain_spec,
@@ -167,10 +168,8 @@ pub fn run() -> sc_cli::Result<()> {
             runner.sync_run(|config| cmd.run::<Block>(&config))
         }
         None => {
-            let sr25519_public_key = cli
-                .run
-                .sr25519_public_key
-                .unwrap_or_else(|| sp_core::sr25519::Public::from_raw([0; 32]));
+            let bytes: [u8; 32] = cli.run.account_id.clone().into();
+            let sr25519_public_key = Public(bytes);
 
             let runner = cli.create_runner(&cli.run.base)?;
             runner.run_node_until_exit(|config| async move {

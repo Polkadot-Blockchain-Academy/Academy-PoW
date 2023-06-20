@@ -9,7 +9,7 @@ EXPOSE 30333 30343 9933 9944
 
 WORKDIR node
 
-COPY target/release/academy-pow /usr/local/bin/academy-pow-node
+COPY target/release/academy-pow-node /usr/local/bin/academy-pow-node
 RUN chmod +x /usr/local/bin/academy-pow-node
 
 COPY docker/docker_entrypoint.sh /node/docker_entrypoint.sh

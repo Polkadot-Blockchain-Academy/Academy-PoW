@@ -2,7 +2,7 @@
 authors = ['Anonymous']
 build = 'build.rs'
 edition = '2021'
-name = 'academy-pow'
+name = 'academy-pow-node'
 version = '3.0.0'
 
 [build-dependencies]
@@ -52,4 +52,4 @@ sha3pow = {path = './sha3pow'}
 hex = "0.4"
 
 [[bin]]
-name = 'academy-pow'
+name = 'academy-pow-node'

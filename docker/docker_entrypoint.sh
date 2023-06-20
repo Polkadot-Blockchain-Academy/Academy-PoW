@@ -11,7 +11,7 @@ fi
 
 # env variables with defaults
 
-PUBLIC_KEY=${PUBLIC_KEY:?'Public key should be specified'}
+ACCOUNT_ID=${ACCOUNT_ID:?'Account id should be specified'}
 NODE_KEY_FILE=${NODE_KEY_FILE:?'Node key file should be specified'}
 BASE_PATH=${BASE_PATH:?'Base path should be specified'}
 CHAIN=${CHAIN:?'Chain should be specified'}
@@ -28,7 +28,7 @@ INSTANT_SEAL=${INSTANT_SEAL:-false}
 
 ARGS=(
   --execution Wasm
-  --sr25519-public-key "${PUBLIC_KEY}"
+  --account-id "${ACCOUNT_ID}"
   --base-path "${BASE_PATH}"
   --chain "${CHAIN}"
   --port "${PORT}"

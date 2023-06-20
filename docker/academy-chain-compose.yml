@@ -7,7 +7,7 @@ services:
     user: ${UID:-0}
     environment:
       - CUSTOM_ARGS=--log runtime::contracts=debug,sync=trace,pow=trace,manual-seal=trace,command=trace
-      - PUBLIC_KEY=$NODE01_PUBLIC_KEY
+      - ACCOUNT_ID=$NODE01_ACCOUNT_ID
       - ALLOW_PRIVATE_IPV4=true
       - BASE_PATH=/data/$NODE01_ACCOUNT_ID
       - CHAIN=/data/chainspec.academy.json
@@ -37,7 +37,7 @@ services:
     user: ${UID:-0}
     environment:
       - CUSTOM_ARGS=--log runtime::contracts=debug,sync=trace,pow=trace,manual-seal=trace,command=trace
-      - PUBLIC_KEY=$NODE02_PUBLIC_KEY
+      - ACCOUNT_ID=$NODE02_ACCOUNT_ID
       - ALLOW_PRIVATE_IPV4=true
       - BASE_PATH=/data/$NODE02_ACCOUNT_ID
       - CHAIN=/data/chainspec.academy.json
