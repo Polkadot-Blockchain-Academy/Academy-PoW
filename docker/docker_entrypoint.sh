@@ -27,7 +27,7 @@ DISCOVER_LOCAL=${DISCOVER_LOCAL:-false}
 INSTANT_SEAL=${INSTANT_SEAL:-false}
 
 ARGS=(
-  --execution Native
+  --execution Wasm
   --sr25519-public-key "${PUBLIC_KEY}"
   --base-path "${BASE_PATH}"
   --chain "${CHAIN}"
