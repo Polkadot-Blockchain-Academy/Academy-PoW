@@ -2,27 +2,17 @@ use std::{
     collections::BTreeMap,
     path::PathBuf,
     sync::{Arc, Mutex},
-    time::Duration,
 };
 
-use futures::{future, prelude::*};
 // Substrate
-use sc_client_api::{BlockchainEvents, StateBackendFor};
-use sc_executor::NativeExecutionDispatch;
-use sc_network_sync::SyncingService;
-use sc_service::{error::Error as ServiceError, BasePath, Configuration, TaskManager};
-use sp_api::ConstructRuntimeApi;
+use sc_service::{error::Error as ServiceError, BasePath, Configuration};
 use sp_runtime::traits::BlakeTwo256;
 // Frontier
 pub use fc_consensus::FrontierBlockImport;
 pub use fc_db::frontier_database_dir;
-use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
-use fc_rpc::{EthTask, OverrideHandle};
 pub use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 // Local
 use academy_pow_runtime::opaque::Block;
-
-use crate::service::{FullBackend, FullClient};
 
 /// Frontier DB backend type.
 pub type FrontierBackend = fc_db::Backend<Block>;
