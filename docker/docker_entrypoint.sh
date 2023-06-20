@@ -34,10 +34,10 @@ ARGS=(
   --port "${PORT}"
   --ws-port "${WS_PORT}"
   --rpc-port "${RPC_PORT}"
-  --rpc-methods Unsafe
-  --rpc-external
   --rpc-cors all
   --no-mdns
+  --unsafe-ws-external
+  --unsafe-rpc-external
   --name "${NAME}"
   --node-key-file "${NODE_KEY_FILE}"
   --no-prometheus
