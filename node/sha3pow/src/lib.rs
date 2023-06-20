@@ -4,7 +4,7 @@ use parity_scale_codec::{Decode, Encode};
 use sc_client_api::HeaderBackend;
 use sc_consensus_pow::{Error, PowAlgorithm};
 use sha3::{Digest, Sha3_256};
-use sp_api::{HeaderT, ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 use sp_consensus_pow::{DifficultyApi, Seal as RawSeal};
 use sp_core::{H256, U256};
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
@@ -80,36 +80,16 @@ where
     type Difficulty = U256;
 
     fn difficulty(&self, parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
-        let parent_header = self
+        let difficulty = self
             .client
-            .header(parent)
-            .expect("Database should perform lookup successfully")
-            .expect("parent header should be present in the db");
-
-        let parent_number = *parent_header.number();
-
-        // Start with a simple hard-coded difficulty
-        // let difficulty = U256::from(100_000_000);
-
-        // Sketch out the possibility for difficulty-based hard forks
-        let difficulty = if parent_number < 2400u32.into() {
-            U256::from(100_000_000)
-        } else {
-            /*parent_number < TODO*/
-
-            U256::from(1_000_000_000)
-            // }
-            // else {
-            // 	self.client
-            // .runtime_api()
-            // .difficulty(&parent_id)
-            // .map_err(|err| {
-            // 	sc_consensus_pow::Error::Environment(format!(
-            // 		"Fetching difficulty from runtime failed: {:?}",
-            // 		err
-            // 	))
-            // })
-        };
+            .runtime_api()
+            .difficulty(parent)
+            .map_err(|err| {
+                sc_consensus_pow::Error::Environment(format!(
+                    "Fetching difficulty from runtime failed: {:?}",
+                    err
+                ))
+            })?;
 
         Ok(difficulty)
     }
