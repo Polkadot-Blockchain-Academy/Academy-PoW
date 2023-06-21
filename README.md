@@ -14,7 +14,7 @@ You can connect a UI to a public node by going to https://polkadot.js.org/apps/?
 To help decentralize the network, you can compile the node by
 
 1. Cloning this repo
-2. Running `make release`
+2. Running `cargo build --release`
 
 ## Connect UI to Your Node
 
