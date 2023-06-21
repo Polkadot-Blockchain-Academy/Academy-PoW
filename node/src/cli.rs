@@ -1,6 +1,6 @@
 use academy_pow_runtime::AccountId;
 use sc_cli::{
-    clap::{self, ArgGroup, Parser},
+    clap::{ArgGroup, Parser},
     RunCmd,
 };
 use sc_service::ChainType;
