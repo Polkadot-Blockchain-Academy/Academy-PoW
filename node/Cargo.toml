@@ -2,7 +2,7 @@
 authors = ['Anonymous']
 build = 'build.rs'
 edition = '2021'
-name = 'academy-pow-node'
+name = 'academy-pow'
 version = '3.0.0'
 
 [build-dependencies]
