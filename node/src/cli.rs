@@ -46,15 +46,13 @@ pub struct AcademyPowCli {
 
 impl AcademyPowCli {
     pub fn public_key_bytes(&self) -> [u8; 32] {
-        if let Some(account_id) = &self.mining_account_id {
-            return *account_id.as_ref();
+        match &self.mining_account_id {
+            Some(account_id) => *account_id.as_ref(),
+            None => match self.mining_public_key {
+                Some(public_key) => public_key.0,
+                None => panic!("Specify one of --mining_account_id or --mining_public_key"),
+            },
         }
-
-        if let Some(public_key) = self.mining_public_key {
-            return public_key.0;
-        }
-
-        panic!("Specify one of --mining_account_id or --mining_public_key")
     }
 }
 
