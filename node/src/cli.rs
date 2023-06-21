@@ -1,7 +1,7 @@
 use academy_pow_runtime::AccountId;
 use sc_cli::{
-    clap::{self, ArgGroup, Parser, Subcommand as ClapSubcommand},
-    ChainSpec, RunCmd, RuntimeVersion, SubstrateCli,
+    clap::{self, ArgGroup, Parser},
+    RunCmd,
 };
 use sc_service::ChainType;
 use sp_core::crypto::Ss58Codec;
