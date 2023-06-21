@@ -11,7 +11,6 @@ fi
 
 # env variables with defaults
 
-ACCOUNT_ID=${ACCOUNT_ID:?'Account id should be specified'}
 NODE_KEY_FILE=${NODE_KEY_FILE:?'Node key file should be specified'}
 BASE_PATH=${BASE_PATH:?'Base path should be specified'}
 CHAIN=${CHAIN:?'Chain should be specified'}
@@ -28,7 +27,6 @@ INSTANT_SEAL=${INSTANT_SEAL:-false}
 
 ARGS=(
   --execution Wasm
-  --account-id "${ACCOUNT_ID}"
   --base-path "${BASE_PATH}"
   --chain "${CHAIN}"
   --port "${PORT}"
@@ -44,6 +42,14 @@ ARGS=(
   --no-telemetry
   --enable-log-reloading
 )
+
+if [[ -n "${MINING_ACCOUNT_ID:-}" ]]; then
+  ARGS+=(--mining-account-id "${MINING_ACCOUNT_ID}")
+fi
+
+if [[ -n "${MINING_PUBLIC_KEY:-}" ]]; then
+  ARGS+=(--mining-public-key "${MINING_PUBLIC_KEY}")
+fi
 
 if [[ "true" == "$VALIDATOR" ]]; then
   ARGS+=(--validator)
@@ -77,4 +83,4 @@ if [[ "true" == "$INSTANT_SEAL" ]]; then
   ARGS+=(--instant-seal)
 fi
 
-echo "${CUSTOM_ARGS}" | xargs academy-pow-node "${ARGS[@]}"
+echo "${CUSTOM_ARGS}" | xargs academy-pow "${ARGS[@]}"

@@ -168,12 +168,12 @@ pub fn run() -> sc_cli::Result<()> {
             runner.sync_run(|config| cmd.run::<Block>(&config))
         }
         None => {
-            let bytes: [u8; 32] = cli.run.account_id.clone().into();
+            let bytes: [u8; 32] = cli.pow.public_key_bytes();
             let sr25519_public_key = Public(bytes);
 
-            let runner = cli.create_runner(&cli.run.base)?;
+            let runner = cli.create_runner(&cli.run)?;
             runner.run_node_until_exit(|config| async move {
-                service::new_full(config, sr25519_public_key, cli.run.instant_seal)
+                service::new_full(config, sr25519_public_key, cli.pow.instant_seal)
                     .map_err(sc_cli::Error::Service)
             })
         }
