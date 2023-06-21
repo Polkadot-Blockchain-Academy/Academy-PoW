@@ -25,7 +25,6 @@ pub struct Cli {
 pub struct AcademyPowCli {
     /// Miner's AccountId (base58 encoding of an SR25519 public key) for the block rewards
     #[clap(long,
-           // required_unless(mining_public_key),
            conflicts_with = "mining_public_key",
            value_parser = parse_account_id)]
     pub mining_account_id: Option<AccountId>,
@@ -33,7 +32,6 @@ pub struct AcademyPowCli {
     /// Miner's hex encoding of the SR25519 public key) for the block rewards
     #[clap(
         long,
-        // required_unless (mining_account_id),
         conflicts_with = "mining_account_id",
         value_parser = parse_sr25519_public_key
     )]
