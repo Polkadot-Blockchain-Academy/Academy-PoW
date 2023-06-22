@@ -1,32 +1,60 @@
 use academy_pow_runtime::AccountId;
+use sc_cli::{
+    clap::{ArgGroup, Parser},
+    RunCmd,
+};
 use sc_service::ChainType;
 use sp_core::crypto::Ss58Codec;
-use std::convert::TryInto;
+use sp_core::sr25519;
 
-#[derive(Debug, clap::Parser)]
+#[derive(Debug, Parser)]
+#[clap(subcommand_negates_reqs(true), version(env!("SUBSTRATE_CLI_IMPL_VERSION")))]
 pub struct Cli {
     #[clap(subcommand)]
     pub subcommand: Option<Subcommand>,
+
+    #[command(flatten)]
+    pub pow: AcademyPowCli,
 
     #[clap(flatten)]
     pub run: RunCmd,
 }
 
-#[derive(Debug, clap::Parser)]
-pub struct RunCmd {
-    #[clap(flatten)]
-    pub base: sc_cli::RunCmd,
+#[derive(Debug, Parser, Clone)]
+#[clap(group(ArgGroup::new("backup")))]
+pub struct AcademyPowCli {
+    /// Miner's AccountId (base58 encoding of an SR25519 public key) for the block rewards
+    #[clap(long,
+           conflicts_with = "mining_public_key",
+           value_parser = parse_account_id)]
+    pub mining_account_id: Option<AccountId>,
 
-    /// Miner's SR25519 public key for block rewards
-    #[clap(long, value_parser = parse_sr25519_public_key)]
-    pub sr25519_public_key: Option<sp_core::sr25519::Public>,
+    /// Miner's hex encoding of the SR25519 public key) for the block rewards
+    #[clap(
+        long,
+        conflicts_with = "mining_account_id",
+        value_parser = parse_sr25519_public_key
+    )]
+    pub mining_public_key: Option<sr25519::Public>,
 
     /// whether to use instant seal
     #[clap(long, default_value = "false")]
     pub instant_seal: bool,
 }
 
-#[derive(Debug, clap::Parser)]
+impl AcademyPowCli {
+    pub fn public_key_bytes(&self) -> [u8; 32] {
+        match &self.mining_account_id {
+            Some(account_id) => *account_id.as_ref(),
+            None => match self.mining_public_key {
+                Some(public_key) => public_key.0,
+                None => panic!("Specify one of --mining_account_id or --mining_public_key"),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Parser)]
 pub struct BuildSpecCmd {
     #[clap(flatten)]
     pub base: sc_cli::BuildSpecCmd,
@@ -60,17 +88,16 @@ fn parse_chaintype(s: &str) -> Result<ChainType, String> {
     })
 }
 
-/// Generate AccountId based on string command line argument.
+/// Parse AccountId from a string argument passed on the command line.
 fn parse_account_id(s: &str) -> Result<AccountId, String> {
-    Ok(AccountId::from_string(s).expect("Passed string is not a hex encoding of a public key"))
+    Ok(AccountId::from_string(s)
+        .expect("Passed string is not a bas58 encoding of a sr25519 public key"))
 }
 
-fn parse_sr25519_public_key(i: &str) -> Result<sp_core::sr25519::Public, String> {
-    hex::decode(i)
-        .map_err(|e| e.to_string())?
-        .as_slice()
-        .try_into()
-        .map_err(|_| "invalid length for SR25519 public key".to_string())
+/// Parse sr25519 pubkey from a string argument passed on the command line.
+fn parse_sr25519_public_key(s: &str) -> Result<sr25519::Public, String> {
+    Ok(sr25519::Public::from_string(s)
+        .expect("Passed string is not a hex encoding of a sr25519 public key"))
 }
 
 #[derive(Debug, clap::Subcommand)]
