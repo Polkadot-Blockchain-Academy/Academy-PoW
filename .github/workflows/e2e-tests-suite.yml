@@ -95,4 +95,4 @@ jobs:
 
       - name: Verify contract interaction
         shell: bash
-        run: ./.github/scripts/verify-contract-interaction.sh
+        run: ./.github/scripts/interact-with-contract.sh

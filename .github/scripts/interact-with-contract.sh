@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 mkdir --parents test-contract/
 cd test-contract/
 
