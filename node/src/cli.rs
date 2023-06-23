@@ -75,7 +75,7 @@ pub struct BuildSpecCmd {
     #[arg(long, value_name = "TYPE", value_parser = parse_chaintype, default_value = "live")]
     pub chain_type: ChainType,
 
-    #[arg(long, default_value = "4_000_000")]
+    #[arg(long, default_value = "4000000")]
     pub initial_difficulty: u32,
 }
 
