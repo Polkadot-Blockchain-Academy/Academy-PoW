@@ -109,7 +109,7 @@ pub mod pallet {
     impl Default for GenesisConfig {
         fn default() -> Self {
             GenesisConfig {
-                initial_difficulty: 4000000.into(),
+                initial_difficulty: 4_000_000.into(),
             }
         }
     }
