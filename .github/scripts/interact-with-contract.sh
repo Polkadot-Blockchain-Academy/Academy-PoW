@@ -5,7 +5,7 @@ set -eo pipefail
 mkdir --parents test-contract/
 cd test-contract/
 
-CC="docker run --network host -u 1000:1000 --rm -it -v $(pwd):/sources paritytech/contracts-ci-linux:9a513893-20230620"
+CC="docker run --network host -u 1000:1000 --rm -v $(pwd):/sources paritytech/contracts-ci-linux:9a513893-20230620"
 
 # Create a new contract
 $CC cargo contract new --target-dir /sources flipper
