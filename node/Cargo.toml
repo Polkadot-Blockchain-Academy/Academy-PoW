@@ -20,6 +20,8 @@ parity-scale-codec = '3.1.2'
 sha3 = "0.10.1"
 rand = { version = "0.8.5", features = ["small_rng"] }
 
+account = { path = "../account" }
+
 # These dependencies are used for the node template's RPCs
 jsonrpsee = { version = "0.16.0", features = ["server"] }
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }

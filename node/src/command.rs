@@ -168,12 +168,9 @@ pub fn run() -> sc_cli::Result<()> {
             runner.sync_run(|config| cmd.run::<Block>(&config))
         }
         None => {
-            let bytes: [u8; 32] = cli.pow.public_key_bytes();
-            let sr25519_public_key = Public(bytes);
-
             let runner = cli.create_runner(&cli.run)?;
             runner.run_node_until_exit(|config| async move {
-                service::new_full(config, sr25519_public_key, cli.pow.instant_seal)
+                service::new_full(config, cli.mining_account_id, cli.instant_seal)
                     .map_err(sc_cli::Error::Service)
             })
         }

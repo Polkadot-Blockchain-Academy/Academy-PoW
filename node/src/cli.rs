@@ -18,8 +18,8 @@ pub struct Cli {
     pub instant_seal: bool,
 
     /// Miner's AccountId (base58 encoding of an SR25519 public key) for the block rewards
-    #[clap(long, value_parser = parse_account_id)]
-    pub mining_account_id: Option<AccountId>,
+    #[clap(long, value_parser = parse_account_id, default_value = "0000000000000000000000000000000000000000")]
+    pub mining_account_id: AccountId,
 
     #[clap(flatten)]
     pub run: RunCmd,

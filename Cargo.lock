@@ -17,6 +17,7 @@ name = "academy-pow"
 version = "3.0.0"
 dependencies = [
  "academy-pow-runtime",
+ "account",
  "clap",
  "futures",
  "hex",
