@@ -58,6 +58,7 @@ dependencies = [
 name = "academy-pow-runtime"
 version = "3.0.0"
 dependencies = [
+ "account",
  "async-trait",
  "frame-executive",
  "frame-support",

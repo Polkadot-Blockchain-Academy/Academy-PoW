@@ -11,6 +11,8 @@ scale-info = { version = "2.1.2", default-features = false, features = ["derive"
 serde = { version = '1.0.137', optional = true }
 async-trait = { version = '0.1.53', optional = true }
 
+account = { path = "../account", default-features = false}
+
 
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 pallet-sudo = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -50,6 +52,7 @@ substrate-wasm-builder = { default-features = false, git = "https://github.com/p
 [features]
 default = ['std']
 std = [
+    'account/std',
     'pallet-balances/std',
     'parity-scale-codec/std',
     'frame-executive/std',
