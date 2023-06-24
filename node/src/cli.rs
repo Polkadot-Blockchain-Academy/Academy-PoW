@@ -1,11 +1,9 @@
 use academy_pow_runtime::AccountId;
 use sc_cli::{
-    clap::{ArgGroup, Parser},
+    clap::Parser,
     RunCmd,
 };
 use sc_service::ChainType;
-use sp_core::crypto::Ss58Codec;
-use sp_core::sr25519;
 
 #[derive(Debug, Parser)]
 #[clap(subcommand_negates_reqs(true), version(env!("SUBSTRATE_CLI_IMPL_VERSION")))]
