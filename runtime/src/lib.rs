@@ -41,7 +41,7 @@ use sp_runtime::{
         AccountIdLookup, BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, MultiSignature,
+    ApplyExtrinsicResult,
 };
 pub use sp_runtime::{FixedPointNumber, Perbill, Permill};
 use sp_std::prelude::*;
@@ -71,8 +71,8 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
-/// The BlockAuthor trait in `./block_author.rs`
-pub mod block_author;
+// /// The BlockAuthor trait in `./block_author.rs`
+// pub mod block_author;
 
 /// The Issuance trait in `./issuance.rs`
 pub mod issuance;
@@ -252,16 +252,16 @@ impl faucet::Config for Runtime {
     type DripAmount = ConstU128<{ 5 * TOKEN }>;
 }
 
-impl block_author::Config for Runtime {
-    // Issue some new tokens to the block author
-    fn on_author_set(author_account: Self::AccountId) {
-        let block = System::block_number();
-        let issuance =
-            <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
-        let issuance = issuance * TOKEN;
-        let _ = Balances::deposit_creating(&author_account, issuance);
-    }
-}
+// impl block_author::Config for Runtime {
+//     // Issue some new tokens to the block author
+//     fn on_author_set(author_account: Self::AccountId) {
+//         let block = System::block_number();
+//         let issuance =
+//             <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
+//         let issuance = issuance * TOKEN;
+//         let _ = Balances::deposit_creating(&author_account, issuance);
+//     }
+// }
 
 parameter_types! {
     // This value increases the priority of `Operational` transactions by adding
@@ -349,7 +349,7 @@ construct_runtime!(
         // Sudo: pallet_sudo
         TransactionPayment: pallet_transaction_payment,
         DifficultyAdjustment: difficulty,
-        BlockAuthor: block_author,
+        // BlockAuthor: block_author,
         Faucet: faucet,
         Contracts: pallet_contracts,
     }
