@@ -1,8 +1,8 @@
 use academy_pow_runtime::{
     AccountId, BalancesConfig, DifficultyAdjustmentConfig, EVMChainIdConfig, GenesisConfig, Signature,
-    SystemConfig, WASM_BINARY,
+    SystemConfig, WASM_BINARY, ManagedAddressMappingConfig,
 };
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public, H160};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -138,7 +138,14 @@ fn genesis(
         evm_chain_id: EVMChainIdConfig { chain_id: 4242 },
         ethereum: Default::default(),
         base_fee: Default::default(),
-        managed_address_mapping: Default::default(),
+        managed_address_mapping: ManagedAddressMappingConfig {
+            genesis_mappings: vec![
+                // Map Alice to "gerald" to get up and testing faster in the evm. Gerald's mnemonic andprivate key are
+                // patch alter unable artist hospital prize swear know faith steel frog gesture
+                // 0x99b3c12287537e38c90a9219d4cb074a89a16e9cdb20bf85728ebd97c343e342
+                (get_account_id_from_seed::<sr25519::Public>("Alice"), H160::from_slice(&hex::decode("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b").unwrap()))
+            ]
+        },
         transaction_payment: Default::default(),
     }
 }

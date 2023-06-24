@@ -14,7 +14,7 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::pallet_prelude::*;
+    use frame_support::{DefaultNoBound, pallet_prelude::*};
     use frame_system::{
 		pallet_prelude::*,
 		RawOrigin,
@@ -90,12 +90,18 @@ pub mod pallet {
 	}
 
     #[pallet::genesis_config]
-    #[derive(Default)]
-    pub struct GenesisConfig {}
+    #[derive(DefaultNoBound)]
+    pub struct GenesisConfig<T: Config>{
+        pub genesis_mappings: Vec<(T::AccountId, H160)>
+    }
 
     #[pallet::genesis_build]
-    impl<T: Config> GenesisBuild<T> for GenesisConfig {
-        fn build(&self) {}
+    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+        fn build(&self) {
+            for (account_id, evm_address) in &self.genesis_mappings {
+                AccountToH160Mapping::<T>::insert(account_id, evm_address);
+            }
+        }
     }
 
     pub struct EVMAddressMapping<T>(PhantomData<T>);
