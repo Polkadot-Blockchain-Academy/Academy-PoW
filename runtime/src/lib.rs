@@ -41,7 +41,7 @@ use sp_runtime::{
         AccountIdLookup, BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify,
     },
     transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, MultiSignature,
+    ApplyExtrinsicResult,
 };
 pub use sp_runtime::{FixedPointNumber, Perbill, Permill};
 use sp_std::prelude::*;
