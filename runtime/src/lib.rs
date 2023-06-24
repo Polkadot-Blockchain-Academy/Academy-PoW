@@ -8,13 +8,14 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use account::AccountId20;
 use sp_core::{OpaqueMetadata, H160, H256, U256};
 use sp_std::prelude::*;
 // Frontier
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, IdentityAddressMapping};
+use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, IdentityAddressMapping, EnsureAddressNever};
 use address_mapping::{EVMAddressMapping, EnsureAddressMapped};
 
 // A few exports that help ease life for downstream crates.
@@ -66,10 +67,11 @@ use precompiles::FrontierPrecompiles;
 pub type BlockNumber = u32;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
+pub type Signature = account::EthereumSignature;
 
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
+// pub type AccountId = AccountId20;
 pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
 /// The type for looking up accounts. We don't expect more than 4 billion of them, but you
@@ -86,7 +88,7 @@ pub type Index = u32;
 pub type Hash = sp_core::H256;
 
 /// The BlockAuthor trait in `./block_author.rs`
-pub mod block_author;
+// pub mod block_author;
 
 /// The Issuance trait in `./issuance.rs`
 pub mod issuance;
@@ -276,16 +278,16 @@ impl faucet::Config for Runtime {
     type DripAmount = ConstU128<{ 5 * TOKEN }>;
 }
 
-impl block_author::Config for Runtime {
-    // Issue some new tokens to the block author
-    fn on_author_set(author_account: Self::AccountId) {
-        let block = System::block_number();
-        let issuance =
-            <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
-        let issuance = issuance * TOKEN;
-        let _ = Balances::deposit_creating(&author_account, issuance);
-    }
-}
+// impl block_author::Config for Runtime {
+//     // Issue some new tokens to the block author
+//     fn on_author_set(author_account: Self::AccountId) {
+//         let block = System::block_number();
+//         let issuance =
+//             <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
+//         let issuance = issuance * TOKEN;
+//         let _ = Balances::deposit_creating(&author_account, issuance);
+//     }
+// }
 
 parameter_types! {
     pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
@@ -324,29 +326,32 @@ parameter_types! {
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
-pub struct FindAuthorMapped;
-impl FindAuthor<H160> for FindAuthorMapped {
-    fn find_author<'a, I>(_: I) -> Option<H160>
-    where
-        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
-    {
-        use crate::block_author::BlockAuthor;
+// pub struct FindAuthorMapped;
+// impl FindAuthor<H160> for FindAuthorMapped {
+//     fn find_author<'a, I>(_: I) -> Option<H160>
+//     where
+//         I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+//     {
+//         use crate::block_author::BlockAuthor;
 
-        if let Some(author_id) = <() as BlockAuthor<AccountId>>::block_author() {
-            ManagedAddressMapping::get_mapped_h160(author_id)
-        } else {
-            None
-        }
-    }
-}
+//         if let Some(author_id) = <() as BlockAuthor<AccountId>>::block_author() {
+//             ManagedAddressMapping::get_mapped_h160(author_id)
+//         } else {
+//             None
+//         }
+//     }
+// }
 
 impl pallet_evm::Config for Runtime {
     type FeeCalculator = ();
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-    type CallOrigin = EnsureAddressSame<Runtime>;
-    type WithdrawOrigin = EnsureAddressSame<Runtime>;
+    // TODO we basically want this to be ensure address same, but there is the accountid20 vs h160 issue still
+    type CallOrigin = EnsureAddressNever<AccountId>;
+    type WithdrawOrigin = EnsureAddressNever<AccountId>;
+    // type CallOrigin = EnsureAddressSame;
+    // type WithdrawOrigin = EnsureAddressSame;
     type AddressMapping = IdentityAddressMapping;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
@@ -357,7 +362,9 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
     type OnCreate = ();
-    type FindAuthor = FindAuthorMapped;
+    // For now I'm having trouble with my block author inherent, so we will disable that stuff.
+    // Once the runtime compiles, I'm confident I can get block author working.
+    type FindAuthor = ();//FindAuthorMapped;
     type Timestamp = Timestamp;
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
 }
@@ -459,7 +466,7 @@ construct_runtime!(
         // Sudo: pallet_sudo
         TransactionPayment: pallet_transaction_payment,
         DifficultyAdjustment: difficulty,
-        BlockAuthor: block_author,
+        // BlockAuthor: block_author,
         Faucet: faucet,
         EVM: pallet_evm,
         EVMChainId: pallet_evm_chain_id,
@@ -496,7 +503,7 @@ impl fp_rpc::ConvertTransaction<opaque::UncheckedExtrinsic> for TransactionConve
 }
 
 /// The address format for describing accounts.
-pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
+pub type Address = AccountId;
 /// Block header type as expected by this runtime.
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 /// Block type as expected by this runtime.
