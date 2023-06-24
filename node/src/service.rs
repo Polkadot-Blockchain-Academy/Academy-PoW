@@ -149,10 +149,10 @@ pub fn build_pow_import_queue(
             let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
             // We don't need the current mining key to check inherents, so we just use a default.
-            let author =
-                academy_pow_runtime::block_author::InherentDataProvider(Default::default());
+            // let author =
+            //     academy_pow_runtime::block_author::InherentDataProvider(Default::default());
 
-            Ok((timestamp, author))
+            Ok((timestamp/*, author*/))
         },
     );
 
@@ -277,11 +277,11 @@ pub fn new_full(
                 move |_, ()| async move {
                     let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-                    let author = academy_pow_runtime::block_author::InherentDataProvider(
-                        sr25519_public_key.encode(),
-                    );
+                    // let author = academy_pow_runtime::block_author::InherentDataProvider(
+                    //     sr25519_public_key.encode(),
+                    // );
 
-                    Ok((timestamp, author))
+                    Ok((timestamp/*, author*/))
                 },
                 std::time::Duration::from_secs(10),
                 std::time::Duration::from_secs(5),
