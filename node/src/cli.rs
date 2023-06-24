@@ -83,12 +83,6 @@ fn parse_account_id(s: &str) -> Result<AccountId, String> {
     Ok(AccountId::from(bytes))
 }
 
-/// Parse sr25519 pubkey from a string argument passed on the command line.
-fn parse_sr25519_public_key(s: &str) -> Result<sr25519::Public, String> {
-    Ok(sr25519::Public::from_string(s)
-        .expect("Passed string is not a hex encoding of a sr25519 public key"))
-}
-
 #[derive(Debug, clap::Subcommand)]
 pub enum Subcommand {
     /// Key management cli utilities

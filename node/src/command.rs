@@ -17,7 +17,6 @@
 use academy_pow_runtime::Block;
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
-use sp_core::sr25519::Public;
 
 use crate::{
     chain_spec,
