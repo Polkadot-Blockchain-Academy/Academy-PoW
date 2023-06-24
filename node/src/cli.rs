@@ -1,8 +1,5 @@
 use academy_pow_runtime::AccountId;
-use sc_cli::{
-    clap::Parser,
-    RunCmd,
-};
+use sc_cli::{clap::Parser, RunCmd};
 use sc_service::ChainType;
 
 #[derive(Debug, Parser)]
@@ -60,11 +57,7 @@ fn parse_chaintype(s: &str) -> Result<ChainType, String> {
 /// Parse AccountId from a string argument passed on the command line.
 fn parse_account_id(s: &str) -> Result<AccountId, String> {
     // Handle the optional 0x prefix
-    let s = if s.starts_with("0x") {
-        &s[2..]
-    } else {
-        &s[..]
-    };
+    let s = if s.starts_with("0x") { &s[2..] } else { &s[..] };
 
     // Decode the hex.
     let v = hex::decode(s).map_err(|_| "Could not decode account id as hex")?;

@@ -1,6 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
+use account::AccountId20;
 use core::clone::Clone;
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
@@ -10,7 +11,6 @@ use sc_telemetry::{Telemetry, TelemetryWorker};
 use sha3pow::Sha3Algorithm;
 use sp_api::TransactionFor;
 use std::sync::Arc;
-use account::AccountId20;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
