@@ -13,45 +13,16 @@ pub struct Cli {
     #[clap(subcommand)]
     pub subcommand: Option<Subcommand>,
 
-    #[command(flatten)]
-    pub pow: AcademyPowCli,
-
-    #[clap(flatten)]
-    pub run: RunCmd,
-}
-
-#[derive(Debug, Parser, Clone)]
-#[clap(group(ArgGroup::new("backup")))]
-pub struct AcademyPowCli {
-    /// Miner's AccountId (base58 encoding of an SR25519 public key) for the block rewards
-    #[clap(long,
-           conflicts_with = "mining_public_key",
-           value_parser = parse_account_id)]
-    pub mining_account_id: Option<AccountId>,
-
-    /// Miner's hex encoding of the SR25519 public key) for the block rewards
-    #[clap(
-        long,
-        conflicts_with = "mining_account_id",
-        value_parser = parse_sr25519_public_key
-    )]
-    pub mining_public_key: Option<sr25519::Public>,
-
     /// whether to use instant seal
     #[clap(long, default_value = "false")]
     pub instant_seal: bool,
-}
 
-impl AcademyPowCli {
-    pub fn public_key_bytes(&self) -> [u8; 32] {
-        match &self.mining_account_id {
-            Some(account_id) => *account_id.as_ref(),
-            None => match self.mining_public_key {
-                Some(public_key) => public_key.0,
-                None => panic!("Specify one of --mining_account_id or --mining_public_key"),
-            },
-        }
-    }
+    /// Miner's AccountId (base58 encoding of an SR25519 public key) for the block rewards
+    #[clap(long, value_parser = parse_account_id)]
+    pub mining_account_id: Option<AccountId>,
+
+    #[clap(flatten)]
+    pub run: RunCmd,
 }
 
 #[derive(Debug, Parser)]
@@ -90,8 +61,26 @@ fn parse_chaintype(s: &str) -> Result<ChainType, String> {
 
 /// Parse AccountId from a string argument passed on the command line.
 fn parse_account_id(s: &str) -> Result<AccountId, String> {
-    Ok(AccountId::from_string(s)
-        .expect("Passed string is not a bas58 encoding of a sr25519 public key"))
+    // Handle the optional 0x prefix
+    let s = if s.starts_with("0x") {
+        &s[2..]
+    } else {
+        &s[..]
+    };
+
+    // Decode the hex.
+    let v = hex::decode(s).map_err(|_| "Could not decode account id as hex")?;
+    if v.len() != 20 {
+        Err("Account id bytes were the wrong length. Expected 20.")?;
+    }
+
+    // Isn't there a method to cast to a fixed length array?
+    let mut bytes = [0u8; 20];
+    for i in 0..20 {
+        bytes[i] = v[i];
+    }
+
+    Ok(AccountId::from(bytes))
 }
 
 /// Parse sr25519 pubkey from a string argument passed on the command line.
