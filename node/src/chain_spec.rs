@@ -39,7 +39,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
                 vec![
                     get_account_id_from_seed::<ecdsa::Public>("Alice"),
                     AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")),
-                    AccountId::from(hex!("A9c0F76cA045163E28afDdFe035ec76a44f5C1F3")),
                     get_account_id_from_seed::<ecdsa::Public>("Bob"),
                     get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
                     get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
