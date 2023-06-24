@@ -14,7 +14,7 @@ use sp_std::prelude::*;
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner};
+use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, IdentityAddressMapping};
 use address_mapping::{EVMAddressMapping, EnsureAddressMapped};
 
 // A few exports that help ease life for downstream crates.
@@ -341,13 +341,13 @@ impl FindAuthor<H160> for FindAuthorMapped {
 }
 
 impl pallet_evm::Config for Runtime {
-    type FeeCalculator = BaseFee;
+    type FeeCalculator = ();
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-    type CallOrigin = EnsureAddressMapped<Runtime>;
-    type WithdrawOrigin = EnsureAddressMapped<Runtime>;
-    type AddressMapping = EVMAddressMapping<Runtime>;
+    type CallOrigin = EnsureAddressSame<Runtime>;
+    type WithdrawOrigin = EnsureAddressSame<Runtime>;
+    type AddressMapping = IdentityAddressMapping;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
     type PrecompilesType = FrontierPrecompiles<Self>;
