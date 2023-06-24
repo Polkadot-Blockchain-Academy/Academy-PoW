@@ -21,6 +21,7 @@ dependencies = [
  "clap",
  "futures",
  "hex",
+ "hex-literal",
  "jsonrpsee",
  "log",
  "pallet-transaction-payment-rpc",
