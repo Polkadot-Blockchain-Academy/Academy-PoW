@@ -2,15 +2,6 @@
 
 This repository contains two scripts to interact with the Polkadot network: `balance.js` and `transfer.js`.
 
-## Prerequisites
-
-These scripts require [Node.js](https://nodejs.org/) to run. They also depend on the `@polkadot/api` and `@polkadot/keyring` libraries. You can install these dependencies by running:
-
-```bash
-npm install @polkadot/api @polkadot/keyring
-```
-
-
 ## balance.js
 
 The `balance.js` script fetches and prints the balance of a specified address on the Polkadot network.
