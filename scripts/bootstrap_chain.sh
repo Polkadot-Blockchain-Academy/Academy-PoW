@@ -7,9 +7,9 @@ set -eo pipefail
 
 export NODE_IMAGE=academy-pow-node:latest
 export BASE_PATH=/tmp/academy-pow
-export ALICE=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
-export BOB=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
-export EVE=5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw
+export ALICE=0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac
+export BOB=0x3Cd0A705a2DC65e5b1E1205896BaA2be8A07c6e0
+export EVE=0xFf64d3F6efE2317EE2807d223a0Bdc4c0c49dfDB
 
 # --- FUNCTIONS
 
