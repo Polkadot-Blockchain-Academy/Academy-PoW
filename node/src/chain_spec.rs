@@ -4,6 +4,7 @@ use academy_pow_runtime::{
 };
 use sp_core::{ecdsa, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use hex_literal::hex;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -37,6 +38,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 vec![
                     get_account_id_from_seed::<ecdsa::Public>("Alice"),
+                    AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")),
                     get_account_id_from_seed::<ecdsa::Public>("Bob"),
                     get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
                     get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
