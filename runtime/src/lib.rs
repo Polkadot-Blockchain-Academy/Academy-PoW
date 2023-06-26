@@ -14,7 +14,7 @@ use sp_std::prelude::*;
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, EnsureAddressRoot, IdentityAddressMapping, EnsureAddressNever, EnsureAddressOrigin};
+use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, IdentityAddressMapping, EnsureAddressNever, EnsureAddressOrigin};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -335,13 +335,13 @@ pub struct EnsureAddressSameBetter<AccountId>(PhantomData<AccountId>);
 impl<OuterOrigin, AccountId> EnsureAddressOrigin<OuterOrigin> for EnsureAddressSameBetter<AccountId>
 where
 	OuterOrigin: Into<Result<RawOrigin<AccountId>, OuterOrigin>> + From<RawOrigin<AccountId>>,
-    AccountId: Into<H160> + From<H160> + Eq,
+    AccountId: From<H160> + Eq,
 {
-	type Success = H160;
+	type Success = AccountId;
 
-	fn try_address_origin(address: &H160, origin: OuterOrigin) -> Result<H160, OuterOrigin> {
+	fn try_address_origin(address: &H160, origin: OuterOrigin) -> Result<AccountId, OuterOrigin> {
 		origin.into().and_then(|o| match o {
-			RawOrigin::Signed(who) if who == (*address).into() => Ok(*address),
+			RawOrigin::Signed(who) if who == (*address).into() => Ok(who),
 			r => Err(OuterOrigin::from(r)),
 		})
 	}
