@@ -2,7 +2,8 @@ use academy_pow_runtime::{
     AccountId, BalancesConfig, DifficultyAdjustmentConfig, EVMChainIdConfig, GenesisConfig, Signature,
     SystemConfig, WASM_BINARY, ManagedAddressMappingConfig,
 };
-use sp_core::{sr25519, Pair, Public, H160};
+use hex_literal::hex;
+use sp_core::{ecdsa, Pair, Public, H160};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
@@ -36,10 +37,11 @@ pub fn development_config() -> Result<ChainSpec, String> {
             genesis(
                 wasm_binary,
                 vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob"),
-                    get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Alice"),
+                    AccountId::from(hex!("f24FF3a9CF04c71Dbc94D0b566f7A27B94566cac")),
+                    get_account_id_from_seed::<ecdsa::Public>("Bob"),
+                    get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
                 ],
                 4_000_000,
             )
@@ -64,18 +66,18 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
             genesis(
                 wasm_binary,
                 vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob"),
-                    get_account_id_from_seed::<sr25519::Public>("Charlie"),
-                    get_account_id_from_seed::<sr25519::Public>("Dave"),
-                    get_account_id_from_seed::<sr25519::Public>("Eve"),
-                    get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-                    get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Alice"),
+                    get_account_id_from_seed::<ecdsa::Public>("Bob"),
+                    get_account_id_from_seed::<ecdsa::Public>("Charlie"),
+                    get_account_id_from_seed::<ecdsa::Public>("Dave"),
+                    get_account_id_from_seed::<ecdsa::Public>("Eve"),
+                    get_account_id_from_seed::<ecdsa::Public>("Ferdie"),
+                    get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Charlie//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Dave//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Eve//stash"),
+                    get_account_id_from_seed::<ecdsa::Public>("Ferdie//stash"),
                 ],
                 4_000_000,
             )

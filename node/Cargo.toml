@@ -19,6 +19,9 @@ clap = { version = "4.3.0", features = ["derive"] }
 parity-scale-codec = '3.1.2'
 sha3 = "0.10.1"
 rand = { version = "0.8.5", features = ["small_rng"] }
+hex-literal = "0.4.1"
+
+account = { path = "../account" }
 
 # These dependencies are used for the node template's RPCs
 jsonrpsee = { version = "0.16.0", features = ["server"] }

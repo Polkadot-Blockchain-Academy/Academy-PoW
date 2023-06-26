@@ -1,0 +1,53 @@
+[package]
+name = "account"
+edition = "2021"
+homepage = "https://moonbeam.network"
+license = "GPL-3.0-only"
+version = "0.1.1"
+
+[package.metadata.docs.rs]
+targets = [ "x86_64-unknown-linux-gnu" ]
+
+[dependencies]
+blake2-rfc = { version = "0.2.18", default-features = false, optional = true }
+hex = { version = "0.4.3", default-features = false }
+impl-serde = { version = "0.3.1", default-features = false }
+libsecp256k1 = { version = "0.7", default-features = false , features = [ "hmac" ] }
+log = { version = "0.4", default-features = false }
+serde = { version = "1.0.101", default-features = false, optional = true, features = [ "derive" ] }
+sha3 = { version = "0.10", default-features = false }
+
+# Substrate
+parity-scale-codec = {version = "3.1.2", default-features = false, features = ["derive"] }
+scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-runtime-interface = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+
+# I don't think we need this because it is already a full dependency.
+# Maybe fix this upstream in moonbeam too.
+# [dev-dependencies]
+# hex = { workspace = true }
+
+[features]
+default = [ "std" ]
+std = [
+	"full_crypto",
+	"hex/std",
+	"impl-serde/std",
+	"libsecp256k1/std",
+	"parity-scale-codec/std",
+	"serde/std",
+	"sha3/std",
+	"sp-core/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-std/std",
+]
+
+full_crypto = [
+	"blake2-rfc",
+	"sp-runtime-interface/disable_target_static_assertions",
+]

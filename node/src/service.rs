@@ -5,6 +5,7 @@ use crate::eth::{
     FrontierPartialComponents,
 };
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi, TransactionConverter};
+use account::AccountId20;
 use core::clone::Clone;
 use fc_storage::overrides_handle;
 use futures::channel::mpsc;
@@ -15,7 +16,6 @@ use sc_service::{error::Error as ServiceError, Configuration, PartialComponents,
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sha3pow::Sha3Algorithm;
 use sp_api::TransactionFor;
-use sp_core::sr25519;
 use std::sync::Arc;
 
 // Our native executor instance.
@@ -176,7 +176,7 @@ pub fn build_pow_import_queue(
 /// Builds a new service for a full client.
 pub fn new_full(
     config: Configuration,
-    sr25519_public_key: sr25519::Public,
+    mining_account_id: AccountId20,
     instant_seal: bool,
     eth_config: &EthConfiguration,
 ) -> Result<TaskManager, ServiceError> {
@@ -337,7 +337,7 @@ pub fn new_full(
                     let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
                     let author = academy_pow_runtime::block_author::InherentDataProvider(
-                        sr25519_public_key.encode(),
+                        mining_account_id.encode(),
                     );
 
                     Ok((timestamp, author))
