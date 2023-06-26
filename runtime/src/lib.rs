@@ -297,9 +297,9 @@ impl pallet_transaction_payment::Config for Runtime {
 // Prints debug output of the `contracts` pallet to stdout if the node is
 // started with `-lruntime::contracts=debug`.
 const CONTRACTS_DEBUG_OUTPUT: pallet_contracts::DebugInfo =
-	pallet_contracts::DebugInfo::UnsafeDebug;
+    pallet_contracts::DebugInfo::UnsafeDebug;
 const CONTRACTS_EVENTS: pallet_contracts::CollectEvents =
-	pallet_contracts::CollectEvents::UnsafeCollect;
+    pallet_contracts::CollectEvents::UnsafeCollect;
 
 // The storage per one byte of contract storage: 4*10^{-5} AZERO per byte.
 pub const CONTRACT_DEPOSIT_PER_BYTE: Balance = 4 * (TOKEN / 100_000);
@@ -392,8 +392,8 @@ pub type Executive = frame_executive::Executive<
 >;
 
 type EventRecord = frame_system::EventRecord<
-	<Runtime as frame_system::Config>::RuntimeEvent,
-	<Runtime as frame_system::Config>::Hash,
+    <Runtime as frame_system::Config>::RuntimeEvent,
+    <Runtime as frame_system::Config>::Hash,
 >;
 
 impl_runtime_apis! {
