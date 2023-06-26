@@ -294,8 +294,13 @@ impl pallet_transaction_payment::Config for Runtime {
     type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
 }
 
-// Prints debug output of the `contracts` pallet to stdout if the node is started with `-lruntime::contracts=debug`.
-const CONTRACTS_DEBUG_OUTPUT: bool = true;
+// Prints debug output of the `contracts` pallet to stdout if the node is
+// started with `-lruntime::contracts=debug`.
+const CONTRACTS_DEBUG_OUTPUT: pallet_contracts::DebugInfo =
+	pallet_contracts::DebugInfo::UnsafeDebug;
+const CONTRACTS_EVENTS: pallet_contracts::CollectEvents =
+	pallet_contracts::CollectEvents::UnsafeCollect;
+
 // The storage per one byte of contract storage: 4*10^{-5} AZERO per byte.
 pub const CONTRACT_DEPOSIT_PER_BYTE: Balance = 4 * (TOKEN / 100_000);
 
@@ -384,6 +389,11 @@ pub type Executive = frame_executive::Executive<
     frame_system::ChainContext<Runtime>,
     Runtime,
     AllPalletsWithSystem,
+>;
+
+type EventRecord = frame_system::EventRecord<
+	<Runtime as frame_system::Config>::RuntimeEvent,
+	<Runtime as frame_system::Config>::Hash,
 >;
 
 impl_runtime_apis! {
@@ -520,7 +530,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
         }
     }
 
-    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>
+    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord>
         for Runtime
     {
         fn call(
@@ -530,7 +540,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
             gas_limit: Option<Weight>,
             storage_deposit_limit: Option<Balance>,
             input_data: Vec<u8>,
-        ) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+        ) -> pallet_contracts_primitives::ContractExecResult<Balance, EventRecord> {
             let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
             Contracts::bare_call(
                 origin,
@@ -540,6 +550,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
                 storage_deposit_limit,
                 input_data,
                 CONTRACTS_DEBUG_OUTPUT,
+                CONTRACTS_EVENTS,
                 pallet_contracts::Determinism::Enforced,
             )
         }
@@ -552,7 +563,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
             code: pallet_contracts_primitives::Code<Hash>,
             data: Vec<u8>,
             salt: Vec<u8>,
-        ) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance>
+        ) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance, EventRecord>
         {
             let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
             Contracts::bare_instantiate(
@@ -563,7 +574,8 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
                 code,
                 data,
                 salt,
-                CONTRACTS_DEBUG_OUTPUT
+                CONTRACTS_DEBUG_OUTPUT,
+                CONTRACTS_EVENTS,
             )
         }
 
