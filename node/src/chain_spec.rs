@@ -1,6 +1,6 @@
 use academy_pow_runtime::{
-    AccountId, BalancesConfig, DifficultyAdjustmentConfig, EVMChainIdConfig, GenesisConfig, Signature,
-    SystemConfig, WASM_BINARY,
+    AccountId, BalancesConfig, DifficultyAdjustmentConfig, EVMChainIdConfig, GenesisConfig,
+    Signature, SystemConfig, WASM_BINARY,
 };
 use hex_literal::hex;
 use sp_core::{ecdsa, Pair, Public};

@@ -7,7 +7,7 @@ use sc_service::ChainType;
 pub struct Cli {
     #[clap(subcommand)]
     pub subcommand: Option<Subcommand>,
-    
+
     #[command(flatten)]
     pub eth: crate::eth::EthConfiguration,
 

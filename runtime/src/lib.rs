@@ -14,16 +14,21 @@ use sp_std::prelude::*;
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, IdentityAddressMapping, EnsureAddressNever, EnsureAddressOrigin};
+use pallet_evm::{
+    Account as EVMAccount, EnsureAddressNever, EnsureAddressOrigin, FeeCalculator,
+    IdentityAddressMapping, Runner,
+};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
+    construct_runtime,
     dispatch::RawOrigin,
-    construct_runtime, log, parameter_types,
+    log,
     pallet_prelude::*,
+    parameter_types,
     traits::{
-        Currency, EstimateNextNewSession, FindAuthor, Imbalance, KeyOwnerProofSystem, LockIdentifier, Nothing,
-        OnUnbalanced, Randomness, ValidatorSet,
+        Currency, EstimateNextNewSession, FindAuthor, Imbalance, KeyOwnerProofSystem,
+        LockIdentifier, Nothing, OnUnbalanced, Randomness, ValidatorSet,
     },
     weights::{
         constants::{
@@ -48,7 +53,9 @@ use sp_api::impl_runtime_apis;
 pub use sp_runtime::BuildStorage;
 use sp_runtime::{
     create_runtime_str, generic,
-    traits::{BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify, UniqueSaturatedInto},
+    traits::{
+        BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, UniqueSaturatedInto, Verify,
+    },
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult,
 };
@@ -317,7 +324,6 @@ parameter_types! {
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
-
 pub struct FindAuthorH160;
 impl FindAuthor<H160> for FindAuthorH160 {
     fn find_author<'a, I>(_: I) -> Option<H160>
@@ -334,21 +340,21 @@ impl FindAuthor<H160> for FindAuthorH160 {
 pub struct EnsureAddressSameBetter<AccountId>(PhantomData<AccountId>);
 impl<OuterOrigin, AccountId> EnsureAddressOrigin<OuterOrigin> for EnsureAddressSameBetter<AccountId>
 where
-	OuterOrigin: Into<Result<RawOrigin<AccountId>, OuterOrigin>> + From<RawOrigin<AccountId>>,
+    OuterOrigin: Into<Result<RawOrigin<AccountId>, OuterOrigin>> + From<RawOrigin<AccountId>>,
     AccountId: From<H160> + Eq,
 {
-	type Success = AccountId;
+    type Success = AccountId;
 
-	fn try_address_origin(address: &H160, origin: OuterOrigin) -> Result<AccountId, OuterOrigin> {
-		origin.into().and_then(|o| match o {
-			RawOrigin::Signed(who) if who == (*address).into() => Ok(who),
-			r => Err(OuterOrigin::from(r)),
-		})
-	}
+    fn try_address_origin(address: &H160, origin: OuterOrigin) -> Result<AccountId, OuterOrigin> {
+        origin.into().and_then(|o| match o {
+            RawOrigin::Signed(who) if who == (*address).into() => Ok(who),
+            r => Err(OuterOrigin::from(r)),
+        })
+    }
 }
 
 impl pallet_evm::Config for Runtime {
-    type FeeCalculator = ();//BaseFee;
+    type FeeCalculator = (); //BaseFee;
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;

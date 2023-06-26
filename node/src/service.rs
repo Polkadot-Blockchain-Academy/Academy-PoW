@@ -56,10 +56,7 @@ pub type ServicePartialComponents = PartialComponents<
 pub fn new_partial<BIQ>(
     config: &Configuration,
     build_import_queue: BIQ,
-) -> Result<
-    ServicePartialComponents,
-    ServiceError,
->
+) -> Result<ServicePartialComponents, ServiceError>
 where
     BIQ: FnOnce(
         Arc<FullClient>,
@@ -250,7 +247,7 @@ pub fn new_full(
         fee_history_cache_limit,
         execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
         forced_parent_hashes: None,
-	};
+    };
 
     // Channel for the rpc handler to communicate with the authorship task.
     let (command_sink, _commands_stream) = mpsc::channel(1000);
