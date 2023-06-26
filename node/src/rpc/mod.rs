@@ -16,7 +16,6 @@ use sc_service::TransactionPool;
 use sc_transaction_pool::ChainApi;
 use sp_api::{CallApiAt, ProvideRuntimeApi};
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
-use sp_runtime::traits::Block as BlockT;
 // Runtime
 use academy_pow_runtime::{opaque::Block, AccountId, Balance, Hash, Index};
 
@@ -24,7 +23,7 @@ mod eth;
 pub use self::eth::{create_eth, EthDeps};
 
 /// Full client dependencies.
-pub struct FullDeps<C, P, A: ChainApi, CT> {
+pub struct FullDeps<C, P, A: ChainApi> {
     /// The client instance to use.
     pub client: Arc<C>,
     /// Transaction pool instance.
@@ -34,7 +33,7 @@ pub struct FullDeps<C, P, A: ChainApi, CT> {
     /// Manual seal command sink
     pub command_sink: Option<mpsc::Sender<EngineCommand<Hash>>>,
     /// Ethereum-compatibility specific dependencies.
-    pub eth: EthDeps<C, P, A, CT, Block>,
+    pub eth: EthDeps<C, P, A, Block>,
 }
 
 pub struct DefaultEthConfig<C, BE>(std::marker::PhantomData<(C, BE)>);
@@ -50,8 +49,8 @@ where
 }
 
 /// Instantiate all Full RPC extensions.
-pub fn create_full<C, P, BE, A, CT>(
-    deps: FullDeps<C, P, A, CT>,
+pub fn create_full<C, P, BE, A>(
+    deps: FullDeps<C, P, A>,
     subscription_task_executor: SubscriptionTaskExecutor,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
@@ -68,7 +67,6 @@ where
     BE: Backend<Block> + 'static,
     P: TransactionPool<Block = Block> + 'static,
     A: ChainApi<Block = Block> + 'static,
-    CT: fp_rpc::ConvertTransaction<<Block as BlockT>::Extrinsic> + Send + Sync + 'static,
 {
     use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
     use sc_consensus_manual_seal::rpc::{ManualSeal, ManualSealApiServer};
@@ -95,11 +93,8 @@ where
     }
 
     // Ethereum compatibility RPCs
-    let io = create_eth::<_, _, _, _, _, _, DefaultEthConfig<C, BE>>(
-        io,
-        eth,
-        subscription_task_executor,
-    )?;
+    let io =
+        create_eth::<_, _, _, _, _, DefaultEthConfig<C, BE>>(io, eth, subscription_task_executor)?;
 
     Ok(io)
 }

@@ -4,7 +4,7 @@ use crate::eth::{
     db_config_dir, new_frontier_partial, EthConfiguration, FrontierBackend,
     FrontierPartialComponents,
 };
-use academy_pow_runtime::{self, opaque::Block, RuntimeApi, TransactionConverter};
+use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use account::AccountId20;
 use core::clone::Clone;
 use fc_storage::overrides_handle;
@@ -227,7 +227,6 @@ pub fn new_full(
         client: client.clone(),
         pool: transaction_pool.clone(),
         graph: transaction_pool.pool().clone(),
-        converter: Some(TransactionConverter),
         is_authority: config.role.is_authority(),
         enable_dev_signer: eth_config.enable_dev_signer,
         network: network.clone(),

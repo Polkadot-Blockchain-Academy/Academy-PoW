@@ -21,18 +21,16 @@ use fc_db::Backend as FrontierBackend;
 pub use fc_rpc::{EthBlockDataCacheTask, EthConfig, OverrideHandle, StorageOverride};
 pub use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 pub use fc_storage::overrides_handle;
-use fp_rpc::{ConvertTransaction, ConvertTransactionRuntimeApi, EthereumRuntimeRPCApi};
+use fp_rpc::{ConvertTransactionRuntimeApi, EthereumRuntimeRPCApi, NoTransactionConverter};
 
 /// Extra dependencies for Ethereum compatibility.
-pub struct EthDeps<C, P, A: ChainApi, CT, B: BlockT> {
+pub struct EthDeps<C, P, A: ChainApi, B: BlockT> {
     /// The client instance to use.
     pub client: Arc<C>,
     /// Transaction pool instance.
     pub pool: Arc<P>,
     /// Graph pool instance.
     pub graph: Arc<Pool<A>>,
-    /// Ethereum transaction converter.
-    pub converter: Option<CT>,
     /// The Node authority flag
     pub is_authority: bool,
     /// Whether to enable dev signer
@@ -62,13 +60,12 @@ pub struct EthDeps<C, P, A: ChainApi, CT, B: BlockT> {
     pub forced_parent_hashes: Option<BTreeMap<H256, H256>>,
 }
 
-impl<C, P, A: ChainApi, CT: Clone, B: BlockT> Clone for EthDeps<C, P, A, CT, B> {
+impl<C, P, A: ChainApi, B: BlockT> Clone for EthDeps<C, P, A, B> {
     fn clone(&self) -> Self {
         Self {
             client: self.client.clone(),
             pool: self.pool.clone(),
             graph: self.graph.clone(),
-            converter: self.converter.clone(),
             is_authority: self.is_authority,
             enable_dev_signer: self.enable_dev_signer,
             network: self.network.clone(),
@@ -87,9 +84,9 @@ impl<C, P, A: ChainApi, CT: Clone, B: BlockT> Clone for EthDeps<C, P, A, CT, B> 
 }
 
 /// Instantiate Ethereum-compatible RPC extensions.
-pub fn create_eth<C, BE, P, A, CT, B, EC: EthConfig<B, C>>(
+pub fn create_eth<C, BE, P, A, B, EC: EthConfig<B, C>>(
     mut io: RpcModule<()>,
-    deps: EthDeps<C, P, A, CT, B>,
+    deps: EthDeps<C, P, A, B>,
     _subscription_task_executor: SubscriptionTaskExecutor,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
@@ -101,7 +98,6 @@ where
     BE: Backend<B> + 'static,
     P: TransactionPool<Block = B> + 'static,
     A: ChainApi<Block = B> + 'static,
-    CT: ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
 {
     use fc_rpc::{
         Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer, EthSigner, Net,
@@ -112,7 +108,6 @@ where
         client,
         pool,
         graph,
-        converter,
         is_authority,
         enable_dev_signer,
         network,
@@ -138,7 +133,7 @@ where
             client.clone(),
             pool,
             graph,
-            converter,
+            None::<NoTransactionConverter>,
             sync,
             vec![],
             overrides,
