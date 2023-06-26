@@ -14,8 +14,7 @@ use sp_std::prelude::*;
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner};
-use address_mapping::{EVMAddressMapping, EnsureAddressMapped};
+use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, EnsureAddressRoot, IdentityAddressMapping, EnsureAddressNever};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
@@ -48,7 +47,7 @@ use sp_api::impl_runtime_apis;
 pub use sp_runtime::BuildStorage;
 use sp_runtime::{
     create_runtime_str, generic,
-    traits::{BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify},
+    traits::{BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify, UniqueSaturatedInto},
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult,
 };
@@ -94,9 +93,6 @@ pub mod difficulty;
 
 /// The faucet to allow users to claim free tokens
 pub mod faucet;
-
-/// The AddressMapping scheme used for Runtime's AccountId32 and EVM's H160
-pub mod address_mapping;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -312,8 +308,6 @@ impl pallet_base_fee::Config for Runtime {
 
 impl pallet_evm_chain_id::Config for Runtime {}
 
-impl address_mapping::Config for Runtime {}
-
 const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 
 parameter_types! {
@@ -322,30 +316,32 @@ parameter_types! {
     pub WeightPerGas: Weight = Weight::from_parts(weight_per_gas(BLOCK_GAS_LIMIT, NORMAL_DISPATCH_RATIO, WEIGHT_MILLISECS_PER_BLOCK), 0);
 }
 
-pub struct FindAuthorMapped;
-impl FindAuthor<H160> for FindAuthorMapped {
-    fn find_author<'a, I>(_: I) -> Option<H160>
-    where
-        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
-    {
-        use crate::block_author::BlockAuthor;
 
-        if let Some(author_id) = <() as BlockAuthor<AccountId>>::block_author() {
-            ManagedAddressMapping::get_mapped_h160(author_id)
-        } else {
-            None
-        }
-    }
-}
+//TODO We'll need to wire up the evm's author to the block author inherent
+// pub struct FindAuthorMapped;
+// impl FindAuthor<H160> for FindAuthorMapped {
+//     fn find_author<'a, I>(_: I) -> Option<H160>
+//     where
+//         I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+//     {
+//         use crate::block_author::BlockAuthor;
+
+//         if let Some(author_id) = <() as BlockAuthor<AccountId>>::block_author() {
+//             ManagedAddressMapping::get_mapped_h160(author_id)
+//         } else {
+//             None
+//         }
+//     }
+// }
 
 impl pallet_evm::Config for Runtime {
     type FeeCalculator = ();//BaseFee;
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-    type CallOrigin = EnsureAddressMapped<Runtime>;
-    type WithdrawOrigin = EnsureAddressMapped<Runtime>;
-    type AddressMapping = EVMAddressMapping<Runtime>;
+    type CallOrigin = EnsureAddressNever<AccountId>;//Same; // TODO make same work with into similarly to how the mapping does
+    type WithdrawOrigin = EnsureAddressNever<AccountId>;//Same;
+    type AddressMapping = IdentityAddressMapping;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
     type PrecompilesType = FrontierPrecompiles<Self>;
@@ -355,7 +351,7 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
     type OnCreate = ();
-    type FindAuthor = FindAuthorMapped;
+    type FindAuthor = (); //TODO wire up to block author
     type Timestamp = Timestamp;
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
 }
@@ -463,7 +459,6 @@ construct_runtime!(
         EVMChainId: pallet_evm_chain_id,
         BaseFee: pallet_base_fee,
         Ethereum: pallet_ethereum,
-        ManagedAddressMapping: address_mapping,
         Contracts: pallet_contracts,
     }
 );
