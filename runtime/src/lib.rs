@@ -37,9 +37,7 @@ use sp_core::{OpaqueMetadata, U256};
 pub use sp_runtime::BuildStorage;
 use sp_runtime::{
     create_runtime_str, generic,
-    traits::{
-        BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify,
-    },
+    traits::{BlakeTwo256, Block as BlockT, Bounded, IdentifyAccount, One, Verify},
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult,
 };

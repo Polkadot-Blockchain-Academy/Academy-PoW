@@ -2,9 +2,9 @@ use academy_pow_runtime::{
     AccountId, BalancesConfig, DifficultyAdjustmentConfig, GenesisConfig, Signature, SystemConfig,
     WASM_BINARY,
 };
+use hex_literal::hex;
 use sp_core::{ecdsa, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use hex_literal::hex;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;

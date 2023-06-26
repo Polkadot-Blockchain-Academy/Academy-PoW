@@ -57,7 +57,11 @@ fn parse_chaintype(s: &str) -> Result<ChainType, String> {
 /// Parse AccountId from a string argument passed on the command line.
 fn parse_account_id(s: &str) -> Result<AccountId, String> {
     // Handle the optional 0x prefix
-    let s = if s.starts_with("0x") { &s[2..] } else { &s[..] };
+    let s = if let Some(stripped) = s.strip_prefix("0x") {
+        stripped
+    } else {
+        s
+    };
 
     // Decode the hex.
     let v = hex::decode(s).map_err(|_| "Could not decode account id as hex")?;
@@ -67,9 +71,7 @@ fn parse_account_id(s: &str) -> Result<AccountId, String> {
 
     // Isn't there a method to cast to a fixed length array?
     let mut bytes = [0u8; 20];
-    for i in 0..20 {
-        bytes[i] = v[i];
-    }
+    bytes[..20].copy_from_slice(&v[..20]);
 
     Ok(AccountId::from(bytes))
 }
