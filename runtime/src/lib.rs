@@ -14,10 +14,11 @@ use sp_std::prelude::*;
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
 use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
-use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, EnsureAddressRoot, IdentityAddressMapping, EnsureAddressNever};
+use pallet_evm::{Account as EVMAccount, FeeCalculator, Runner, EnsureAddressSame, EnsureAddressRoot, IdentityAddressMapping, EnsureAddressNever, EnsureAddressOrigin};
 
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
+    dispatch::RawOrigin,
     construct_runtime, log, parameter_types,
     pallet_prelude::*,
     traits::{
@@ -329,13 +330,30 @@ impl FindAuthor<H160> for FindAuthorH160 {
     }
 }
 
+//TODO Consider moving this upstream into frontier
+pub struct EnsureAddressSameBetter<AccountId>(PhantomData<AccountId>);
+impl<OuterOrigin, AccountId> EnsureAddressOrigin<OuterOrigin> for EnsureAddressSameBetter<AccountId>
+where
+	OuterOrigin: Into<Result<RawOrigin<AccountId>, OuterOrigin>> + From<RawOrigin<AccountId>>,
+    AccountId: Into<H160> + From<H160> + Eq,
+{
+	type Success = H160;
+
+	fn try_address_origin(address: &H160, origin: OuterOrigin) -> Result<H160, OuterOrigin> {
+		origin.into().and_then(|o| match o {
+			RawOrigin::Signed(who) if who == (*address).into() => Ok(*address),
+			r => Err(OuterOrigin::from(r)),
+		})
+	}
+}
+
 impl pallet_evm::Config for Runtime {
     type FeeCalculator = ();//BaseFee;
     type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
     type WeightPerGas = WeightPerGas;
     type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-    type CallOrigin = EnsureAddressNever<AccountId>;//Same; // TODO make same work with into similarly to how the mapping does
-    type WithdrawOrigin = EnsureAddressNever<AccountId>;//Same;
+    type CallOrigin = EnsureAddressSameBetter<AccountId>;
+    type WithdrawOrigin = EnsureAddressNever<AccountId>; // No real notion of withdrawal when using unified accounts.
     type AddressMapping = IdentityAddressMapping;
     type Currency = Balances;
     type RuntimeEvent = RuntimeEvent;
