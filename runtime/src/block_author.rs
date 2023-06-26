@@ -109,9 +109,12 @@ impl<AccountId> BlockAuthor<AccountId> for () {
     }
 }
 
-impl<T: Config> BlockAuthor<T::AccountId> for Pallet<T> {
-    fn block_author() -> Option<T::AccountId> {
-        Author::<T>::get()
+impl<T: Config, U> BlockAuthor<U> for Pallet<T>
+where
+    T::AccountId: Into<U>,
+{
+    fn block_author() -> Option<U> {
+        Author::<T>::get().map(|x| x.into())
     }
 }
 

@@ -317,22 +317,17 @@ parameter_types! {
 }
 
 
-//TODO We'll need to wire up the evm's author to the block author inherent
-// pub struct FindAuthorMapped;
-// impl FindAuthor<H160> for FindAuthorMapped {
-//     fn find_author<'a, I>(_: I) -> Option<H160>
-//     where
-//         I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
-//     {
-//         use crate::block_author::BlockAuthor;
+pub struct FindAuthorH160;
+impl FindAuthor<H160> for FindAuthorH160 {
+    fn find_author<'a, I>(_: I) -> Option<H160>
+    where
+        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+    {
+        use crate::block_author::BlockAuthor as _;
 
-//         if let Some(author_id) = <() as BlockAuthor<AccountId>>::block_author() {
-//             ManagedAddressMapping::get_mapped_h160(author_id)
-//         } else {
-//             None
-//         }
-//     }
-// }
+        BlockAuthor::block_author()
+    }
+}
 
 impl pallet_evm::Config for Runtime {
     type FeeCalculator = ();//BaseFee;
@@ -351,7 +346,7 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type OnChargeTransaction = ();
     type OnCreate = ();
-    type FindAuthor = (); //TODO wire up to block author
+    type FindAuthor = FindAuthorH160;
     type Timestamp = Timestamp;
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Runtime>;
 }
