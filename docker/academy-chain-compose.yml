@@ -22,8 +22,10 @@ services:
     volumes:
       - $BASE_PATH/:/data/
     expose:
+      - 30333
       - 9944
     ports:
+      - 0.0.0.0:30333:30333
       - 0.0.0.0:9944:9944
 
   node02:
