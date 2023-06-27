@@ -36,10 +36,8 @@ mod roulette {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum BetType {
         Number(u8),
-        Red,
-        Black,
-        Odd,
-        Even,
+        Red,   // even
+        Black, // red
     }
 
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
@@ -170,8 +168,6 @@ mod roulette {
 
     fn distribute_winnings(data: &Data, winning_number: u64) -> Result<()> {
         (0..data.next_bet_id).into_iter().for_each(|id| {
-            //
-            // todo!()
 
             // let bet = self.be
         });
@@ -179,24 +175,55 @@ mod roulette {
         Ok(())
     }
 
-    // Calculate the payout for a given bet
-    fn calculate_payout(bet: &BetType, winning_number: u64) -> Balance {
-        match bet {
-            BetType::Number(number) => todo!(),
-            BetType::Red => todo!(),
-            BetType::Black => todo!(),
-            BetType::Odd => todo!(),
-            BetType::Even => todo!(),
-        };
+    /// Calculate the payout for a given bet
+    ///
+    /// returns a potential payout is no winning_number is passed
+    fn calculate_payout(bet: &Bet, winning_number: Option<u8>) -> Balance {
+        match bet.bet_type {
+            BetType::Number(bet_number) => {
+                let potential_payout = bet.amount * 36;
+                match winning_number {
+                    Some(winning_number) => match bet_number == winning_number {
+                        true => potential_payout,
+                        false => 0,
+                    },
+                    None => potential_payout,
+                }
+            }
+            BetType::Red => {
+                let potential_payout = bet.amount * 2;
+                match winning_number {
+                    Some(winning_number) => match is_red(winning_number) {
+                        true => potential_payout,
+                        false => 0,
+                    },
+                    None => potential_payout,
+                }
+            }
+            BetType::Black => {
+                let potential_payout = bet.amount * 2;
+                match winning_number {
+                    Some(winning_number) => match is_black(winning_number) {
+                        true => potential_payout,
+                        false => 0,
+                    },
+                    None => potential_payout,
+                }
+            }
+        }
+    }
 
-        // if bet.betType == 0 && isRed(winningNumber) {
-        //     return bet.betAmount * 2;
-        // } else if bet.betType == 1 && isBlack(winningNumber) {
-        //     return bet.betAmount * 2;
-        // } else if bet.betType == 2 && bet.betNumber == winningNumber {
-        //     return bet.betAmount * 36;
-        // }
+    fn is_black(number: u8) -> bool {
+        matches!(
+            number,
+            2 | 4 | 6 | 8 | 10 | 11 | 13 | 15 | 17 | 20 | 22 | 24 | 26 | 28 | 29 | 31 | 33 | 35
+        )
+    }
 
-        // return 0;
+    fn is_red(number: u8) -> bool {
+        matches!(
+            number,
+            1 | 3 | 5 | 7 | 9 | 12 | 14 | 16 | 18 | 19 | 21 | 23 | 25 | 27 | 30 | 32 | 34 | 36
+        )
     }
 }
