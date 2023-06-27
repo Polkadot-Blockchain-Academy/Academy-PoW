@@ -43,9 +43,11 @@ ARGS=(
   --enable-log-reloading
 )
 
-if [[ -n "${MINING_ACCOUNT_ID:-}" ]]; then
-  ARGS+=(--mining-account-id "${MINING_ACCOUNT_ID}")
-fi
+# TODO Joshy disabled these lines as part of https://github.com/Polkadot-Blockchain-Academy/Academy-PoW/pull/26
+# @fbielejec please fix this or remove it more elegantly as you see fit.
+# if [[ -n "${MINING_ACCOUNT_ID:-}" ]]; then
+#   ARGS+=(--mining-account-id "${MINING_ACCOUNT_ID}")
+# fi
 
 if [[ "true" == "$VALIDATOR" ]]; then
   ARGS+=(--validator)
