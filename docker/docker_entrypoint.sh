@@ -47,10 +47,6 @@ if [[ -n "${MINING_ACCOUNT_ID:-}" ]]; then
   ARGS+=(--mining-account-id "${MINING_ACCOUNT_ID}")
 fi
 
-if [[ -n "${MINING_PUBLIC_KEY:-}" ]]; then
-  ARGS+=(--mining-public-key "${MINING_PUBLIC_KEY}")
-fi
-
 if [[ "true" == "$VALIDATOR" ]]; then
   ARGS+=(--validator)
 fi
