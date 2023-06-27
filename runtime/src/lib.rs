@@ -218,7 +218,7 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type HoldIdentifier = ();
+    type RuntimeHoldReason = ();
     type MaxHolds = ();
 }
 
@@ -339,6 +339,7 @@ impl pallet_contracts::Config for Runtime {
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
     type DefaultDepositLimit = DefaultDepositLimit;
+    type Migrations = ();
 }
 
 construct_runtime!(

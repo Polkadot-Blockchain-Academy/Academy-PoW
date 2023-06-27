@@ -89,6 +89,7 @@ pub mod pallet {
     pub type InitialDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
 
     #[pallet::genesis_config]
+    #[derive(Default)]
     pub struct GenesisConfig {
         pub initial_difficulty: Difficulty,
     }
