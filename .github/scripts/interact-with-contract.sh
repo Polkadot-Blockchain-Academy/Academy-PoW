@@ -17,4 +17,4 @@ $CC cargo contract build --release --manifest-path=/sources/flipper/Cargo.toml
 ADDRESS=$($CC cargo contract instantiate --suri //Alice --url ws://localhost:9944 --skip-confirm --args false -x --output-json /sources/flipper/target/ink/flipper.wasm | jq -jr '.contract')
 
 # Call the contract
-$CC cargo contract call --suri //Alice --url ws://localhost:9933 --contract $ADDRESS --message flip --manifest-path=/sources/flipper/Cargo.toml -x --skip-confirm
+$CC cargo contract call --suri //Alice --url ws://localhost:9944 --contract $ADDRESS --message flip --manifest-path=/sources/flipper/Cargo.toml -x --skip-confirm
