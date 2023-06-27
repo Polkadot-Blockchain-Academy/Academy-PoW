@@ -15,7 +15,7 @@ NODE_KEY_FILE=${NODE_KEY_FILE:?'Node key file should be specified'}
 BASE_PATH=${BASE_PATH:?'Base path should be specified'}
 CHAIN=${CHAIN:?'Chain should be specified'}
 PORT=${PORT:-30333}
-RPC_PORT=${RPC_PORT:-9933}
+RPC_PORT=${RPC_PORT:-9944}
 NAME=${NAME:?'Name should be specified'}
 
 # booleans
