@@ -60,11 +60,7 @@ fn parse_chaintype(s: &str) -> Result<ChainType, String> {
 /// Parse AccountId from a string argument passed on the command line.
 fn parse_account_id(s: &str) -> Result<AccountId, String> {
     // Handle the optional 0x prefix
-    let s = if let Some(stripped) = s.strip_prefix("0x") {
-        stripped
-    } else {
-        s
-    };
+    let s = s.trim_start_matches("0x");
 
     // Decode the hex.
     let v = hex::decode(s).map_err(|_| "Could not decode account id as hex")?;
