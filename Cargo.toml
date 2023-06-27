@@ -7,3 +7,7 @@ members = [
     'runtime',
     'node/sha3pow',
 ]
+
+exclude = [
+    'contracts/roulette',
+]
