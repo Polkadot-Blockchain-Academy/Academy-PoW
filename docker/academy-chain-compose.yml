@@ -16,7 +16,6 @@ services:
       - NODE_KEY_FILE=/data/$NODE01_ACCOUNT_ID/p2p_secret.txt
       - PORT=30333
       - RPC_PORT=9933
-      - WS_PORT=9944
       - RUST_LOG=info
       - BOOT_NODES=/ip4/127.0.0.1/tcp/30333/p2p/$NODE01_PEER_ID
       - PUBLIC_ADDR=/ip4/127.0.0.1/tcp/30333
@@ -46,7 +45,6 @@ services:
       - NODE_KEY_FILE=/data/$NODE02_ACCOUNT_ID/p2p_secret.txt
       - PORT=30334
       - RPC_PORT=9934
-      - WS_PORT=9945
       - RUST_LOG=info
       - BOOT_NODES=/ip4/127.0.0.1/tcp/30333/p2p/$NODE01_PEER_ID
       - PUBLIC_ADDR=/ip4/127.0.0.1/tcp/30333

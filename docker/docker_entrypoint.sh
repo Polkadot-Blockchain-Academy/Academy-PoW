@@ -15,7 +15,6 @@ NODE_KEY_FILE=${NODE_KEY_FILE:?'Node key file should be specified'}
 BASE_PATH=${BASE_PATH:?'Base path should be specified'}
 CHAIN=${CHAIN:?'Chain should be specified'}
 PORT=${PORT:-30333}
-WS_PORT=${WS_PORT:-9944}
 RPC_PORT=${RPC_PORT:-9933}
 NAME=${NAME:?'Name should be specified'}
 
@@ -30,11 +29,9 @@ ARGS=(
   --base-path "${BASE_PATH}"
   --chain "${CHAIN}"
   --port "${PORT}"
-  --ws-port "${WS_PORT}"
   --rpc-port "${RPC_PORT}"
   --rpc-cors all
   --no-mdns
-  --unsafe-ws-external
   --unsafe-rpc-external
   --name "${NAME}"
   --node-key-file "${NODE_KEY_FILE}"
