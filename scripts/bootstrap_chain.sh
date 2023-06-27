@@ -18,9 +18,9 @@ function bootstrap_node() {
   local __peer_id_resultvar=$2
 
   local output=$(docker run --rm -v $BASE_PATH:/data --entrypoint "/bin/sh" -e RUST_LOG=debug "${NODE_IMAGE}" -c \
-                        "academy-pow key generate --scheme Sr25519 --output-type json")
+                        "academy-pow key generate --scheme Ecdsa --output-type json")
 
-  local account_id=$(echo $output | jq -r .ss58PublicKey)
+  local account_id=$(echo $output | jq -r .accountId)
 
   mkdir -p $BASE_PATH/$account_id
   echo $(echo $output | jq -r .secretPhrase) > $BASE_PATH/$account_id/account_secret_phrase.txt
