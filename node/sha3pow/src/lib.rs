@@ -1,3 +1,10 @@
+//! This crate represents a concrete Substrate PoW algorithm.
+//! 
+//! It is multi-pow in the sense that there are multiple supported hashes each with its own difficulty threshold.
+//! A seal with any of the supported hashing algorithms will be accepted.
+//! 
+//! The purpose of this design is to demonstrate hard and soft forks by adding and removing valid hashing algorithms.
+
 use std::sync::Arc;
 
 use parity_scale_codec::{Decode, Encode};
@@ -5,27 +12,72 @@ use sc_client_api::HeaderBackend;
 use sc_consensus_pow::{Error, PowAlgorithm};
 use sha3::{Digest, Sha3_256};
 use sp_api::ProvideRuntimeApi;
-use sp_consensus_pow::{DifficultyApi, Seal as RawSeal};
+use sp_consensus_pow::{DifficultyApi, Seal as RawSeal, TotalDifficulty};
 use sp_core::{H256, U256};
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
+
+
+/// A struct that represents a difficulty threshold.
+/// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, Debug, Default)]
+pub struct Threshold {
+    md5: U256,
+    sha3: U256,
+    keccak: U256,
+}
+
+// TODO This trait is actually not ideal. When we increment the total difficulty, we should be passing a
+// Multihash, not another Threshold. The trait should be re-written.
+impl TotalDifficulty for Threshold {
+    fn increment(&mut self, other: Self) {
+        // For now we just assume that only one field is non-zero
+        self.md5 += other.md5;
+        self.sha3 += other.sha3;
+        self.keccak += other.keccak;
+    }
+}
+
+/// An enum that represents the supported hash types
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, Debug)]
+pub enum SupportedHashes {
+    Md5,
+    Sha3,
+    Keccak,
+}
+
+/// A struct that represents a concrete hash value tagged with what hashing
+///  algorithm was used to compute it.
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, Debug)]
+pub struct MultiHash {
+    pub algo: SupportedHashes,
+    pub value: H256,
+}
 
 /// Determine whether the given hash satisfies the given difficulty.
 /// The test is done by multiplying the two together. If the product
 /// overflows the bounds of U256, then the product (and thus the hash)
 /// was too high.
-pub fn hash_meets_difficulty(hash: &H256, difficulty: U256) -> bool {
+pub fn simple_hash_meets_difficulty(hash: &H256, difficulty: U256) -> bool {
     let num_hash = U256::from(&hash[..]);
     let (_, overflowed) = num_hash.overflowing_mul(difficulty);
 
     !overflowed
 }
 
+pub fn multi_hash_meets_difficulty(hash: &MultiHash, difficulty: Threshold) -> bool {
+    match hash.algo {
+        SupportedHashes::Md5 => simple_hash_meets_difficulty(&hash.value, difficulty.md5),
+        SupportedHashes::Sha3 => simple_hash_meets_difficulty(&hash.value, difficulty.sha3),
+        SupportedHashes::Keccak => simple_hash_meets_difficulty(&hash.value, difficulty.keccak),
+    }
+}
+
 /// A Seal struct that will be encoded to a Vec<u8> as used as the
 /// `RawSeal` type.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct Seal {
-    pub difficulty: U256,
-    pub work: H256,
+    pub difficulty: Threshold,
+    pub work: MultiHash,
     pub nonce: U256,
 }
 
@@ -33,19 +85,23 @@ pub struct Seal {
 /// compute method will compute the hash and return the seal.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct Compute {
-    pub difficulty: U256,
+    pub difficulty: Threshold,
     pub pre_hash: H256,
     pub nonce: U256,
 }
 
 impl Compute {
-    pub fn compute(self) -> Seal {
-        let work = H256::from_slice(Sha3_256::digest(&self.encode()[..]).as_slice());
+    pub fn compute(self, algo: SupportedHashes) -> Seal {
+        let value = match algo {
+            SupportedHashes::Md5 => todo!(),
+            SupportedHashes::Sha3 => H256::from_slice(Sha3_256::digest(&self.encode()[..]).as_slice()),
+            SupportedHashes::Keccak => todo!(),
+        };
 
         Seal {
             nonce: self.nonce,
             difficulty: self.difficulty,
-            work,
+            work: MultiHash { algo, value },
         }
     }
 }
@@ -74,10 +130,10 @@ impl<C> Clone for Sha3Algorithm<C> {
 impl<B: BlockT<Hash = H256>, C> PowAlgorithm<B> for Sha3Algorithm<C>
 where
     C: ProvideRuntimeApi<B>,
-    C::Api: DifficultyApi<B, U256>,
+    C::Api: DifficultyApi<B, Threshold>,
     C: HeaderBackend<B>,
 {
-    type Difficulty = U256;
+    type Difficulty = Threshold;
 
     fn difficulty(&self, parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
         let difficulty = self
@@ -109,7 +165,7 @@ where
         };
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
-        if !hash_meets_difficulty(&seal.work, difficulty) {
+        if !multi_hash_meets_difficulty(&seal.work, difficulty) {
             return Ok(false);
         }
 
@@ -120,7 +176,7 @@ where
             nonce: seal.nonce,
         };
 
-        if compute.compute() != seal {
+        if compute.compute(seal.work.algo) != seal {
             return Ok(false);
         }
 

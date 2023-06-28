@@ -1,7 +1,9 @@
 [package]
 authors = ['Anonymous']
 edition = '2021'
+#TODO change crate and folder name
 name = 'sha3pow'
+description = 'a concrete Substrate PoW algorithm that supports multiple hashing algorithms'
 version = '3.0.0'
 
 [dependencies]
