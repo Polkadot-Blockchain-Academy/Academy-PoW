@@ -93,6 +93,10 @@ jobs:
            alias curl='docker run -it --rm curlimages/curl:8.1.2'
            curl --retry 12 --retry-all-errors --retry-delay 3 -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9933
 
+      - name: Install polkadot js cli utility
+        run: |
+           npm install --location=global @polkadot/api-cli
+           
       - name: Verify contract interaction
         shell: bash
         run: ./.github/scripts/interact-with-contract.sh
