@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-/// The Roulette SC
+/// The Roulette
 /// - there is a window of length N blocks for users to place their bets
 /// - there are M bets allowed in each such block
 /// - after that no more bets can be placed until spin is called and the winnings are paid out
@@ -10,15 +10,14 @@ mod roulette {
     #[cfg(feature = "std")]
     use ink::storage::traits::StorageLayout;
     use ink::{
-        codegen::{EmitEvent, Env},
+        codegen::EmitEvent,
         env::{
-            call::{build_call, ExecutionInput, FromAccountId},
-            set_code_hash, CallFlags, DefaultEnvironment,
+            call::{build_call, ExecutionInput},
+            set_code_hash, DefaultEnvironment, Error as InkEnvError,
         },
-        prelude::{format, string::String, vec},
+        prelude::{format, string::String},
         reflect::ContractEventBase,
         storage::{traits::ManualKey, Lazy, Mapping},
-        ToAccountId,
     };
     use scale::{Decode, Encode};
 
@@ -33,10 +32,17 @@ mod roulette {
         BettingPeriodNotOver,
         NativeTransferFailed(String),
         NotEnoughBalance,
+        CallerIsNotTheHouseOwner,
     }
 
+    impl From<InkEnvError> for RouletteError {
+        fn from(e: InkEnvError) -> Self {
+            RouletteError::InkEnvError(format!("{e:?}"))
+        }
+    }
+
+    pub type Selector = [u8; 4];
     pub type Result<T> = core::result::Result<T, RouletteError>;
-    // TODO : more events
     pub type Event = <Roulette as ContractEventBase>::Type;
 
     #[ink(event)]
@@ -47,6 +53,12 @@ mod roulette {
         #[ink(topic)]
         bet_type: BetType,
         amount: Balance,
+    }
+
+    #[ink(event)]
+    #[derive(Debug)]
+    pub struct WheelSpin {
+        winning_number: u8,
     }
 
     #[derive(Debug, Encode, Decode, Clone, Copy, PartialEq, Eq)]
@@ -218,6 +230,8 @@ mod roulette {
             self.distribute_payouts(winning_number)?;
             self.reset()?;
 
+            Self::emit_event(self.env(), Event::WheelSpin(WheelSpin { winning_number }));
+
             Ok(())
         }
 
@@ -253,6 +267,64 @@ mod roulette {
 
             Ok(())
         }
+
+        fn ensure_house(&self, caller: AccountId) -> Result<()> {
+            if self.data.get().unwrap().house.eq(&caller) {
+                Ok(())
+            } else {
+                Err(RouletteError::CallerIsNotTheHouseOwner)
+            }
+        }
+
+        // --- DANGER ZONE --
+
+        /// Withdraws the casino balance
+        ///
+        /// Can only be called by the house
+        #[ink(message)]
+        pub fn withdraw(&mut self, amount: Balance) -> Result<()> {
+            let caller = self.env().caller();
+            self.ensure_house(caller)?;
+            self.env().transfer(caller, amount)?;
+            Ok(())
+        }
+
+        /// Upgrades contract code
+        ///
+        /// Can only be called by the house
+        #[ink(message)]
+        pub fn set_code(&mut self, code_hash: [u8; 32], callback: Option<Selector>) -> Result<()> {
+            self.ensure_house(self.env().caller())?;
+            set_code_hash(&code_hash)?;
+
+            // Optionally call a callback function in the new contract that performs the storage data migration.
+            // By convention this function should be called `migrate`, it should take no arguments
+            // and be call-able only by `this` contract's instance address.
+            // To ensure the latter the `migrate` in the updated contract can e.g. check if it has an Admin role on self.
+            //
+            // `delegatecall` ensures that the target contract is called within the caller contracts context.
+            if let Some(selector) = callback {
+                build_call::<DefaultEnvironment>()
+                    .delegate(Hash::from(code_hash))
+                    .exec_input(ExecutionInput::new(ink::env::call::Selector::new(selector)))
+                    .returns::<Result<()>>()
+                    .invoke()?;
+            }
+
+            Ok(())
+        }
+
+        /// Terminates the contract
+        ///
+        /// Can only be called by the house
+        #[ink(message)]
+        pub fn terminate(&mut self) -> Result<()> {
+            let caller = self.env().caller();
+            self.ensure_house(caller)?;
+            self.env().terminate_contract(caller)
+        }
+
+        // --- END: DANGER ZONE --
 
         fn emit_event<EE>(emitter: EE, event: Event)
         where
