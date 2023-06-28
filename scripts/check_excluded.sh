@@ -3,6 +3,10 @@
 set -x
 set -eo pipefail
 
+# --- GLOBAL CONSTANTS ---
+
+TOML_FILE="Cargo.toml"
+
 # --- FUNCTIONS ---
 
 function parse_toolchain() {
@@ -17,10 +21,6 @@ function parse_toolchain() {
 
   eval $__resultvar="'$channel'"
 }
-
-# --- CONSTANTS ---
-
-TOML_FILE="Cargo.toml"
 
 # --- RUN ---
 
