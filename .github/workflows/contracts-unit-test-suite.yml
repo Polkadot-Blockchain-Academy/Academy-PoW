@@ -42,4 +42,4 @@ jobs:
 
       - name: Check excluded packages
         run: |
-          ./scripts/run_excluded.sh
+          ./scripts/check_excluded.sh
