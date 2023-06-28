@@ -19,6 +19,7 @@ jobs:
     name: Check contracts code
     runs-on: ubuntu-latest
     env:
+      CARGO_CONTRACT_VERSION: 3.0.1
       RUST_CONTRACTS_TOOLCHAIN: nightly-2023-01-10-x86_64-unknown-linux-gnu
     steps:
       - name: Checkout source code
