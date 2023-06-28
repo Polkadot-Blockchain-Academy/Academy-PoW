@@ -9,5 +9,5 @@ members = [
 ]
 
 exclude = [
-    'contracts/roulette',
+    "contracts/roulette",
 ]
