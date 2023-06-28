@@ -1,5 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
+/// The Roulette SC
+/// - there is a window of length N blocks for users to place their bets
+/// - there are M bets allowed in each such block
+/// - after that no more bets can be placed until spin is called and the winnings are paid out
 #[ink::contract]
 mod roulette {
 
@@ -27,10 +31,23 @@ mod roulette {
         PlayerAlreadyPlacedABet,
         NoMoreBetsCanBeMade,
         BettingPeriodNotOver,
+        NativeTransferFailed(String),
+        NotEnoughBalance,
     }
 
     pub type Result<T> = core::result::Result<T, RouletteError>;
+    // TODO : more events
     pub type Event = <Roulette as ContractEventBase>::Type;
+
+    #[ink(event)]
+    #[derive(Debug)]
+    pub struct BetPlaced {
+        #[ink(topic)]
+        player: AccountId,
+        #[ink(topic)]
+        bet_type: BetType,
+        amount: Balance,
+    }
 
     #[derive(Debug, Encode, Decode, Clone, Copy, PartialEq, Eq)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -43,6 +60,7 @@ mod roulette {
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Bet {
+        pub player: AccountId,
         pub bet_type: BetType,
         pub amount: Balance,
     }
@@ -62,6 +80,8 @@ mod roulette {
         pub maximal_number_of_bets: u8,
         /// minimal amount of native tokens that can be transferred as part of a bet
         pub minimal_bet_amount: Balance,
+        /// keeps track of the total potential payouts to make sure all bets can be covered
+        pub potential_payouts: Balance,
     }
 
     #[ink(storage)]
@@ -72,18 +92,30 @@ mod roulette {
         pub account_id_to_bet: Mapping<AccountId, u32>,
     }
 
-    // TODOs
-    // - there is a window of length N blocks for users to place their bets
-    // - there are M bets allowed in each such block
-    // - after that no more bets can be placed until spin is called and winnings are paid out
-
     impl Roulette {
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
+        pub fn new(
+            betting_period_length: BlockNumber,
+            maximal_number_of_bets: u8,
+            minimal_bet_amount: Balance,
+        ) -> Self {
+            let caller = Self::env().caller();
+            let mut data = Lazy::new();
+
+            data.set(&Data {
+                betting_period_start: Self::env().block_number(),
+                house: caller,
+                betting_period_length,
+                maximal_number_of_bets,
+                next_bet_id: 0,
+                minimal_bet_amount,
+                potential_payouts: 0,
+            });
+
             Self {
-                data: todo!(),
-                bets: todo!(),
-                account_id_to_bet: todo!(),
+                data,
+                bets: Mapping::new(),
+                account_id_to_bet: Mapping::new(),
             }
         }
 
@@ -94,27 +126,31 @@ mod roulette {
             data.betting_period_start + data.betting_period_length
         }
 
-        /// Returns the status of the betting period
+        /// Returns true if we are past the betting period
         #[ink(message)]
-        pub fn is_betting_over(&self) -> bool {
+        pub fn is_betting_period_over(&self) -> bool {
             self.env().block_number() > self.betting_period_end()
         }
 
-        // TODO
-        /// Place a bet
+        /// Returns true if there is still place for more bets
         #[ink(message)]
+        pub fn are_bets_accepted(&self) -> bool {
+            let data = self.data.get().unwrap();
+            data.next_bet_id < data.maximal_number_of_bets.into()
+        }
+
+        /// Place a bet
+        ///
+        /// Places a bet from a player along for the native amount of token included in the transaction
+        #[ink(message, payable)]
         pub fn place_bet(&mut self, bet_type: BetType) -> Result<()> {
-            let caller = self.env().caller();
+            let player = self.env().caller();
             let amount = self.env().transferred_value();
 
             let mut data = self.data.get().unwrap();
 
-            // TODO : casino should also check if it has enough balance to cover all the winnings up to this point
-            // limit number of bets to avoid going over the block size limit when distributing the wins
             let next_bet_id = data.next_bet_id;
-            if self.is_betting_over() // TODO : avoid reading from storage twice
-|| next_bet_id > data.maximal_number_of_bets.into()
-            {
+            if self.is_betting_period_over() || self.are_bets_accepted() {
                 return Err(RouletteError::NoMoreBetsCanBeMade);
             };
 
@@ -122,11 +158,28 @@ mod roulette {
                 return Err(RouletteError::BetAmountIsTooSmall);
             }
 
-            if self.account_id_to_bet.contains(caller) {
+            if self.account_id_to_bet.contains(player) {
                 return Err(RouletteError::PlayerAlreadyPlacedABet);
             }
 
-            let bet = Bet { amount, bet_type };
+            let bet = Bet {
+                player,
+                amount,
+                bet_type,
+            };
+
+            let potential_payout = calculate_payout(&bet, None);
+            let casino_balance = self.env().balance();
+
+            // casino checks if it has enough balance to cover all the winnings up to this point
+            if data
+                .potential_payouts
+                .checked_add(potential_payout)
+                .ok_or(RouletteError::ArithmethicError)?
+                > casino_balance
+            {
+                return Err(RouletteError::NotEnoughBalance);
+            }
 
             data.next_bet_id = data
                 .next_bet_id
@@ -134,50 +187,84 @@ mod roulette {
                 .ok_or(RouletteError::ArithmethicError)?;
 
             self.data.set(&data);
-            self.account_id_to_bet.insert(caller, &next_bet_id);
+            self.account_id_to_bet.insert(player, &next_bet_id);
             self.bets.insert(next_bet_id, &bet);
+
+            Self::emit_event(
+                self.env(),
+                Event::BetPlaced(BetPlaced {
+                    player,
+                    amount,
+                    bet_type,
+                }),
+            );
 
             Ok(())
         }
 
-        // TODO
         /// Spin the wheel
         ///
-        /// Will also distribute the winnings to the players and start a new round of bets
+        /// Will also distribute the winnings to the players and reset the state, starting a new round of bets
         #[ink(message)]
         pub fn spin(&mut self) -> Result<()> {
-            if !self.is_betting_over() {
+            if !self.is_betting_period_over() {
                 return Err(RouletteError::BettingPeriodNotOver);
             };
 
             // generate a "random" number between 1 and 36
             // NOTE: this is a very poor source of randomness, we should add rcf palet
-            let winning_number = self.env().block_timestamp() % 36 + 1;
+            let winning_number = (self.env().block_timestamp() % 36 + 1) as u8;
 
-            let data = &self.data.get().unwrap();
-            distribute_winnings(&data, winning_number)?;
-            reset()?;
+            self.distribute_payouts(winning_number)?;
+            self.reset()?;
 
             Ok(())
         }
-    }
 
-    fn reset() -> Result<()> {
-        todo!()
-    }
+        /// calculates anbd transfers payouts to the winning bets
+        fn distribute_payouts(&self, winning_number: u8) -> Result<()> {
+            let data = &self.data.get().unwrap();
+            (0..data.next_bet_id).try_for_each(|id| -> Result<()> {
+                let bet = self.bets.get(id).expect("all bet's should be present");
+                let payout = calculate_payout(&bet, Some(winning_number));
 
-    fn distribute_winnings(data: &Data, winning_number: u64) -> Result<()> {
-        (0..data.next_bet_id).into_iter().for_each(|id| {
+                if payout > 0 {
+                    self.env()
+                        .transfer(bet.player, payout)
+                        .map_err(|why| RouletteError::NativeTransferFailed(format!("{why:?}")))?;
+                }
 
-            // let bet = self.be
-        });
+                Ok(())
+            })?;
 
-        Ok(())
+            Ok(())
+        }
+
+        /// Reset the state allowing for a new round of bets to be made
+        fn reset(&mut self) -> Result<()> {
+            let mut data = self.data.get().unwrap();
+
+            data.betting_period_start = self.env().block_number();
+            data.next_bet_id = 0;
+            self.data.set(&data);
+
+            self.bets = Mapping::new();
+            self.account_id_to_bet = Mapping::new();
+
+            Ok(())
+        }
+
+        fn emit_event<EE>(emitter: EE, event: Event)
+        where
+            EE: EmitEvent<Self>,
+        {
+            emitter.emit_event(event);
+        }
     }
 
     /// Calculate the payout for a given bet
     ///
-    /// returns a potential payout is no winning_number is passed
+    /// returns a potential payout if no winning_number is passed
     fn calculate_payout(bet: &Bet, winning_number: Option<u8>) -> Balance {
         match bet.bet_type {
             BetType::Number(bet_number) => {
