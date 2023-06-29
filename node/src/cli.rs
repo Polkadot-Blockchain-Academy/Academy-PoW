@@ -1,4 +1,5 @@
 use academy_pow_runtime::AccountId;
+use multi_pow::SupportedHashes;
 use sc_cli::{
     clap::{ArgGroup, Parser},
     RunCmd,
@@ -36,6 +37,10 @@ pub struct AcademyPowCli {
         value_parser = parse_sr25519_public_key
     )]
     pub mining_public_key: Option<sr25519::Public>,
+
+    /// The mining algorithm to use
+    #[clap(long, value_parser = parse_algo, default_value = "sha3")]
+    pub mining_algo: multi_pow::SupportedHashes,
 
     /// whether to use instant seal
     #[clap(long, default_value = "false")]
@@ -77,6 +82,15 @@ pub struct BuildSpecCmd {
 
     #[arg(long, default_value = "4000000")]
     pub initial_difficulty: u32,
+}
+
+fn parse_algo(s: &str) -> Result<SupportedHashes, String> {
+    Ok(match s {
+        "md" | "Md" | "md5" | "Md5" => SupportedHashes::Md5,
+        "sha" | "sha3" | "Sha" | "Sha3" => SupportedHashes::Sha3,
+        "keccak" | "Keccak" => SupportedHashes::Keccak,
+        s => panic!("Wrong mining algo: {}. Possible values: md5, sha3, keccak", s),
+    })
 }
 
 fn parse_chaintype(s: &str) -> Result<ChainType, String> {

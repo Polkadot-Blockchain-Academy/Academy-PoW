@@ -7,7 +7,7 @@ use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use multi_pow::Sha3Algorithm;
+use multi_pow::{Sha3Algorithm, SupportedHashes};
 use sp_api::TransactionFor;
 use sp_core::sr25519;
 use std::sync::Arc;
@@ -172,6 +172,7 @@ pub fn new_full(
     config: Configuration,
     sr25519_public_key: sr25519::Public,
     instant_seal: bool,
+    mining_algo: SupportedHashes,
 ) -> Result<TaskManager, ServiceError> {
     let build_import_queue = if instant_seal {
         build_manual_seal_import_queue
@@ -293,9 +294,9 @@ pub fn new_full(
                 mining_worker_task,
             );
 
-            // Start Keccak Mining only. No flags exist yet to select a specific mining algo
+            // Start Mining worker.
             //TODO Some of this should move into the multi_pow crate.
-            use multi_pow::{multi_hash_meets_difficulty, Compute, SupportedHashes};
+            use multi_pow::{multi_hash_meets_difficulty, Compute};
             use sp_core::U256;
             let mut nonce: U256 = U256::from(0);
             std::thread::spawn(move || loop {
@@ -307,7 +308,7 @@ pub fn new_full(
                         pre_hash: metadata.pre_hash,
                         nonce,
                     };
-                    let seal = compute.compute(SupportedHashes::Md5);
+                    let seal = compute.compute(mining_algo);
                     if multi_hash_meets_difficulty(&seal.work, seal.difficulty) {
                         nonce = U256::from(0);
                         let _ = futures::executor::block_on(worker.submit(seal.encode()));

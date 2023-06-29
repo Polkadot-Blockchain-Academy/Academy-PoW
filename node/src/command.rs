@@ -173,7 +173,7 @@ pub fn run() -> sc_cli::Result<()> {
 
             let runner = cli.create_runner(&cli.run)?;
             runner.run_node_until_exit(|config| async move {
-                service::new_full(config, sr25519_public_key, cli.pow.instant_seal)
+                service::new_full(config, sr25519_public_key, cli.pow.instant_seal, cli.pow.mining_algo)
                     .map_err(sc_cli::Error::Service)
             })
         }
