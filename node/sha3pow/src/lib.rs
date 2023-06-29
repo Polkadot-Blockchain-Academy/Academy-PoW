@@ -10,7 +10,7 @@
 #[cfg(feature = "std")]
 use std::sync::Arc;
 
-// use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
@@ -25,7 +25,7 @@ use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord,  Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, Debug, Default)]
 pub struct Threshold {
     md5: U256,
     sha3: U256,
@@ -44,7 +44,7 @@ impl TotalDifficulty for Threshold {
 }
 
 /// An enum that represents the supported hash types
-#[derive(Clone, Copy, PartialEq, Eq,  Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, Debug)]
 pub enum SupportedHashes {
     Md5,
     Sha3,
@@ -53,7 +53,7 @@ pub enum SupportedHashes {
 
 /// A struct that represents a concrete hash value tagged with what hashing
 ///  algorithm was used to compute it.
-#[derive(Clone, Copy, PartialEq, Eq,  Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct MultiHash {
     pub algo: SupportedHashes,
     pub value: H256,
@@ -80,7 +80,7 @@ pub fn multi_hash_meets_difficulty(hash: &MultiHash, difficulty: Threshold) -> b
 
 /// A Seal struct that will be encoded to a Vec<u8> as used as the
 /// `RawSeal` type.
-#[derive(Clone, PartialEq, Eq,  Debug)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct Seal {
     pub difficulty: Threshold,
     pub work: MultiHash,
@@ -89,7 +89,7 @@ pub struct Seal {
 
 /// A not-yet-computed attempt to solve the proof of work. Calling the
 /// compute method will compute the hash and return the seal.
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct Compute {
     pub difficulty: Threshold,
     pub pre_hash: H256,
