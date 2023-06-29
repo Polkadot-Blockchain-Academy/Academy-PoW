@@ -19,7 +19,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::Decode;
+use codec::{Encode, Decode};
 use sp_runtime::ConsensusEngineId;
 use sp_std::vec::Vec;
 
@@ -31,7 +31,7 @@ pub type Seal = Vec<u8>;
 
 /// Define methods that total difficulty should implement.
 pub trait TotalDifficulty {
-	type Incremental;
+	type Incremental: Send + Sync + Clone + Copy + Decode + Encode + Default;
 
 	fn increment(&mut self, other: Self::Incremental);
 }

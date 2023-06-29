@@ -148,16 +148,16 @@ pub static INTERMEDIATE_KEY: &[u8] = b"pow1";
 
 /// Auxiliary storage data for PoW.
 #[derive(Encode, Decode, Clone, Debug, Default)]
-pub struct PowAux<Difficulty> {
+pub struct PowAux<Difficulty: TotalDifficulty> {
 	/// Difficulty of the current block.
-	pub difficulty: Difficulty,
+	pub difficulty: Difficulty::Incremental,
 	/// Total difficulty up to current block.
 	pub total_difficulty: Difficulty,
 }
 
 impl<Difficulty> PowAux<Difficulty>
 where
-	Difficulty: Decode + Default,
+	Difficulty: TotalDifficulty + Decode + Default,
 {
 	/// Read the auxiliary from client.
 	pub fn read<C: AuxStore, B: BlockT>(client: &C, hash: &B::Hash) -> Result<Self, Error<B>> {
@@ -208,6 +208,10 @@ pub trait PowAlgorithm<B: BlockT> {
 		seal: &Seal,
 		difficulty: Self::Difficulty,
 	) -> Result<bool, Error<B>>;
+
+	/// Determine the amount of work actually done on this block
+    /// from the block's seal
+	fn actual_work(seal: &Seal) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>>;
 }
 
 /// A block importer for PoW.
@@ -336,7 +340,7 @@ where
 
 		let parent_hash = *block.header.parent_hash();
 		let best_aux = PowAux::read::<_, B>(self.client.as_ref(), &best_hash)?;
-		let mut aux = PowAux::read::<_, B>(self.client.as_ref(), &parent_hash)?;
+		let mut aux: PowAux<Algorithm::Difficulty> = PowAux::read::<_, B>(self.client.as_ref(), &parent_hash)?;
 
 		if let Some(inner_body) = block.body.take() {
 			let check_block = B::new(block.header.clone(), inner_body);
@@ -361,6 +365,8 @@ where
 		let intermediate = block
 			.remove_intermediate::<PowIntermediate<Algorithm::Difficulty>>(INTERMEDIATE_KEY)?;
 
+		// Based on what we saw above, this is currently always be the none case.
+		// which means we only know the threshold from the runtime.
 		let difficulty = match intermediate.difficulty {
 			Some(difficulty) => difficulty,
 			None => self.algorithm.difficulty(parent_hash)?,
@@ -378,8 +384,9 @@ where
 			return Err(Error::<B>::InvalidSeal.into())
 		}
 
-		aux.difficulty = difficulty;
-		aux.total_difficulty.increment(difficulty);
+		let actual_work = Algorithm::actual_work(&inner_seal)?;
+		aux.difficulty = actual_work;
+		aux.total_difficulty.increment(actual_work);
 
 		let key = aux_key(&block.post_hash());
 		block.auxiliary.push((key, Some(aux.encode())));
@@ -452,6 +459,7 @@ where
 		let hash = block.header.hash();
 		let (checked_header, seal) = self.check_header(block.header)?;
 
+		// TODO WTF, why is it always None?
 		let intermediate = PowIntermediate::<Algorithm::Difficulty> { difficulty: None };
 		block.header = checked_header;
 		block.post_digests.push(seal);

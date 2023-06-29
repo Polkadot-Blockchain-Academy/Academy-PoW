@@ -60,9 +60,15 @@ pub enum SupportedHashes {
     Keccak,
 }
 
+impl Default for SupportedHashes {
+    fn default() -> Self {
+        Self::Sha3
+    }
+}
+
 /// A struct that represents a concrete hash value tagged with what hashing
 ///  algorithm was used to compute it.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, Debug, Default)]
 pub struct MultiHash {
     pub algo: SupportedHashes,
     pub value: H256,
@@ -200,5 +206,11 @@ where
         }
 
         Ok(true)
+    }
+
+    fn actual_work(seal: &RawSeal) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
+        let seal = Seal::decode(&mut &seal[..]).map_err(|_| sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into()))?;
+
+        Ok(seal.work)
     }
 }
