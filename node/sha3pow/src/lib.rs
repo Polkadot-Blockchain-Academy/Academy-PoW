@@ -15,11 +15,22 @@ use std::sync::Arc;
 use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Sha3_256};
+#[cfg(feature = "std")]
 use sp_api::ProvideRuntimeApi;
-use sp_consensus_pow::{DifficultyApi, Seal as RawSeal, TotalDifficulty};
+#[cfg(feature = "std")]
+use sp_consensus_pow::DifficultyApi;
+use sp_consensus_pow::{Seal as RawSeal, TotalDifficulty};
 use sp_core::{H256, U256};
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
-use pow_primitives::Threshold;
+
+/// A struct that represents a difficulty threshold.
+/// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord,  Debug, Default)]
+pub struct Threshold {
+    md5: U256,
+    sha3: U256,
+    keccak: U256,
+}
 
 // TODO This trait is actually not ideal. When we increment the total difficulty, we should be passing a
 // Multihash, not another Threshold. The trait should be re-written.

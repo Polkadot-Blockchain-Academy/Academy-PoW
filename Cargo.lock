@@ -4050,17 +4050,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "modified-sp-consensus-pow"
-version = "0.10.0-dev"
-dependencies = [
- "parity-scale-codec",
- "sp-api",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "multiaddr"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4931,14 +4920,6 @@ dependencies = [
  "cpufeatures",
  "opaque-debug 0.3.0",
  "universal-hash 0.5.1",
-]
-
-[[package]]
-name = "pow-primitives"
-version = "3.0.0"
-dependencies = [
- "sp-consensus-pow",
- "sp-core",
 ]
 
 [[package]]
@@ -7080,7 +7061,6 @@ name = "sha3pow"
 version = "3.0.0"
 dependencies = [
  "parity-scale-codec",
- "pow-primitives",
  "sc-consensus-pow",
  "sha3",
  "sp-api",
