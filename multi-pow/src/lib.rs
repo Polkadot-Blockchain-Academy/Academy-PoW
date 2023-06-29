@@ -115,7 +115,16 @@ pub struct Compute {
 impl Compute {
     pub fn compute(self, algo: SupportedHashes) -> Seal {
         let value = match algo {
-            SupportedHashes::Md5 => todo!(),
+            SupportedHashes::Md5 => {
+                // The md5 is only 16 byte output, so we just concatenate it twice to
+                // get an H256
+                let bytes = *md5::compute(&self.encode()[..]);
+                let mut doubled = [0u8; 32];
+                doubled[0..16].copy_from_slice(&bytes[0..16]);
+                doubled[16..32].copy_from_slice(&bytes[0..16]);
+
+                H256::from(doubled)
+            }
             SupportedHashes::Sha3 => H256::from_slice(Sha3_256::digest(&self.encode()[..]).as_slice()),
             SupportedHashes::Keccak => todo!(),
         };
