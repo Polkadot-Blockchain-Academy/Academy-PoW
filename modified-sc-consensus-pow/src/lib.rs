@@ -39,6 +39,10 @@
 //! as the storage, but it is not recommended as it won't work well with light
 //! clients.
 
+// This crate is copied from Substrate, so it is not really our code.
+// I don't want to get distracted fixing clippy lints in upstream code.
+#![allow(clippy::all)]
+
 mod worker;
 
 pub use crate::worker::{MiningBuild, MiningHandle, MiningMetadata};
