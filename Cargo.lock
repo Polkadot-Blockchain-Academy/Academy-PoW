@@ -24,6 +24,7 @@ dependencies = [
  "log",
  "modified-sc-consensus-pow",
  "modified-sp-consensus-pow",
+ "multi-pow",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
  "rand 0.8.5",
@@ -40,7 +41,6 @@ dependencies = [
  "sc-transaction-pool",
  "sc-transaction-pool-api",
  "sha3",
- "sha3pow",
  "sp-api",
  "sp-block-builder",
  "sp-blockchain",
@@ -65,6 +65,7 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "hex-literal",
  "modified-sp-consensus-pow",
+ "multi-pow",
  "pallet-balances",
  "pallet-contracts",
  "pallet-contracts-primitives",
@@ -76,7 +77,6 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sha3pow",
  "sp-api",
  "sp-block-builder",
  "sp-core",
@@ -4085,6 +4085,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "multi-pow"
+version = "3.0.0"
+dependencies = [
+ "modified-sc-consensus-pow",
+ "modified-sp-consensus-pow",
+ "parity-scale-codec",
+ "scale-info",
+ "sha3",
+ "sp-api",
+ "sp-core",
+ "sp-runtime",
+]
+
+[[package]]
 name = "multiaddr"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7064,20 +7078,6 @@ checksum = "75872d278a8f37ef87fa0ddbda7802605cb18344497949862c0d4dcb291eba60"
 dependencies = [
  "digest 0.10.7",
  "keccak",
-]
-
-[[package]]
-name = "sha3pow"
-version = "3.0.0"
-dependencies = [
- "modified-sc-consensus-pow",
- "modified-sp-consensus-pow",
- "parity-scale-codec",
- "scale-info",
- "sha3",
- "sp-api",
- "sp-core",
- "sp-runtime",
 ]
 
 [[package]]

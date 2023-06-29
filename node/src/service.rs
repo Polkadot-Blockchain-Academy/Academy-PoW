@@ -7,7 +7,7 @@ use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sha3pow::Sha3Algorithm;
+use multi_pow::Sha3Algorithm;
 use sp_api::TransactionFor;
 use sp_core::sr25519;
 use std::sync::Arc;
@@ -294,8 +294,8 @@ pub fn new_full(
             );
 
             // Start sha3 Mining only. Other mining algos are not yet written.
-            //TODO Some of this should move into the sha3pow crate.
-            use sha3pow::{multi_hash_meets_difficulty, Compute, SupportedHashes};
+            //TODO Some of this should move into the multi_pow crate.
+            use multi_pow::{multi_hash_meets_difficulty, Compute, SupportedHashes};
             use sp_core::U256;
             let mut nonce: U256 = U256::from(0);
             std::thread::spawn(move || loop {

@@ -48,7 +48,7 @@ sp-inherents = {git = "https://github.com/paritytech/substrate.git", branch = "p
 sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-timestamp = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sha3pow = {path = './sha3pow'}
+multi-pow = {path = '../multi-pow'}
 hex = "0.4"
 
 [[bin]]
