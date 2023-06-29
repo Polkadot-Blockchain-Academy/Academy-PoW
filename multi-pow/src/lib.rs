@@ -14,7 +14,7 @@ use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
-use sha3::{Digest, Sha3_256};
+use sha3::{Digest, Sha3_256, Keccak256};
 #[cfg(feature = "std")]
 use sp_api::ProvideRuntimeApi;
 #[cfg(feature = "std")]
@@ -126,7 +126,7 @@ impl Compute {
                 H256::from(doubled)
             }
             SupportedHashes::Sha3 => H256::from_slice(Sha3_256::digest(&self.encode()[..]).as_slice()),
-            SupportedHashes::Keccak => todo!(),
+            SupportedHashes::Keccak => H256::from_slice(Keccak256::digest(&self.encode()[..]).as_slice()),
         };
 
         Seal {
