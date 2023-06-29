@@ -7062,6 +7062,7 @@ version = "3.0.0"
 dependencies = [
  "parity-scale-codec",
  "sc-consensus-pow",
+ "scale-info",
  "sha3",
  "sp-api",
  "sp-consensus-pow",

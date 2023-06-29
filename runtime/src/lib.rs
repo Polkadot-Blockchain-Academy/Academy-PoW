@@ -470,9 +470,9 @@ impl_runtime_apis! {
             // For now we just hard-code the difficulties for the new hashes and use the pre-existing adjustment algo for sha3
             let sha3_difficulty = DifficultyAdjustment::difficulty();
             sha3pow::Threshold {
-                md5: 4_000_000,
+                md5: U256::from(4_000_000),
                 sha3: sha3_difficulty,
-                keccak: 4_000_000,
+                keccak: U256::from(4_000_000),
             }
         }
     }

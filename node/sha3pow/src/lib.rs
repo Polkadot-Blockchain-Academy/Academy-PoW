@@ -25,11 +25,11 @@ use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, Debug, Default, scale_info::TypeInfo)]
 pub struct Threshold {
-    md5: U256,
-    sha3: U256,
-    keccak: U256,
+    pub md5: U256,
+    pub sha3: U256,
+    pub keccak: U256,
 }
 
 // TODO This trait is actually not ideal. When we increment the total difficulty, we should be passing a
