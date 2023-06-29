@@ -293,7 +293,7 @@ pub fn new_full(
                 mining_worker_task,
             );
 
-            // Start sha3 Mining only. Other mining algos are not yet written.
+            // Start Keccak Mining only. No flags exist yet to select a specific mining algo
             //TODO Some of this should move into the multi_pow crate.
             use multi_pow::{multi_hash_meets_difficulty, Compute, SupportedHashes};
             use sp_core::U256;
@@ -307,7 +307,7 @@ pub fn new_full(
                         pre_hash: metadata.pre_hash,
                         nonce,
                     };
-                    let seal = compute.compute(SupportedHashes::Sha3);
+                    let seal = compute.compute(SupportedHashes::Md5);
                     if multi_hash_meets_difficulty(&seal.work, seal.difficulty) {
                         nonce = U256::from(0);
                         let _ = futures::executor::block_on(worker.submit(seal.encode()));
