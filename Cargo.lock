@@ -4050,6 +4050,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "modified-sp-consensus-pow"
+version = "0.10.0-dev"
+dependencies = [
+ "parity-scale-codec",
+ "sp-api",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "multiaddr"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
