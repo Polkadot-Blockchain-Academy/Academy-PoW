@@ -53,7 +53,7 @@ impl AcademyPowCli {
             Some(account_id) => *account_id.as_ref(),
             None => match self.mining_public_key {
                 Some(public_key) => public_key.0,
-                None => panic!("Specify one of --mining_account_id or --mining_public_key"),
+                None => [0u8; 32],
             },
         }
     }
