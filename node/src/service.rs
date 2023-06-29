@@ -293,9 +293,9 @@ pub fn new_full(
                 mining_worker_task,
             );
 
-            // Start Mining
+            // Start sha3 Mining only. Other mining algos are not yet written.
             //TODO Some of this should move into the sha3pow crate.
-            use sha3pow::{hash_meets_difficulty, Compute};
+            use sha3pow::{multi_hash_meets_difficulty, Compute, SupportedHashes};
             use sp_core::U256;
             let mut nonce: U256 = U256::from(0);
             std::thread::spawn(move || loop {
@@ -307,8 +307,8 @@ pub fn new_full(
                         pre_hash: metadata.pre_hash,
                         nonce,
                     };
-                    let seal = compute.compute();
-                    if hash_meets_difficulty(&seal.work, seal.difficulty) {
+                    let seal = compute.compute(SupportedHashes::Sha3);
+                    if multi_hash_meets_difficulty(&seal.work, seal.difficulty) {
                         nonce = U256::from(0);
                         let _ = futures::executor::block_on(worker.submit(seal.encode()));
                     } else {
