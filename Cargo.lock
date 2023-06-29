@@ -22,6 +22,8 @@ dependencies = [
  "hex",
  "jsonrpsee",
  "log",
+ "modified-sc-consensus-pow",
+ "modified-sp-consensus-pow",
  "pallet-transaction-payment-rpc",
  "parity-scale-codec",
  "rand 0.8.5",
@@ -30,7 +32,6 @@ dependencies = [
  "sc-client-api",
  "sc-consensus",
  "sc-consensus-manual-seal",
- "sc-consensus-pow",
  "sc-executor",
  "sc-network",
  "sc-rpc-api",
@@ -44,7 +45,6 @@ dependencies = [
  "sp-block-builder",
  "sp-blockchain",
  "sp-consensus",
- "sp-consensus-pow",
  "sp-core",
  "sp-inherents",
  "sp-runtime",
@@ -64,6 +64,7 @@ dependencies = [
  "frame-system",
  "frame-system-rpc-runtime-api",
  "hex-literal",
+ "modified-sp-consensus-pow",
  "pallet-balances",
  "pallet-contracts",
  "pallet-contracts-primitives",
@@ -78,7 +79,6 @@ dependencies = [
  "sha3pow",
  "sp-api",
  "sp-block-builder",
- "sp-consensus-pow",
  "sp-core",
  "sp-inherents",
  "sp-io",
@@ -4050,6 +4050,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "modified-sc-consensus-pow"
+version = "0.10.0-dev"
+dependencies = [
+ "async-trait",
+ "futures",
+ "futures-timer",
+ "log",
+ "modified-sp-consensus-pow",
+ "parity-scale-codec",
+ "parking_lot 0.12.1",
+ "sc-client-api",
+ "sc-consensus",
+ "sp-api",
+ "sp-block-builder",
+ "sp-blockchain",
+ "sp-consensus",
+ "sp-core",
+ "sp-inherents",
+ "sp-runtime",
+ "substrate-prometheus-endpoint",
+ "thiserror",
+]
+
+[[package]]
 name = "modified-sp-consensus-pow"
 version = "0.10.0-dev"
 dependencies = [
@@ -6051,31 +6075,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sc-consensus-pow"
-version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
-dependencies = [
- "async-trait",
- "futures",
- "futures-timer",
- "log",
- "parity-scale-codec",
- "parking_lot 0.12.1",
- "sc-client-api",
- "sc-consensus",
- "sp-api",
- "sp-block-builder",
- "sp-blockchain",
- "sp-consensus",
- "sp-consensus-pow",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
- "substrate-prometheus-endpoint",
- "thiserror",
-]
-
-[[package]]
 name = "sc-consensus-slots"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
@@ -7071,12 +7070,12 @@ dependencies = [
 name = "sha3pow"
 version = "3.0.0"
 dependencies = [
+ "modified-sc-consensus-pow",
+ "modified-sp-consensus-pow",
  "parity-scale-codec",
- "sc-consensus-pow",
  "scale-info",
  "sha3",
  "sp-api",
- "sp-consensus-pow",
  "sp-core",
  "sp-runtime",
 ]
@@ -7384,18 +7383,6 @@ dependencies = [
  "sp-application-crypto",
  "sp-core",
  "sp-keystore",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "sp-consensus-pow"
-version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#ff24c60ac7d9f87727ecdd0ded9a80c56e4f4b65"
-dependencies = [
- "parity-scale-codec",
- "sp-api",
- "sp-core",
  "sp-runtime",
  "sp-std",
 ]
