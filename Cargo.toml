@@ -6,4 +6,6 @@ members = [
     'node',
     'runtime',
     'node/sha3pow',
+    'node/pow-primitives',
+    # 'modified-sp-consensus-pow',
 ]

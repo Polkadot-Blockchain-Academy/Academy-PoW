@@ -7,15 +7,16 @@ description = 'a concrete Substrate PoW algorithm that supports multiple hashing
 version = '3.0.0'
 
 [dependencies]
-parity-scale-codec = '3.1.2'
-sha3 = "0.10.1"
-rand = { version = "0.8.5", features = ["small_rng"] }
+parity-scale-codec = {version = "3.6.1", default-features = false, features = ["derive"] }
+sha3 = { version = "0.10.1", optional = true, default-features = false }
+pow-primitives = { path = "../pow-primitives" }
 
-sc-consensus = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sc-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sc-client-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-blockchain = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-core = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sc-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false, optional = true }
+sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sp-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sp-core = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+
+[features]
+default = ['std']
+std = ['sha3', 'sc-consensus-pow']
