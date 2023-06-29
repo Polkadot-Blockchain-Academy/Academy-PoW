@@ -89,7 +89,10 @@ fn parse_algo(s: &str) -> Result<SupportedHashes, String> {
         "md" | "Md" | "md5" | "Md5" => SupportedHashes::Md5,
         "sha" | "sha3" | "Sha" | "Sha3" => SupportedHashes::Sha3,
         "keccak" | "Keccak" => SupportedHashes::Keccak,
-        s => panic!("Wrong mining algo: {}. Possible values: md5, sha3, keccak", s),
+        s => panic!(
+            "Wrong mining algo: {}. Possible values: md5, sha3, keccak",
+            s
+        ),
     })
 }
 

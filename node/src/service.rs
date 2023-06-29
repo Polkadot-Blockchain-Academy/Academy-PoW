@@ -2,12 +2,12 @@
 
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use core::clone::Clone;
+use multi_pow::{Sha3Algorithm, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use multi_pow::{Sha3Algorithm, SupportedHashes};
 use sp_api::TransactionFor;
 use sp_core::sr25519;
 use std::sync::Arc;

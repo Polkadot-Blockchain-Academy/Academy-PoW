@@ -1,8 +1,8 @@
 //! This crate represents a concrete Substrate PoW algorithm.
-//! 
+//!
 //! It is multi-pow in the sense that there are multiple supported hashes each with its own difficulty threshold.
 //! A seal with any of the supported hashing algorithms will be accepted.
-//! 
+//!
 //! The purpose of this design is to demonstrate hard and soft forks by adding and removing valid hashing algorithms.
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -14,7 +14,7 @@ use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
-use sha3::{Digest, Sha3_256, Keccak256};
+use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
 use sp_api::ProvideRuntimeApi;
 #[cfg(feature = "std")]
@@ -25,7 +25,19 @@ use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, Debug, Default, scale_info::TypeInfo)]
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Encode,
+    Decode,
+    Debug,
+    Default,
+    scale_info::TypeInfo,
+)]
 pub struct Threshold {
     pub md5: U256,
     pub sha3: U256,
@@ -33,11 +45,9 @@ pub struct Threshold {
 }
 
 impl TotalDifficulty for Threshold {
-
-    type Incremental =  MultiHash;
+    type Incremental = MultiHash;
 
     fn increment(&mut self, other: MultiHash) {
-
         match other.algo {
             SupportedHashes::Md5 => {
                 self.md5 += U256::from(&other.value[..]);
@@ -125,8 +135,12 @@ impl Compute {
 
                 H256::from(doubled)
             }
-            SupportedHashes::Sha3 => H256::from_slice(Sha3_256::digest(&self.encode()[..]).as_slice()),
-            SupportedHashes::Keccak => H256::from_slice(Keccak256::digest(&self.encode()[..]).as_slice()),
+            SupportedHashes::Sha3 => {
+                H256::from_slice(Sha3_256::digest(&self.encode()[..]).as_slice())
+            }
+            SupportedHashes::Keccak => {
+                H256::from_slice(Keccak256::digest(&self.encode()[..]).as_slice())
+            }
         };
 
         Seal {
@@ -217,8 +231,12 @@ where
         Ok(true)
     }
 
-    fn actual_work(seal: &RawSeal) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
-        let seal = Seal::decode(&mut &seal[..]).map_err(|_| sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into()))?;
+    fn actual_work(
+        seal: &RawSeal,
+    ) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
+        let seal = Seal::decode(&mut &seal[..]).map_err(|_| {
+            sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into())
+        })?;
 
         Ok(seal.work)
     }

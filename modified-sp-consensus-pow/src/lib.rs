@@ -19,7 +19,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
 use sp_runtime::ConsensusEngineId;
 use sp_std::vec::Vec;
 
@@ -31,41 +31,41 @@ pub type Seal = Vec<u8>;
 
 /// Define methods that total difficulty should implement.
 pub trait TotalDifficulty {
-	type Incremental: Send + Sync + Clone + Copy + Decode + Encode + Default;
+    type Incremental: Send + Sync + Clone + Copy + Decode + Encode + Default;
 
-	fn increment(&mut self, other: Self::Incremental);
+    fn increment(&mut self, other: Self::Incremental);
 }
 
 impl TotalDifficulty for sp_core::U256 {
-	type Incremental = Self;
+    type Incremental = Self;
 
-	fn increment(&mut self, other: Self) {
-		let ret = self.saturating_add(other);
-		*self = ret;
-	}
+    fn increment(&mut self, other: Self) {
+        let ret = self.saturating_add(other);
+        *self = ret;
+    }
 }
 
 impl TotalDifficulty for u128 {
-	type Incremental = Self;
-	
-	fn increment(&mut self, other: Self) {
-		let ret = self.saturating_add(other);
-		*self = ret;
-	}
+    type Incremental = Self;
+
+    fn increment(&mut self, other: Self) {
+        let ret = self.saturating_add(other);
+        *self = ret;
+    }
 }
 
 sp_api::decl_runtime_apis! {
-	/// API necessary for timestamp-based difficulty adjustment algorithms.
-	pub trait TimestampApi<Moment: Decode> {
-		/// Return the timestamp in the current block.
-		fn timestamp() -> Moment;
-	}
+    /// API necessary for timestamp-based difficulty adjustment algorithms.
+    pub trait TimestampApi<Moment: Decode> {
+        /// Return the timestamp in the current block.
+        fn timestamp() -> Moment;
+    }
 
-	/// API for those chains that put their difficulty adjustment algorithm directly
-	/// onto runtime. Note that while putting difficulty adjustment algorithm to
-	/// runtime is safe, putting the PoW algorithm on runtime is not.
-	pub trait DifficultyApi<Difficulty: Decode> {
-		/// Return the target difficulty of the next block.
-		fn difficulty() -> Difficulty;
-	}
+    /// API for those chains that put their difficulty adjustment algorithm directly
+    /// onto runtime. Note that while putting difficulty adjustment algorithm to
+    /// runtime is safe, putting the PoW algorithm on runtime is not.
+    pub trait DifficultyApi<Difficulty: Decode> {
+        /// Return the target difficulty of the next block.
+        fn difficulty() -> Difficulty;
+    }
 }
