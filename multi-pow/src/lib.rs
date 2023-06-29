@@ -32,14 +32,23 @@ pub struct Threshold {
     pub keccak: U256,
 }
 
-// TODO This trait is actually not ideal. When we increment the total difficulty, we should be passing a
-// Multihash, not another Threshold. The trait should be re-written.
 impl TotalDifficulty for Threshold {
-    fn increment(&mut self, other: Self) {
-        // For now we just assume that only one field is non-zero
-        self.md5 += other.md5;
-        self.sha3 += other.sha3;
-        self.keccak += other.keccak;
+
+    type Incremental =  MultiHash;
+
+    fn increment(&mut self, other: MultiHash) {
+
+        match other.algo {
+            SupportedHashes::Md5 => {
+                self.md5 += U256::from(&other.value[..]);
+            }
+            SupportedHashes::Sha3 => {
+                self.sha3 += U256::from(&other.value[..]);
+            }
+            SupportedHashes::Keccak => {
+                self.keccak += U256::from(&other.value[..]);
+            }
+        }
     }
 }
 

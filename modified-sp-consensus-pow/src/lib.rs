@@ -31,10 +31,14 @@ pub type Seal = Vec<u8>;
 
 /// Define methods that total difficulty should implement.
 pub trait TotalDifficulty {
-	fn increment(&mut self, other: Self);
+	type Incremental;
+
+	fn increment(&mut self, other: Self::Incremental);
 }
 
 impl TotalDifficulty for sp_core::U256 {
+	type Incremental = Self;
+
 	fn increment(&mut self, other: Self) {
 		let ret = self.saturating_add(other);
 		*self = ret;
@@ -42,6 +46,8 @@ impl TotalDifficulty for sp_core::U256 {
 }
 
 impl TotalDifficulty for u128 {
+	type Incremental = Self;
+	
 	fn increment(&mut self, other: Self) {
 		let ret = self.saturating_add(other);
 		*self = ret;
