@@ -27,7 +27,6 @@ mod roulette {
         InkEnvError(String),
         ArithmethicError,
         BetAmountIsTooSmall,
-        PlayerAlreadyPlacedABet,
         NoMoreBetsCanBeMade,
         BettingPeriodNotOver,
         NativeTransferFailed(String),
@@ -65,8 +64,10 @@ mod roulette {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum BetType {
         Number(u8),
-        Red,   // even
-        Black, // red
+        Red,
+        Black,
+        Even,
+        Odd,
     }
 
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
@@ -100,8 +101,6 @@ mod roulette {
     pub struct Roulette {
         pub data: Lazy<Data, ManualKey<0x44415441>>,
         pub bets: Mapping<u32, Bet, ManualKey<0x42455453>>,
-        /// accounting: maps accounts to bets
-        pub account_id_to_bet: Mapping<AccountId, u32>,
     }
 
     impl Roulette {
@@ -127,7 +126,6 @@ mod roulette {
             Self {
                 data,
                 bets: Mapping::new(),
-                account_id_to_bet: Mapping::new(),
             }
         }
 
@@ -170,10 +168,6 @@ mod roulette {
                 return Err(RouletteError::BetAmountIsTooSmall);
             }
 
-            if self.account_id_to_bet.contains(player) {
-                return Err(RouletteError::PlayerAlreadyPlacedABet);
-            }
-
             let bet = Bet {
                 player,
                 amount,
@@ -199,7 +193,6 @@ mod roulette {
                 .ok_or(RouletteError::ArithmethicError)?;
 
             self.data.set(&data);
-            self.account_id_to_bet.insert(player, &next_bet_id);
             self.bets.insert(next_bet_id, &bet);
 
             Self::emit_event(
@@ -263,7 +256,6 @@ mod roulette {
             self.data.set(&data);
 
             self.bets = Mapping::new();
-            self.account_id_to_bet = Mapping::new();
 
             Ok(())
         }
@@ -369,6 +361,26 @@ mod roulette {
                     None => potential_payout,
                 }
             }
+            BetType::Even => {
+                let potential_payout = bet.amount * 2;
+                match winning_number {
+                    Some(winning_number) => match is_even(winning_number) {
+                        true => potential_payout,
+                        false => 0,
+                    },
+                    None => potential_payout,
+                }
+            }
+            BetType::Odd => {
+                let potential_payout = bet.amount * 2;
+                match winning_number {
+                    Some(winning_number) => match is_odd(winning_number) {
+                        true => potential_payout,
+                        false => 0,
+                    },
+                    None => potential_payout,
+                }
+            }
         }
     }
 
@@ -384,5 +396,13 @@ mod roulette {
             number,
             1 | 3 | 5 | 7 | 9 | 12 | 14 | 16 | 18 | 19 | 21 | 23 | 25 | 27 | 30 | 32 | 34 | 36
         )
+    }
+
+    fn is_odd(number: u8) -> bool {
+        number % 2 != 0
+    }
+
+    fn is_even(number: u8) -> bool {
+        number % 2 == 0
     }
 }
