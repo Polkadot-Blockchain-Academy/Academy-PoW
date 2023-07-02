@@ -1,7 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 /// SimpleDex contract
-/// Basically a Balancer pool with all equal weights
+/// Basically a Balancer v1 pool with all weights equal
+///
+/// Supports swaps and all assets withdrawals / deposits
+/// Keeps track of LP tokens in a map
+///
+/// - single asset deposit / withdrawal is left as an exerciese
+/// - so is implementing LP shares as a token in PSP22 stadard (mintable & burnable)
 #[ink::contract]
 mod dex {
 
