@@ -25,6 +25,7 @@ mod dex {
         TokenNotInPool(AccountId),
         TooMuchSlippage,
         NotEnoughLiquidityOf(AccountId),
+        InsufficientLiquidityShares,
         PSP22(PSP22Error),
     }
 
@@ -52,6 +53,10 @@ mod dex {
     pub struct SimpleDex {
         pub swap_fee_percentage: u128,
         pub pool: Vec<AccountId>,
+        // mapping that keeps track of LP tokens for each provider
+        pub liquidity_shares: Mapping<AccountId, u128>,
+        // optimization: keeps track of total liquidity
+        pub total_liquidity_shares: Balance,
     }
 
     impl SimpleDex {
@@ -64,6 +69,8 @@ mod dex {
             Self {
                 pool,
                 swap_fee_percentage,
+                total_liquidity_shares: 0,
+                liquidity_shares: Mapping::new(),
             }
         }
 
@@ -136,20 +143,78 @@ mod dex {
             todo!()
         }
 
+        /// Caller will receive issued_shares of LP tokens for depositing d_k amount of each token.
+        ///
+        /// Before calling this tx liquidity provider should give this contract enough allowance to deposit d_k of each token in the pool,
+        /// where d_k depends on the current balance of token k in the pool.
+        /// The exact amount can be queried by calling `deposit_given_shares`.
         #[ink(message)]
-        pub fn all_asset_deposit(&mut self) -> Result<(), DexError> {
-            todo!()
+        pub fn all_asset_deposit(&mut self, issued_shares: Balance) -> Result<(), DexError> {
+            let this = Self::env().account_id();
+            let caller = Self::env().caller();
+
+            let total_liquidity = self.total_liquidity_shares;
+
+            for token_in in &self.pool {
+                let balance = self.balance_of(*token_in, this);
+                let deposit = Self::_deposit_given_shares(issued_shares, balance, total_liquidity)?;
+
+                // transfer token_in from the user to the contract
+                // whole tx will fail if not enough allowance was given beforehand!
+                self.transfer_from_tx(*token_in, caller, this, deposit)?;
+            }
+
+            // issue liquidity shares to the caller
+            self.liquidity_shares
+                .get(caller)
+                .unwrap_or(0)
+                .checked_add(issued_shares)
+                .ok_or(DexError::Arithmethic)?;
+
+            self.total_liquidity_shares += issued_shares;
+
+            Ok(())
         }
 
+        /// Caller will receive d_k amount of each token for redeeming `redeemed_shares` of LP tokens,
+        /// where d_k depends on the current balance of token k in the pool.
+        /// The exact amount can be queried by calling `deposit_given_shares`.
         #[ink(message)]
-        pub fn all_asset_withdrawal(&mut self) -> Result<(), DexError> {
-            todo!()
+        pub fn all_asset_withdrawal(&mut self, redeemed_shares: Balance) -> Result<(), DexError> {
+            let this = self.env().account_id();
+            let caller = self.env().caller();
+
+            let total_liquidity = self.total_liquidity_shares;
+
+            if self.liquidity_shares.get(caller).unwrap_or(0) < redeemed_shares {
+                return Err(DexError::InsufficientLiquidityShares);
+            }
+
+            for token_out in &self.pool {
+                let balance = self.balance_of(*token_out, this);
+                let amount = Self::_amount_given_shares(redeemed_shares, balance, total_liquidity)?;
+
+                // transfer token_in from the user to the contract
+                // whole tx will fail if not enough allowance was given beforehand!
+                self.transfer_tx(*token_out, caller, amount)?;
+            }
+
+            // burn LP shares
+            self.liquidity_shares
+                .get(caller)
+                .unwrap_or(0)
+                .checked_sub(redeemed_shares)
+                .ok_or(DexError::Arithmethic)?;
+
+            self.total_liquidity_shares -= redeemed_shares;
+
+            Ok(())
         }
 
         /// Swaps the specified amount of one of the pool's PSP22 tokens to another PSP22 token
         ///
         /// Calling account needs to give allowance to the DEX contract to spend amount_token_in of token_in on its behalf
-        /// before executing this tx.
+        /// before executing this tx as well as make sure it has enough balance of each token at the moment of executing the transaction
         #[ink(message)]
         pub fn swap(
             &mut self,
@@ -174,11 +239,6 @@ mod dex {
             if !self.pool.contains(&token_out) {
                 return Err(DexError::TokenNotInPool(token_out));
             }
-
-            // check allowance
-            // if self.allowance(token_in, caller, this) < amount_token_in {
-            //     return Err(DexError::InsufficientAllowanceOf(token_in));
-            // }
 
             let amount_token_out = self.out_given_in(token_in, token_out, amount_token_in)?;
 
@@ -208,15 +268,83 @@ mod dex {
             Ok(())
         }
 
+        // calculates an amount of tokens one will receive in exchange for redeeming LP pool shares
+        fn _amount_given_shares(
+            redeemed_pool_shares: u128,
+            token_balance: u128,
+            total_liquidity: u128,
+        ) -> Result<u128, DexError> {
+            todo!()
+        }
+
+        // fn _shares_given_withdrawal(
+        //     withdrawal_amount: u128,
+        //     token_balance: u128,
+        //     total_liquidity: u128,
+        // ) -> Result<u128, DexError> {
+        //     let op1 = withdrawal_amount
+        //         .checked_mul(total_liquidity)
+        //         .ok_or(DexError::Arithmethic)?;
+        //     let op2 = op1
+        //         .checked_div(token_balance)
+        //         .ok_or(DexError::Arithmethic)?;
+        //     Ok(op2)
+        // }
+
+        // calculates an amount of LP pool shares one will recieve after depositing a `deposit` amount of the token with token_balance in the pool
+        fn _shares_given_deposit(
+            deposit: u128,
+            token_balance: u128,
+            total_liquidity: u128,
+        ) -> Result<u128, DexError> {
+            let op1 = total_liquidity
+                .checked_div(token_balance)
+                .ok_or(DexError::Arithmethic)?;
+
+            let op2 = deposit.checked_mul(op1).ok_or(DexError::Arithmethic)?;
+            Ok(op2)
+        }
+
+        // calculates a required deposit of token with the `token_balance` in the pool required to receive a `pool shares` of LP pool shares
+        // see All Asset Deposit in the Balancer whitepaper
+        fn _deposit_given_shares(
+            issued_pool_shares: u128,
+            token_balance: u128,
+            total_liquidity: u128,
+        ) -> Result<u128, DexError> {
+            let op1 = total_liquidity
+                .checked_add(issued_pool_shares)
+                .ok_or(DexError::Arithmethic)?;
+
+            let op2 = op1
+                .checked_div(total_liquidity)
+                .ok_or(DexError::Arithmethic)?;
+
+            let op3 = op2.checked_sub(1u128).ok_or(DexError::Arithmethic)?;
+
+            let op4 = op3
+                .checked_mul(token_balance)
+                .ok_or(DexError::Arithmethic)?;
+
+            Ok(op4)
+        }
+
         /// Returns the swap trade input given a desired amount and assuming a curve with equal token weights
-        ///
-        /// A_i = 100 * (B_o * B_i - A_o * B_i) / (A_o * (100 - swap_fee) - A_o * swap_fee)
         fn _in_given_out(
             amount_token_out: Balance,
             balance_token_in: Balance,
             balance_token_out: Balance,
-            _swap_fee_percentage: Balance,
+            swap_fee_percentage: Balance,
         ) -> Result<Balance, DexError> {
+            let amount_token_out = match swap_fee_percentage {
+                0 => amount_token_out,
+                _ => amount_token_out
+                    .checked_mul(swap_fee_percentage)
+                    .ok_or(DexError::Arithmethic)?
+                    .checked_div(100)
+                    .ok_or(DexError::Arithmethic)?,
+            };
+
             let op1 = balance_token_in
                 .checked_mul(amount_token_out)
                 .ok_or(DexError::Arithmethic)?;
@@ -228,10 +356,8 @@ mod dex {
             op1.checked_div(op2).ok_or(DexError::Arithmethic)
         }
 
-        /// return swap trade output given a curve with equal token weights
-        ///
-        /// B_o - (100 * B_o * B_i) / (100 * (B_i + A_i) - A_i * swap_fee)
-        /// where swap_fee (integer) is a percentage of the trade that goes towards the pool
+        /// Returns swap trade output given a curve with equal token weights
+        /// swap_fee (integer) is a percentage of the trade that goes towards the pool
         /// and is used to pay the liquidity providers
         fn _out_given_in(
             amount_token_in: Balance,
