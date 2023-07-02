@@ -215,12 +215,20 @@ mod dex {
             amount_token_out: Balance,
             balance_token_in: Balance,
             balance_token_out: Balance,
-            swap_fee_percentage: Balance,
+            _swap_fee_percentage: Balance,
         ) -> Result<Balance, DexError> {
-            todo!()
+            let op1 = balance_token_in
+                .checked_mul(amount_token_out)
+                .ok_or(DexError::Arithmethic)?;
+
+            let op2 = balance_token_out
+                .checked_sub(amount_token_out)
+                .ok_or(DexError::Arithmethic)?;
+
+            op1.checked_div(op2).ok_or(DexError::Arithmethic)
         }
 
-        /// Return swap trade output given a curve with equal token weights
+        /// return swap trade output given a curve with equal token weights
         ///
         /// B_o - (100 * B_o * B_i) / (100 * (B_i + A_i) - A_i * swap_fee)
         /// where swap_fee (integer) is a percentage of the trade that goes towards the pool
