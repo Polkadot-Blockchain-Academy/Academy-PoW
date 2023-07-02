@@ -6,15 +6,7 @@
 mod dex {
 
     use ink::{
-        codegen::{EmitEvent, Env},
-        env::{
-            call::{build_call, ExecutionInput, FromAccountId},
-            set_code_hash, CallFlags, DefaultEnvironment, Error as InkEnvError,
-        },
-        prelude::{format, string::String, vec, vec::Vec},
-        reflect::ContractEventBase,
-        storage::{traits::ManualKey, Lazy, Mapping},
-        LangError, ToAccountId,
+        codegen::EmitEvent, prelude::vec::Vec, reflect::ContractEventBase, storage::Mapping,
     };
     use psp22_traits::{PSP22Error, PSP22};
 
@@ -49,7 +41,6 @@ mod dex {
     }
 
     #[ink(storage)]
-    #[derive(Default)]
     pub struct SimpleDex {
         pub swap_fee_percentage: u128,
         pub pool: Vec<AccountId>,
@@ -72,6 +63,30 @@ mod dex {
                 total_liquidity_shares: 0,
                 liquidity_shares: Mapping::new(),
             }
+        }
+
+        /// How many tokens of token_in has to be deposited to receive `issued_pool_shares` of the LP token
+        #[ink(message)]
+        pub fn deposit_given_shares(
+            &self,
+            token_in: AccountId,
+            issued_shares: u128,
+        ) -> Result<Balance, DexError> {
+            let this = self.env().account_id();
+            let balance = self.balance_of(token_in, this);
+            Self::_deposit_given_shares(issued_shares, balance, self.total_liquidity_shares)
+        }
+
+        /// How many tokens of token_in will be transferred in exchange for `issued_pool_shares` of the LP token
+        #[ink(message)]
+        pub fn withdrawal_given_shares(
+            &self,
+            token_out: AccountId,
+            redeemed_shares: u128,
+        ) -> Result<Balance, DexError> {
+            let this = self.env().account_id();
+            let balance = self.balance_of(token_out, this);
+            Self::_withdrawal_given_shares(redeemed_shares, balance, self.total_liquidity_shares)
         }
 
         /// Return swap trade output given a curve with equal token weights
@@ -125,74 +140,59 @@ mod dex {
             )
         }
 
-        #[ink(message)]
-        pub fn single_asset_deposit(
-            &mut self,
-            token: Option<AccountId>,
-            amount: Option<u128>,
-        ) -> Result<(), DexError> {
-            todo!()
-        }
-
-        #[ink(message)]
-        pub fn single_asset_withdrawal(
-            &mut self,
-            token: Option<AccountId>,
-            amount: u128,
-        ) -> Result<(), DexError> {
-            todo!()
-        }
-
+        /// An All Asset Deposit
+        ///
         /// Caller will receive issued_shares of LP tokens for depositing d_k amount of each token.
         ///
         /// Before calling this tx liquidity provider should give this contract enough allowance to deposit d_k of each token in the pool,
         /// where d_k depends on the current balance of token k in the pool.
         /// The exact amount can be queried by calling `deposit_given_shares`.
         #[ink(message)]
-        pub fn all_asset_deposit(&mut self, issued_shares: Balance) -> Result<(), DexError> {
+        pub fn deposit(&mut self, issued_shares: Balance) -> Result<(), DexError> {
             let this = Self::env().account_id();
             let caller = Self::env().caller();
 
-            let total_liquidity = self.total_liquidity_shares;
-
             for token_in in &self.pool {
-                let balance = self.balance_of(*token_in, this);
-                let deposit = Self::_deposit_given_shares(issued_shares, balance, total_liquidity)?;
+                let deposit = self.deposit_given_shares(*token_in, issued_shares)?;
 
                 // transfer token_in from the user to the contract
                 // whole tx will fail if not enough allowance was given beforehand!
                 self.transfer_from_tx(*token_in, caller, this, deposit)?;
             }
 
-            // issue liquidity shares to the caller
-            self.liquidity_shares
+            // mint LP shares
+            let new_amount = self
+                .liquidity_shares
                 .get(caller)
                 .unwrap_or(0)
                 .checked_add(issued_shares)
                 .ok_or(DexError::Arithmethic)?;
 
-            self.total_liquidity_shares += issued_shares;
+            self.liquidity_shares.insert(caller, &new_amount);
+
+            self.total_liquidity_shares = self
+                .total_liquidity_shares
+                .checked_add(issued_shares)
+                .ok_or(DexError::Arithmethic)?;
 
             Ok(())
         }
 
+        /// An All Asset Withdrawal
+        ///
         /// Caller will receive d_k amount of each token for redeeming `redeemed_shares` of LP tokens,
         /// where d_k depends on the current balance of token k in the pool.
-        /// The exact amount can be queried by calling `deposit_given_shares`.
+        /// The exact amount can be queried by calling `withdrawal_given_shares`.
         #[ink(message)]
-        pub fn all_asset_withdrawal(&mut self, redeemed_shares: Balance) -> Result<(), DexError> {
-            let this = self.env().account_id();
+        pub fn withdrawal(&mut self, redeemed_shares: Balance) -> Result<(), DexError> {
             let caller = self.env().caller();
-
-            let total_liquidity = self.total_liquidity_shares;
 
             if self.liquidity_shares.get(caller).unwrap_or(0) < redeemed_shares {
                 return Err(DexError::InsufficientLiquidityShares);
             }
 
             for token_out in &self.pool {
-                let balance = self.balance_of(*token_out, this);
-                let amount = Self::_amount_given_shares(redeemed_shares, balance, total_liquidity)?;
+                let amount = self.withdrawal_given_shares(*token_out, redeemed_shares)?;
 
                 // transfer token_in from the user to the contract
                 // whole tx will fail if not enough allowance was given beforehand!
@@ -200,13 +200,19 @@ mod dex {
             }
 
             // burn LP shares
-            self.liquidity_shares
+            let new_amount = self
+                .liquidity_shares
                 .get(caller)
                 .unwrap_or(0)
                 .checked_sub(redeemed_shares)
                 .ok_or(DexError::Arithmethic)?;
 
-            self.total_liquidity_shares -= redeemed_shares;
+            self.liquidity_shares.insert(caller, &new_amount);
+
+            self.total_liquidity_shares = self
+                .total_liquidity_shares
+                .checked_sub(redeemed_shares)
+                .ok_or(DexError::Arithmethic)?;
 
             Ok(())
         }
@@ -269,49 +275,36 @@ mod dex {
         }
 
         // calculates an amount of tokens one will receive in exchange for redeeming LP pool shares
-        fn _amount_given_shares(
-            redeemed_pool_shares: u128,
-            token_balance: u128,
-            total_liquidity: u128,
-        ) -> Result<u128, DexError> {
-            todo!()
-        }
-
-        // fn _shares_given_withdrawal(
-        //     withdrawal_amount: u128,
-        //     token_balance: u128,
-        //     total_liquidity: u128,
-        // ) -> Result<u128, DexError> {
-        //     let op1 = withdrawal_amount
-        //         .checked_mul(total_liquidity)
-        //         .ok_or(DexError::Arithmethic)?;
-        //     let op2 = op1
-        //         .checked_div(token_balance)
-        //         .ok_or(DexError::Arithmethic)?;
-        //     Ok(op2)
-        // }
-
-        // calculates an amount of LP pool shares one will recieve after depositing a `deposit` amount of the token with token_balance in the pool
-        fn _shares_given_deposit(
-            deposit: u128,
-            token_balance: u128,
-            total_liquidity: u128,
-        ) -> Result<u128, DexError> {
-            let op1 = total_liquidity
-                .checked_div(token_balance)
+        // in all asset withdrawal
+        fn _withdrawal_given_shares(
+            redeemed_pool_shares: Balance,
+            token_balance: Balance,
+            total_liquidity: Balance,
+        ) -> Result<Balance, DexError> {
+            let op1 = token_balance
+                .checked_mul(total_liquidity)
                 .ok_or(DexError::Arithmethic)?;
 
-            let op2 = deposit.checked_mul(op1).ok_or(DexError::Arithmethic)?;
-            Ok(op2)
+            let op2 = redeemed_pool_shares
+                .checked_mul(token_balance)
+                .ok_or(DexError::Arithmethic)?;
+
+            let op3 = op1.checked_sub(op2).ok_or(DexError::Arithmethic)?;
+
+            let op4 = op3
+                .checked_div(total_liquidity)
+                .ok_or(DexError::Arithmethic)?;
+
+            token_balance.checked_sub(op4).ok_or(DexError::Arithmethic)
         }
 
         // calculates a required deposit of token with the `token_balance` in the pool required to receive a `pool shares` of LP pool shares
-        // see All Asset Deposit in the Balancer whitepaper
+        // in all asset deposit
         fn _deposit_given_shares(
-            issued_pool_shares: u128,
-            token_balance: u128,
-            total_liquidity: u128,
-        ) -> Result<u128, DexError> {
+            issued_pool_shares: Balance,
+            token_balance: Balance,
+            total_liquidity: Balance,
+        ) -> Result<Balance, DexError> {
             let op1 = total_liquidity
                 .checked_add(issued_pool_shares)
                 .ok_or(DexError::Arithmethic)?;

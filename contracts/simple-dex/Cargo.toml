@@ -19,9 +19,9 @@ path = "lib.rs"
 [features]
 default = ["std"]
 std = [
-    "psp22-traits/std",
-    "ink/std",
-    "scale-info/std",
-    "scale/std",
+  "ink/std",
+  "psp22-traits/std",
+  "scale-info/std",
+  "scale/std",
 ]
 ink-as-dependency = []
