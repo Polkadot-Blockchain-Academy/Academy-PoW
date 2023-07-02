@@ -10,4 +10,5 @@ members = [
 
 exclude = [
     "contracts/roulette",
+    "contracts/psp22-traits",
 ]
