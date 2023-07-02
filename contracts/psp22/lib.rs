@@ -4,7 +4,7 @@
 mod psp22 {
 
     use ink::{codegen::EmitEvent, reflect::ContractEventBase, storage::Mapping};
-    use psp22_traits::{PSP22Error, PSP22};
+    use psp22_traits::{PSP22Error, PSP22 as TraitPSP22};
 
     #[ink(event)]
     pub struct Approval {
@@ -26,15 +26,15 @@ mod psp22 {
 
     #[ink(storage)]
     #[derive(Default)]
-    pub struct Erc20 {
+    pub struct PSP22 {
         total_supply: Balance,
         balances: Mapping<AccountId, Balance>,
         allowances: Mapping<(AccountId, AccountId), Balance>,
     }
 
-    pub type Event = <Erc20 as ContractEventBase>::Type;
+    pub type Event = <PSP22 as ContractEventBase>::Type;
 
-    impl Erc20 {
+    impl PSP22 {
         #[ink(constructor)]
         pub fn new(total_supply: Balance) -> Self {
             let mut balances = Mapping::default();
@@ -82,7 +82,7 @@ mod psp22 {
         }
     }
 
-    impl PSP22 for Erc20 {
+    impl TraitPSP22 for PSP22 {
         /// Returns the total token supply.
         #[ink(message)]
         fn total_supply(&self) -> Balance {
