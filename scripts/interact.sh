@@ -13,6 +13,9 @@ INK_DEV_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:1.5.0
 AUTHORITY=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 AUTHORITY_SEED=//Alice
 
+FILIP=5D2ZNVZ5xnMrs9SRJvVSe9ACnsbhTwmdC2PmeC1MXJVt8Drf
+FILIP_SEED=//Filip
+
 # ---  FUNCTIONS
 
 function run_ink_dev() {
@@ -81,3 +84,5 @@ else
   echo "Placing a bet"
   place_bet
 fi
+
+# basic psp22 interaction
