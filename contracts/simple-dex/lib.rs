@@ -22,7 +22,7 @@ mod dex {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum DexError {
         Arithmethic,
-        TokenNotInPool,
+        TokenNotInPool(AccountId),
         TooMuchSlippage,
         NotEnoughLiquidityOf(AccountId),
         PSP22(PSP22Error),
@@ -51,13 +51,19 @@ mod dex {
     #[derive(Default)]
     pub struct SimpleDex {
         pub swap_fee_percentage: u128,
+        pub pool: Vec<AccountId>,
     }
 
     impl SimpleDex {
         #[ink(constructor)]
-        pub fn new() -> Self {
+        pub fn new(swap_fee_percentage: u128, pool: Vec<AccountId>) -> Self {
+            if swap_fee_percentage > 100 {
+                panic!("swap_fee needs to be expressed as a %")
+            }
+
             Self {
-                swap_fee_percentage: 0,
+                pool,
+                swap_fee_percentage,
             }
         }
 
@@ -140,7 +146,8 @@ mod dex {
             todo!()
         }
 
-        /// Swaps the a specified amount of one of the pool's PSP22 tokens to another PSP22 token
+        /// Swaps the specified amount of one of the pool's PSP22 tokens to another PSP22 token
+        ///
         /// Calling account needs to give allowance to the DEX contract to spend amount_token_in of token_in on its behalf
         /// before executing this tx.
         #[ink(message)]
@@ -160,10 +167,13 @@ mod dex {
                 return Err(DexError::NotEnoughLiquidityOf(token_out));
             }
 
-            // let swap_pair = SwapPair::new(token_in, token_out);
-            // if !self.swap_pairs.contains(&swap_pair) {
-            //     return Err(DexError::UnsupportedSwapPair(swap_pair));
-            // }
+            if !self.pool.contains(&token_in) {
+                return Err(DexError::TokenNotInPool(token_in));
+            }
+
+            if !self.pool.contains(&token_out) {
+                return Err(DexError::TokenNotInPool(token_out));
+            }
 
             // check allowance
             // if self.allowance(token_in, caller, this) < amount_token_in {
