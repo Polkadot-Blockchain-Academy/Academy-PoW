@@ -1,5 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
+use ink::{
+    env::{DefaultEnvironment, Environment},
+    primitives::AccountId,
+};
+
+pub type Balance = <DefaultEnvironment as Environment>::Balance;
+
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 pub enum PSP22Error {
@@ -19,17 +26,10 @@ pub trait PSP22 {
     fn allowance(&self, owner: AccountId, spender: AccountId) -> Balance;
 
     #[ink(message)]
-    fn increase_allowance(
-        &mut self,
-        spender: AccountId,
-        delta_value: Balance,
-    ) -> Result<(), PSP22Error>;
+    fn approve(&mut self, spender: AccountId, value: Balance) -> Result<(), PSP22Error>;
 
     #[ink(message)]
     fn transfer(&mut self, to: AccountId, value: Balance) -> Result<(), PSP22Error>;
-
-    #[ink(message)]
-    fn approve(&mut self, spender: AccountId, value: Balance) -> Result<(), PSP22Error>;
 
     #[ink(message)]
     fn transfer_from(
@@ -37,16 +37,17 @@ pub trait PSP22 {
         from: AccountId,
         to: AccountId,
         value: Balance,
-        data: Vec<u8>,
     ) -> Result<(), PSP22Error>;
 }
 
 #[ink::trait_definition]
 pub trait Mintable {
+    #[ink(message)]
     fn mint(&mut self, account: AccountId, amount: Balance) -> Result<(), PSP22Error>;
 }
 
 #[ink::trait_definition]
 pub trait Burnable {
+    #[ink(message)]
     fn burn(&mut self, account: AccountId, amount: Balance) -> Result<(), PSP22Error>;
 }
