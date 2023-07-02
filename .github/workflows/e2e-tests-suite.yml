@@ -97,8 +97,10 @@ jobs:
         shell: bash
         run: ./.github/scripts/interact-with-contract.sh
 
-      - name: Deploy roulette
+      - name: Deploy contracts
         shell: bash
         run: ./scripts/deploy.sh
 
-      # TODO: interact with roulette
+      - name: Test basic contract interactions
+        shell: bash
+        run: ./scripts/deploy.sh

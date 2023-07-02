@@ -104,7 +104,7 @@ mod roulette {
     }
 
     impl Roulette {
-        #[ink(constructor)]
+        #[ink(constructor, payable)]
         pub fn new(
             betting_period_length: BlockNumber,
             maximal_number_of_bets: u8,
@@ -143,10 +143,15 @@ mod roulette {
         }
 
         /// Returns true if there is still place for more bets
-        #[ink(message)]
-        pub fn are_bets_accepted(&self) -> bool {
-            let data = self.data.get().unwrap();
+        pub fn are_bets_accepted(data: &Data) -> bool {
             data.next_bet_id < data.maximal_number_of_bets.into()
+        }
+
+        /// Returns true if there is still place & time for more bets
+        #[ink(message)]
+        pub fn can_place_bets(&self) -> bool {
+            let data = self.data.get().unwrap();
+            !self.is_betting_period_over() && Self::are_bets_accepted(&data)
         }
 
         /// Place a bet
@@ -160,7 +165,7 @@ mod roulette {
             let mut data = self.data.get().unwrap();
 
             let next_bet_id = data.next_bet_id;
-            if self.is_betting_period_over() || self.are_bets_accepted() {
+            if !self.can_place_bets() {
                 return Err(RouletteError::NoMoreBetsCanBeMade);
             };
 
@@ -217,7 +222,7 @@ mod roulette {
             };
 
             // generate a "random" number between 1 and 36
-            // NOTE: this is a very poor source of randomness, we should add rcf palet
+            // NOTE: this is a poor source of randomness, what other sources could we use?
             let winning_number = (self.env().block_timestamp() % 36 + 1) as u8;
 
             self.distribute_payouts(winning_number)?;

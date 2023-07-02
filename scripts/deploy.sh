@@ -5,7 +5,7 @@ set -eo pipefail
 
 # --- GLOBAL CONSTANTS
 
-BETTING_PERIOD_LENGTH=5
+BETTING_PERIOD_LENGTH=100
 MAXIMAL_NUMBER_OF_BETS=5
 MINIMAL_BET_AMOUNT=1000000000000
 
@@ -50,7 +50,7 @@ cd "$CONTRACTS_PATH"/roulette
 cargo_contract build --release
 ROULETTE_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
 
-ROULETTE=$(cargo_contract instantiate --url "$NODE" --constructor new --args $BETTING_PERIOD_LENGTH $MAXIMAL_NUMBER_OF_BETS $MINIMAL_BET_AMOUNT --suri "$AUTHORITY_SEED" --skip-confirm --output-json --execute | jq -r '.contract')
+ROULETTE=$(cargo_contract instantiate --url "$NODE" --constructor new --args $BETTING_PERIOD_LENGTH $MAXIMAL_NUMBER_OF_BETS $MINIMAL_BET_AMOUNT --suri "$AUTHORITY_SEED" --value 100000000000000 --skip-confirm --output-json --execute | jq -r '.contract')
 
 # spit adresses to a JSON file
 cd "$CONTRACTS_PATH"
