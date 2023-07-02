@@ -103,4 +103,4 @@ jobs:
 
       - name: Test basic contract interactions
         shell: bash
-        run: ./scripts/deploy.sh
+        run: ./scripts/interact.sh
