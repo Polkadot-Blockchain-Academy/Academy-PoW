@@ -9,6 +9,8 @@ BETTING_PERIOD_LENGTH=5
 MAXIMAL_NUMBER_OF_BETS=5
 MINIMAL_BET_AMOUNT=1000000000000
 
+TOTAL_SUPPLY=300000000000000000000
+
 INK_DEV_IMAGE=public.ecr.aws/p6e8q1z1/ink-dev:1.5.0
 NODE=ws://127.0.0.1:9944
 AUTHORITY=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
@@ -44,13 +46,21 @@ function cargo_contract() {
 
 run_ink_dev
 
-# compile contracts
+# compile & deploy contracts
+
+# -- roulette
 
 cd "$CONTRACTS_PATH"/roulette
 cargo_contract build --release
 ROULETTE_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
-
 ROULETTE=$(cargo_contract instantiate --url "$NODE" --constructor new --args $BETTING_PERIOD_LENGTH $MAXIMAL_NUMBER_OF_BETS $MINIMAL_BET_AMOUNT --suri "$AUTHORITY_SEED" --skip-confirm --output-json --execute | jq -r '.contract')
+
+# -- psp22
+
+cd "$CONTRACTS_PATH"/psp22
+cargo_contract build --release
+PSP22_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
+PSP22=$(cargo_contract instantiate --url "$NODE" --constructor new --args $TOTAL_SUPPLY --suri "$AUTHORITY_SEED" --skip-confirm --output-json --execute | jq -r '.contract')
 
 # spit adresses to a JSON file
 cd "$CONTRACTS_PATH"
@@ -58,9 +68,13 @@ cd "$CONTRACTS_PATH"
 jq -n \
    --arg roulette "$ROULETTE" \
    --arg roulette_code_hash "$ROULETTE_CODE_HASH" \
+   --arg psp22 "$ROULETTE" \
+   --arg psp22_code_hash "$ROULETTE_CODE_HASH" \
    '{
       roulette: $roulette,
-      roulette_code_hash: $roulette_code_hash
+      roulette_code_hash: $roulette_code_hash,
+      psp22: $psp22,
+      psp22_code_hash: $psp22_code_hash
     }' > addresses.json
 
 cat addresses.json
