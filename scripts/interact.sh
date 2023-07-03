@@ -113,6 +113,58 @@ function balance_of() {
   eval $__resultvar="'$result'"
 }
 
+function deposit() {
+  local issued_shares=$1
+  local token_one=$(get_address $2)
+  local token_two=$(get_address $3)
+  local suri="${4:-$AUTHORITY_SEED}"
+  local dex=$(get_address dex)
+
+  # give DEX allowances to spend PSP22's when depositing
+  cd "$CONTRACTS_PATH"/simple-dex
+  local deposit=$(cargo_contract call --url "$NODE" --contract "$dex" --suri $suri --message deposit_given_shares --args $token_one $issued_shares --output-json | jq  -r '.data.Tuple.values' | jq '.[].Tuple.values' | jq '.[].UInt')
+  approve $2 $dex $deposit
+
+  cd "$CONTRACTS_PATH"/simple-dex
+  local deposit=$(cargo_contract call --url "$NODE" --contract "$dex" --suri $suri --message deposit_given_shares --args $token_two $issued_shares --output-json | jq  -r '.data.Tuple.values' | jq '.[].Tuple.values' | jq '.[].UInt')
+  approve $3 $dex $deposit
+
+  # make the deposit
+  cd "$CONTRACTS_PATH"/simple-dex
+  cargo_contract call --url "$NODE" --contract $dex --message deposit --args $issued_shares --suri $suri --execute --skip-confirm
+}
+
+function out_given_in() {
+  local token_in=$(get_address $1)
+  local token_out=$(get_address $2)
+  local amount_token_in=$3
+  local dex=$(get_address dex)
+
+  cd "$CONTRACTS_PATH"/simple-dex
+  cargo_contract call --url "$NODE" --contract "$dex" --message out_given_in --args $token_in $token_out $amount_token_in  --suri "$AUTHORITY_SEED" --output-json
+}
+
+# TODO
+function swap() {
+  local token_in=$(get_address $1)
+  local token_out=$(get_address $2)
+  local amount_token_in=$3
+  local suri="${4:-$AUTHORITY_SEED}"
+  local dex=$(get_address dex)
+
+  # give DEX allowance
+  approve $1 $dex $amount_token_in
+
+  # eval min
+
+  let min_amount_token_out=$(out_given_in $1 $2 $amount_token_in | jq  -r '.data.Tuple.values' | jq '.[].Tuple.values' | jq '.[].UInt')
+
+  echo "setting min_amount_out: $min_amount_token_out"
+
+  cd "$CONTRACTS_PATH"/simple-dex
+  cargo_contract call --url "$NODE" --contract "$dex" --message swap --args $token_in $token_out $amount_token_in $min_amount_token_out --suri $suri --execute --skip-confirm
+}
+
 # --- RUN
 
 run_ink_dev
@@ -149,3 +201,17 @@ transfer_from token_one $BOB $ALICE $AMOUNT $EVE_SEED
 
 balance_of BALANCE_OF token_one $BOB
 echo "${BOB}'s balance of $(get_address token_one): $BALANCE_OF"
+
+# basic DEX interactions
+
+# seed DEX with some liquidity
+AMOUNT=1000000000000
+transfer token_one $(get_address dex) $AMOUNT
+transfer token_two $(get_address dex) $AMOUNT
+
+# make a deposit and get some LP shares
+deposit 1000 token_one token_two
+
+# swap 1 token_one for token_two
+AMOUNT=1000000000000
+swap token_one token_two $AMOUNT

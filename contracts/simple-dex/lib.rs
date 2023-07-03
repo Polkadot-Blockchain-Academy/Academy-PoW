@@ -103,7 +103,7 @@ mod dex {
             data.set(&Data {
                 pool,
                 swap_fee_percentage,
-                total_liquidity_shares: 0,
+                total_liquidity_shares: 1,
             });
 
             Ok(Self {
@@ -122,6 +122,7 @@ mod dex {
             let this = self.env().account_id();
             let balance = self.balance_of(token_in, this);
             let data = self.data.get().unwrap();
+
             Self::_deposit_given_shares(issued_shares, balance, data.total_liquidity_shares)
         }
 
@@ -529,7 +530,19 @@ mod dex {
         use super::*;
 
         #[test]
-        fn test_in_given_out() {
+        fn deposit_given_shares() {
+            let balance = 1000000000000u128;
+            let shares_out = 1000u128;
+            let total_liquidity = 1u128;
+
+            let required_deposit =
+                SimpleDex::_deposit_given_shares(shares_out, balance, total_liquidity).unwrap();
+
+            assert_eq!(balance * shares_out, required_deposit);
+        }
+
+        #[test]
+        fn in_given_out() {
             let balance_in = 1054100000000000u128;
             let balance_out = 991358845313840u128;
 
