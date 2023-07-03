@@ -96,3 +96,11 @@ jobs:
       - name: Verify contract interaction
         shell: bash
         run: ./.github/scripts/interact-with-contract.sh
+
+      - name: Deploy contracts
+        shell: bash
+        run: ./scripts/deploy.sh
+
+      - name: Test basic contract interactions
+        shell: bash
+        run: ./scripts/interact.sh
