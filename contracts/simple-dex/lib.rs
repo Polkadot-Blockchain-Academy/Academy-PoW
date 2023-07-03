@@ -12,13 +12,20 @@
 mod dex {
 
     use ink::{
-        codegen::EmitEvent, prelude::vec::Vec, reflect::ContractEventBase, storage::Mapping,
+        codegen::EmitEvent,
+        prelude::{
+            string::{String, ToString},
+            vec::Vec,
+        },
+        reflect::ContractEventBase,
+        storage::{traits::ManualKey, Lazy, Mapping},
     };
     use psp22_traits::{PSP22Error, PSP22};
 
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum DexError {
+        Constructor(String),
         Arithmethic,
         TokenNotInPool(AccountId),
         TooMuchSlippage,
@@ -46,29 +53,63 @@ mod dex {
         amount_out: Balance,
     }
 
-    #[ink(storage)]
-    pub struct SimpleDex {
+    #[ink(event)]
+    pub struct Deposit {
+        caller: AccountId,
+        deposits: Vec<Balance>,
+        issued_shares: Balance,
+    }
+
+    #[ink(event)]
+    pub struct Withdrawal {
+        caller: AccountId,
+        withdrawals: Vec<Balance>,
+        redeemed_shares: Balance,
+    }
+
+    #[derive(Debug)]
+    #[ink::storage_item]
+    pub struct Data {
         pub swap_fee_percentage: u128,
         pub pool: Vec<AccountId>,
-        // mapping that keeps track of LP tokens for each provider
-        pub liquidity_shares: Mapping<AccountId, u128>,
         // optimization: keeps track of total liquidity
         pub total_liquidity_shares: Balance,
     }
 
+    #[ink(storage)]
+    pub struct SimpleDex {
+        pub data: Lazy<Data, ManualKey<0x44415441>>,
+        // mapping that keeps track of LP tokens for each provider
+        pub liquidity_shares: Mapping<AccountId, u128>,
+    }
+
     impl SimpleDex {
         #[ink(constructor)]
-        pub fn new(swap_fee_percentage: u128, pool: Vec<AccountId>) -> Self {
+        pub fn new(swap_fee_percentage: u128, pool: Vec<AccountId>) -> Result<Self, DexError> {
             if swap_fee_percentage > 100 {
-                panic!("swap_fee needs to be expressed as a %")
+                return Err(DexError::Constructor(
+                    "swap_fee needs to be expressed as a %".to_string(),
+                ));
             }
 
-            Self {
+            if pool.len() > 3 {
+                return Err(DexError::Constructor(
+                    "Pool composition cannot exceed 3 tokens".to_string(),
+                ));
+            }
+
+            let mut data = Lazy::new();
+
+            data.set(&Data {
                 pool,
                 swap_fee_percentage,
                 total_liquidity_shares: 0,
+            });
+
+            Ok(Self {
+                data,
                 liquidity_shares: Mapping::new(),
-            }
+            })
         }
 
         /// How many tokens of token_in has to be deposited to receive `issued_pool_shares` of the LP token
@@ -80,7 +121,8 @@ mod dex {
         ) -> Result<Balance, DexError> {
             let this = self.env().account_id();
             let balance = self.balance_of(token_in, this);
-            Self::_deposit_given_shares(issued_shares, balance, self.total_liquidity_shares)
+            let data = self.data.get().unwrap();
+            Self::_deposit_given_shares(issued_shares, balance, data.total_liquidity_shares)
         }
 
         /// How many tokens of token_in will be transferred in exchange for `issued_pool_shares` of the LP token
@@ -92,7 +134,8 @@ mod dex {
         ) -> Result<Balance, DexError> {
             let this = self.env().account_id();
             let balance = self.balance_of(token_out, this);
-            Self::_withdrawal_given_shares(redeemed_shares, balance, self.total_liquidity_shares)
+            let data = self.data.get().unwrap();
+            Self::_withdrawal_given_shares(redeemed_shares, balance, data.total_liquidity_shares)
         }
 
         /// Return swap trade output given a curve with equal token weights
@@ -111,11 +154,12 @@ mod dex {
             let balance_token_in = self.balance_of(token_in, this);
             let balance_token_out = self.balance_of(token_out, this);
 
+            let data = self.data.get().unwrap();
             Self::_out_given_in(
                 amount_token_in,
                 balance_token_in,
                 balance_token_out,
-                self.swap_fee_percentage,
+                data.swap_fee_percentage,
             )
         }
 
@@ -138,11 +182,12 @@ mod dex {
                 return Err(DexError::NotEnoughLiquidityOf(token_out));
             }
 
+            let data = self.data.get().unwrap();
             Self::_in_given_out(
                 amount_token_out,
                 balance_token_in,
                 balance_token_out,
-                self.swap_fee_percentage,
+                data.swap_fee_percentage,
             )
         }
 
@@ -158,13 +203,21 @@ mod dex {
             let this = Self::env().account_id();
             let caller = Self::env().caller();
 
-            for token_in in &self.pool {
-                let deposit = self.deposit_given_shares(*token_in, issued_shares)?;
+            let mut data = self.data.get().unwrap();
 
-                // transfer token_in from the user to the contract
-                // whole tx will fail if not enough allowance was given beforehand!
-                self.transfer_from_tx(*token_in, caller, this, deposit)?;
-            }
+            let deposits = data.pool.iter().try_fold(
+                Vec::with_capacity(data.pool.len()),
+                |mut deposits: Vec<Balance>, token_in| -> Result<Vec<Balance>, DexError> {
+                    let deposit = self.deposit_given_shares(*token_in, issued_shares)?;
+
+                    // transfer token_in from the user to the contract
+                    // whole tx will fail if not enough allowance was given beforehand!
+                    self.transfer_from_tx(*token_in, caller, this, deposit)?;
+
+                    deposits.push(deposit);
+                    Ok(deposits)
+                },
+            )?;
 
             // mint LP shares
             let new_amount = self
@@ -176,10 +229,22 @@ mod dex {
 
             self.liquidity_shares.insert(caller, &new_amount);
 
-            self.total_liquidity_shares = self
+            data.total_liquidity_shares = data
                 .total_liquidity_shares
                 .checked_add(issued_shares)
                 .ok_or(DexError::Arithmethic)?;
+
+            self.data.set(&data);
+
+            // emit event
+            Self::emit_event(
+                self.env(),
+                Event::Deposit(Deposit {
+                    caller,
+                    deposits,
+                    issued_shares,
+                }),
+            );
 
             Ok(())
         }
@@ -197,13 +262,30 @@ mod dex {
                 return Err(DexError::InsufficientLiquidityShares);
             }
 
-            for token_out in &self.pool {
+            let mut data = self.data.get().unwrap();
+
+            for token_out in &data.pool {
                 let amount = self.withdrawal_given_shares(*token_out, redeemed_shares)?;
 
                 // transfer token_in from the user to the contract
                 // whole tx will fail if not enough allowance was given beforehand!
                 self.transfer_tx(*token_out, caller, amount)?;
             }
+
+            let withdrawals = data.pool.iter().try_fold(
+                Vec::with_capacity(data.pool.len()),
+                |mut withdrawals: Vec<Balance>, token_out| -> Result<Vec<Balance>, DexError> {
+                    // let amount = self.deposit_given_shares(*token_in, issued_shares)?;
+                    let amount = self.withdrawal_given_shares(*token_out, redeemed_shares)?;
+
+                    // transfer token_in from the user to the contract
+                    // whole tx will fail if not enough allowance was given beforehand!
+                    self.transfer_tx(*token_out, caller, amount)?;
+
+                    withdrawals.push(amount);
+                    Ok(withdrawals)
+                },
+            )?;
 
             // burn LP shares
             let new_amount = self
@@ -215,10 +297,22 @@ mod dex {
 
             self.liquidity_shares.insert(caller, &new_amount);
 
-            self.total_liquidity_shares = self
+            data.total_liquidity_shares = data
                 .total_liquidity_shares
                 .checked_sub(redeemed_shares)
                 .ok_or(DexError::Arithmethic)?;
+
+            self.data.set(&data);
+
+            // emit event
+            Self::emit_event(
+                self.env(),
+                Event::Withdrawal(Withdrawal {
+                    caller,
+                    withdrawals,
+                    redeemed_shares,
+                }),
+            );
 
             Ok(())
         }
@@ -244,11 +338,13 @@ mod dex {
                 return Err(DexError::NotEnoughLiquidityOf(token_out));
             }
 
-            if !self.pool.contains(&token_in) {
+            let data = self.data.get().unwrap();
+
+            if !data.pool.contains(&token_in) {
                 return Err(DexError::TokenNotInPool(token_in));
             }
 
-            if !self.pool.contains(&token_out) {
+            if !data.pool.contains(&token_out) {
                 return Err(DexError::TokenNotInPool(token_out));
             }
 
