@@ -24,6 +24,12 @@ mod psp22 {
     //     value: Balance,
     // }
 
+    #[derive(scale::Encode)]
+    enum RuntimeCall {
+        #[codec(index = 4)]
+        Balances(BalancesCall),
+    }
+
     #[ink(storage)]
     #[derive(Default)]
     pub struct WrappedNative {
