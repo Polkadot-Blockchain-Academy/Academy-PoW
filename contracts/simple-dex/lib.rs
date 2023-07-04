@@ -503,7 +503,7 @@ mod dex {
             amount: Balance,
         ) -> Result<(), PSP22Error> {
             let mut psp22: ink::contract_ref!(PSP22) = token.into();
-            psp22.transfer_from(from, to, amount)
+            psp22.transfer_from(from, to, amount, Vec::new())
         }
 
         /// Transfers a given amount of a PSP22 token to a specified using the callers own balance
@@ -514,7 +514,7 @@ mod dex {
             amount: Balance,
         ) -> Result<(), PSP22Error> {
             let mut psp22: ink::contract_ref!(PSP22) = token.into();
-            psp22.transfer(to, amount)
+            psp22.transfer(to, amount, Vec::new())
         }
 
         fn emit_event<EE>(emitter: EE, event: Event)
