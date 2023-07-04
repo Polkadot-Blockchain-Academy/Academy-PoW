@@ -12,15 +12,15 @@ mod psp22 {
         owner: AccountId,
         #[ink(topic)]
         spender: AccountId,
-        value: Balance,
+        amount: Balance,
     }
 
     #[ink(event)]
     pub struct Transfer {
         #[ink(topic)]
-        from: Option<AccountId>,
+        from: AccountId,
         #[ink(topic)]
-        to: Option<AccountId>,
+        to: AccountId,
         value: Balance,
     }
 
@@ -47,11 +47,32 @@ mod psp22 {
             }
         }
 
-        fn transfer_from_to(
+        fn _approve_from_to(
+            &mut self,
+            owner: AccountId,
+            spender: AccountId,
+            amount: Balance,
+        ) -> Result<(), PSP22Error> {
+            self.allowances.insert((&owner, &spender), &amount);
+
+            Self::emit_event(
+                self.env(),
+                Event::Approval(Approval {
+                    owner,
+                    spender,
+                    amount,
+                }),
+            );
+
+            Ok(())
+        }
+
+        fn _transfer_from_to(
             &mut self,
             from: &AccountId,
             to: &AccountId,
             value: Balance,
+            _data: Vec<u8>,
         ) -> Result<(), PSP22Error> {
             let from_balance = self.balance_of(*from);
             if from_balance < value {
@@ -65,8 +86,8 @@ mod psp22 {
             Self::emit_event(
                 self.env(),
                 Event::Transfer(Transfer {
-                    from: Some(*from),
-                    to: Some(*to),
+                    from: *from,
+                    to: *to,
                     value,
                 }),
             );
@@ -105,25 +126,47 @@ mod psp22 {
         #[ink(message)]
         fn approve(&mut self, spender: AccountId, value: Balance) -> Result<(), PSP22Error> {
             let owner = self.env().caller();
-            self.allowances.insert((&owner, &spender), &value);
+            self._approve_from_to(owner, spender, value)
+        }
 
-            Self::emit_event(
-                self.env(),
-                Event::Approval(Approval {
-                    owner,
-                    spender,
-                    value,
-                }),
-            );
+        /// Incrase `spender`'s allowance to withdraw from the caller's account by the `by` amount.
+        #[ink(message)]
+        fn increase_allowance(
+            &mut self,
+            spender: AccountId,
+            by: Balance,
+        ) -> Result<(), PSP22Error> {
+            let owner = Self::env().caller();
+            self._approve_from_to(owner, spender, self.allowance(owner, spender) + by)
+        }
 
-            Ok(())
+        /// Decrease `spender`'s allowance to withdraw from the caller's account by the `by` amount.
+        #[ink(message)]
+        fn decrease_allowance(
+            &mut self,
+            spender: AccountId,
+            by: Balance,
+        ) -> Result<(), PSP22Error> {
+            let owner = Self::env().caller();
+            let allowance = self.allowance(owner, spender);
+
+            if allowance < by {
+                return Err(PSP22Error::InsufficientAllowance);
+            }
+
+            self._approve_from_to(owner, spender, allowance - by)
         }
 
         /// Transfers `value` amount of tokens from the caller's account to account `to`.
         #[ink(message)]
-        fn transfer(&mut self, to: AccountId, value: Balance) -> Result<(), PSP22Error> {
+        fn transfer(
+            &mut self,
+            to: AccountId,
+            value: Balance,
+            data: Vec<u8>,
+        ) -> Result<(), PSP22Error> {
             let from = self.env().caller();
-            self.transfer_from_to(&from, &to, value)
+            self._transfer_from_to(&from, &to, value, data)
         }
 
         /// Transfers `value` amount of tokens on the behalf of `from` to the account `to`.
@@ -134,6 +177,7 @@ mod psp22 {
             from: AccountId,
             to: AccountId,
             value: Balance,
+            data: Vec<u8>,
         ) -> Result<(), PSP22Error> {
             let caller = self.env().caller();
             let allowance = self.allowance(from, caller);
@@ -142,8 +186,9 @@ mod psp22 {
                 return Err(PSP22Error::InsufficientAllowance);
             }
 
-            self.transfer_from_to(&from, &to, value)?;
+            self._transfer_from_to(&from, &to, value, data)?;
 
+            // NOTE: can you spot a potential storage optimization here?
             self.allowances
                 .insert((&from, &caller), &(allowance - value));
 

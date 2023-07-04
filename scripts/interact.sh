@@ -79,7 +79,7 @@ function transfer() {
   local suri="${4:-$AUTHORITY_SEED}"
 
   cd "$CONTRACTS_PATH"/psp22
-  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer --args $to $amount --execute --skip-confirm
+  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer --args $to $amount "[0x0]" --execute --skip-confirm
 }
 
 function approve() {
@@ -100,7 +100,7 @@ function transfer_from() {
   local suri="${5:-$AUTHORITY_SEED}"
 
   cd "$CONTRACTS_PATH"/psp22
-  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer_from --args $from $to $amount --execute --skip-confirm
+  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer_from --args $from $to $amount "[0x0]" --execute --skip-confirm
 }
 
 function balance_of() {
