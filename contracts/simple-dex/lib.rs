@@ -112,6 +112,12 @@ mod dex {
             })
         }
 
+        /// How many LP tokens this account has in it's balance
+        #[ink(message)]
+        pub fn liquidity_shares(&self, owner: AccountId) -> Balance {
+            self.liquidity_shares.get(owner).unwrap_or(0)
+        }
+
         /// How many tokens of token_in has to be deposited to receive `issued_pool_shares` of the LP token
         #[ink(message)]
         pub fn deposit_given_shares(

@@ -29,7 +29,7 @@ function run_ink_dev() {
                                  -v "${CONTRACTS_PATH}:/code" \
                                  -v ~/.cargo/git:/usr/local/cargo/git \
                                  -v ~/.cargo/registry:/usr/local/cargo/registry \
-                                 -u "$(id -u):$(id -g)" \>>>>>>> main
+                                 -u "$(id -u):$(id -g)" \
                                  --name ink_dev \
                                  --platform linux/amd64 \
                                  --detach \
