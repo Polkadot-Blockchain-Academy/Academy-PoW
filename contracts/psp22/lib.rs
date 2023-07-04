@@ -3,7 +3,9 @@
 #[ink::contract]
 mod psp22 {
 
-    use ink::{codegen::EmitEvent, reflect::ContractEventBase, storage::Mapping};
+    use ink::{
+        codegen::EmitEvent, prelude::vec::Vec, reflect::ContractEventBase, storage::Mapping,
+    };
     use psp22_traits::{PSP22Error, PSP22};
 
     #[ink(event)]
