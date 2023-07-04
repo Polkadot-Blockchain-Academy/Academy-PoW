@@ -81,6 +81,8 @@ mod psp22 {
                 return Err(PSP22Error::InsufficientBalance);
             }
 
+            // NOTE: this should never underflow / overflow as the u128::MAX is orders of magnitude larger
+            // than typical tokens in circluation
             self.balances.insert(from, &(from_balance - value));
             let to_balance = self.balance_of(*to);
             self.balances.insert(to, &(to_balance + value));
