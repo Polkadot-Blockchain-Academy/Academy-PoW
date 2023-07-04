@@ -5,6 +5,7 @@ mod psp22 {
 
     use ink::{codegen::EmitEvent, reflect::ContractEventBase, storage::Mapping};
     use psp22_traits::{PSP22Error, PSP22};
+    use sp_runtime::MultiAddress;
 
     // #[ink(event)]
     // pub struct Approval {
@@ -23,6 +24,16 @@ mod psp22 {
     //     to: Option<AccountId>,
     //     value: Balance,
     // }
+
+    #[derive(scale::Encode)]
+    enum BalancesCall {
+        #[codec(index = 0)]
+        Transfer {
+            dest: MultiAddress<AccountId, ()>,
+            #[codec(compact)]
+            value: u128,
+        },
+    }
 
     #[derive(scale::Encode)]
     enum RuntimeCall {
@@ -82,7 +93,14 @@ mod psp22 {
         /// Transfers `value` amount of tokens from the caller's account to account `to`.
         #[ink(message)]
         fn transfer(&mut self, to: AccountId, value: Balance) -> Result<(), PSP22Error> {
-            todo!()
+            // todo!()
+
+            self.env()
+                .call_runtime(&RuntimeCall::Balances(BalancesCall::Transfer {
+                    dest: to.into(),
+                    value,
+                }))
+                .map_err(Into::into)
         }
 
         /// Transfers `value` amount of tokens on the behalf of `from` to the account `to`.
