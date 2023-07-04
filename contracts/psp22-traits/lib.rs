@@ -27,7 +27,7 @@ pub trait PSP22 {
     fn allowance(&self, owner: AccountId, spender: AccountId) -> Balance;
 
     #[ink(message)]
-    fn approve(&mut self, spender: AccountId, value: Balance) -> Result<(), PSP22Error>;
+    fn approve(&mut self, spender: AccountId, amount: Balance) -> Result<(), PSP22Error>;
 
     #[ink(message)]
 
