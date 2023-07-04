@@ -2,6 +2,7 @@
 
 use ink::{
     env::{DefaultEnvironment, Environment},
+    prelude::vec::Vec,
     primitives::AccountId,
 };
 
@@ -29,7 +30,14 @@ pub trait PSP22 {
     fn approve(&mut self, spender: AccountId, value: Balance) -> Result<(), PSP22Error>;
 
     #[ink(message)]
-    fn transfer(&mut self, to: AccountId, value: Balance) -> Result<(), PSP22Error>;
+
+    fn increase_allowance(&mut self, spender: AccountId, by: Balance) -> Result<(), PSP22Error>;
+
+    #[ink(message)]
+    fn decrease_allowance(&mut self, spender: AccountId, by: Balance) -> Result<(), PSP22Error>;
+
+    #[ink(message)]
+    fn transfer(&mut self, to: AccountId, value: Balance, data: Vec<u8>) -> Result<(), PSP22Error>;
 
     #[ink(message)]
     fn transfer_from(
@@ -37,6 +45,7 @@ pub trait PSP22 {
         from: AccountId,
         to: AccountId,
         value: Balance,
+        data: Vec<u8>,
     ) -> Result<(), PSP22Error>;
 }
 
