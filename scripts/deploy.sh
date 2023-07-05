@@ -23,22 +23,18 @@ CONTRACTS_PATH=$(pwd)/contracts
 function run_ink_dev() {
   docker start ink_dev || docker run \
                                  --network host \
-                                 -v "${PWD}:/code" \
-                                 -v ~/.cargo/git:/usr/local/cargo/git \
-                                 -v ~/.cargo/registry:/usr/local/cargo/registry \
-                                 -u "$(id -u):$(id -g)" \
+                                 -v "${PWD}:/sources" \
                                  --name ink_dev \
-                                 --platform linux/amd64 \
                                  --detach \
-                                 --rm public.ecr.aws/p6e8q1z1/ink-dev:1.5.0 sleep 1d
+                                 --rm paritytech/contracts-ci-linux:9a513893-20230620 sleep 1d
 }
 
 function cargo_contract() {
   contract_dir=$(basename "${PWD}")
   docker exec \
-         -u "$(id -u):$(id -g)" \
-         -w "/code/contracts/$contract_dir" \
+         -w "/sources/contracts/$contract_dir" \
          -e RUST_LOG=info \
+         -e CARGO_TARGET_DIR=/tmp/ \
          ink_dev cargo contract "$@"
 }
 
@@ -51,7 +47,6 @@ run_ink_dev
 cd "$CONTRACTS_PATH"/roulette
 cargo_contract build --release
 ROULETTE_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
-
 ROULETTE=$(cargo_contract instantiate --url "$NODE" --constructor new --args $BETTING_PERIOD_LENGTH $MAXIMAL_NUMBER_OF_BETS $MINIMAL_BET_AMOUNT --suri "$AUTHORITY_SEED" --value 100000000000000 --skip-confirm --output-json --execute | jq -r '.contract')
 
 cd "$CONTRACTS_PATH"/psp22
@@ -60,6 +55,11 @@ PSP22_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" -
 
 TOKEN_ONE=$(cargo_contract instantiate --url "$NODE" --constructor new --args $TOTAL_SUPPLY --suri "$AUTHORITY_SEED" --salt 0x0001 --skip-confirm --output-json --execute | jq -r '.contract')
 TOKEN_TWO=$(cargo_contract instantiate --url "$NODE" --constructor new --args $TOTAL_SUPPLY --suri "$AUTHORITY_SEED" --salt 0x0002 --skip-confirm --output-json --execute | jq -r '.contract')
+
+echo $PSP22_CODE_HASH
+
+echo $TOKEN_ONE
+echo $TOKEN_TWO
 
 cd "$CONTRACTS_PATH"/simple-dex
 cargo_contract build --release
