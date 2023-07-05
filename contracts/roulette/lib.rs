@@ -231,13 +231,11 @@ mod roulette {
             };
 
             // generate a "random" number between 1 and 36
-            // NOTE: this is a poor source of randomness, what other sources could we use?
-            // let winning_number = (self.env().block_timestamp() % 36 + 1) as u8;
             let bytes = self.env().block_timestamp().to_be_bytes();
             let mut seed: [u8; 32] = [0; 32];
             seed[24..32].copy_from_slice(&bytes);
 
-            let winning_number = self.env().extension().random(seed)?[0];
+            let winning_number = self.env().extension().random(seed)?[0] % 36 + 1;
 
             self.distribute_payouts(winning_number)?;
             self.reset()?;
