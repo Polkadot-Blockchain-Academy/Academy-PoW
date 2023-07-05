@@ -63,15 +63,6 @@ mod a {
             Ok(())
         }
 
-        // /// Terminates the contract.
-        // ///
-        // /// can only be called by the contract owner
-        // #[ink(message)]
-        // pub fn terminate(&mut self) -> Result<()> {
-        //     let caller = self.env().caller();
-        //     self.env().terminate_contract(caller)
-        // }
-
         /// Upgrades contract code
         #[ink(message)]
         pub fn set_code(&mut self, code_hash: [u8; 32], callback: Option<Selector>) -> Result<()> {

@@ -76,10 +76,6 @@ cd "$CONTRACTS_PATH"/new_a
 cargo_contract build --release
 NEW_A_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
 
-echo "OLD_A_CODE_HASH" $OLD_A_CODE_HASH
-echo "OLD_A" $OLD_A
-echo "NEW_A_CODE_HASH" $NEW_A_CODE_HASH
-
 # spit adresses to a JSON file
 cd "$CONTRACTS_PATH"
 

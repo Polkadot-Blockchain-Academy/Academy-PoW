@@ -69,15 +69,6 @@ mod a {
             )
         }
 
-        // /// Terminates the contract.
-        // ///
-        // /// can only be called by the contract owner
-        // #[ink(message)]
-        // pub fn terminate(&mut self) -> Result<()> {
-        //     let caller = self.env().caller();
-        //     self.env().terminate_contract(caller)
-        // }
-
         /// Performs a contract storage migration.
         ///
         /// Call it only once
