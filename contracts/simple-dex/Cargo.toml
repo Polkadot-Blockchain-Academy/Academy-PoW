@@ -1,0 +1,27 @@
+[package]
+name = "simple_dex"
+version = "1.0.0"
+authors = ["filip.bielejec@cardinals.cc"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "=4.2.1",  default-features = false }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+
+psp22-traits = { path = "../psp22-traits" , default-features = false }
+
+[lib]
+name = "simple_dex"
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+  "ink/std",
+  "psp22-traits/std",
+  "scale-info/std",
+  "scale/std",
+]
+ink-as-dependency = []

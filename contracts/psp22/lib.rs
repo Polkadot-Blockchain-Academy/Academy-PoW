@@ -82,7 +82,7 @@ mod psp22 {
             }
 
             // NOTE: this should never underflow / overflow as the u128::MAX is orders of magnitude larger
-            // than typical tokens in circluation
+            // than typical amount of tokens in circluation
             self.balances.insert(from, &(from_balance - value));
             let to_balance = self.balance_of(*to);
             self.balances.insert(to, &(to_balance + value));
@@ -128,9 +128,9 @@ mod psp22 {
 
         /// Allows `spender` to withdraw from the caller's account multiple times, up to the `value` amount.
         #[ink(message)]
-        fn approve(&mut self, spender: AccountId, value: Balance) -> Result<(), PSP22Error> {
+        fn approve(&mut self, spender: AccountId, amount: Balance) -> Result<(), PSP22Error> {
             let owner = self.env().caller();
-            self._approve_from_to(owner, spender, value)
+            self._approve_from_to(owner, spender, amount)
         }
 
         /// Incrase `spender`'s allowance to withdraw from the caller's account by the `by` amount.
