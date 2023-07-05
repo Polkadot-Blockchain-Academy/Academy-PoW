@@ -9,9 +9,9 @@ members = [
 ]
 
 exclude = [
+    "academy-pow-extension",
     "contracts/roulette",
     "contracts/psp22-traits",
     "contracts/psp22",
     "contracts/simple-dex",
-    "contracts/wrapped-native",
 ]

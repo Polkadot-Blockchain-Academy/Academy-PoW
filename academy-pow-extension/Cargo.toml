@@ -1,0 +1,33 @@
+[package]
+name = "academy-pow-extension"
+version = "0.1.0"
+authors = ["filip.bielejec@cardinals.cc"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "=4.2.1", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+pallet-contracts = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+
+academy-pow-runtime = {default-features = false, path = "../runtime" }
+
+[features]
+default = ["std"]
+std = [
+    "academy-pow-runtime/std",
+    "ink/std",
+    "scale-info/std",
+    "scale/std",
+    "sp-std/std",
+    'frame-support/std',
+    'pallet-contracts/std',
+    'sp-core/std',
+    'sp-runtime/std',
+]
