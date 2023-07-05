@@ -79,7 +79,7 @@ function transfer() {
   local suri="${4:-$AUTHORITY_SEED}"
 
   cd "$CONTRACTS_PATH"/psp22
-  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer --args $to $amount --execute --skip-confirm
+  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer --args $to $amount "[0]" --execute --skip-confirm
 }
 
 function approve() {
@@ -100,7 +100,7 @@ function transfer_from() {
   local suri="${5:-$AUTHORITY_SEED}"
 
   cd "$CONTRACTS_PATH"/psp22
-  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer_from --args $from $to $amount --execute --skip-confirm
+  cargo_contract call --url "$NODE" --contract "$address" --suri "$suri" --message PSP22::transfer_from --args $from $to $amount "[0]" --execute --skip-confirm
 }
 
 function balance_of() {
@@ -144,7 +144,6 @@ function out_given_in() {
   cargo_contract call --url "$NODE" --contract "$dex" --message out_given_in --args $token_in $token_out $amount_token_in  --suri "$AUTHORITY_SEED" --output-json
 }
 
-# TODO
 function swap() {
   local token_in=$(get_address $1)
   local token_out=$(get_address $2)

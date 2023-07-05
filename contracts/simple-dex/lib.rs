@@ -112,6 +112,12 @@ mod dex {
             })
         }
 
+        /// How many LP tokens this account has in it's balance
+        #[ink(message)]
+        pub fn liquidity_shares(&self, owner: AccountId) -> Balance {
+            self.liquidity_shares.get(owner).unwrap_or(0)
+        }
+
         /// How many tokens of token_in has to be deposited to receive `issued_pool_shares` of the LP token
         #[ink(message)]
         pub fn deposit_given_shares(
@@ -503,7 +509,7 @@ mod dex {
             amount: Balance,
         ) -> Result<(), PSP22Error> {
             let mut psp22: ink::contract_ref!(PSP22) = token.into();
-            psp22.transfer_from(from, to, amount)
+            psp22.transfer_from(from, to, amount, Vec::new())
         }
 
         /// Transfers a given amount of a PSP22 token to a specified using the callers own balance
@@ -514,7 +520,7 @@ mod dex {
             amount: Balance,
         ) -> Result<(), PSP22Error> {
             let mut psp22: ink::contract_ref!(PSP22) = token.into();
-            psp22.transfer(to, amount)
+            psp22.transfer(to, amount, Vec::new())
         }
 
         fn emit_event<EE>(emitter: EE, event: Event)

@@ -64,6 +64,7 @@ TOKEN_TWO=$(cargo_contract instantiate --url "$NODE" --constructor new --args $T
 cd "$CONTRACTS_PATH"/simple-dex
 cargo_contract build --release
 DEX_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
+
 DEX=$(cargo_contract instantiate --url "$NODE" --constructor new --args 0 "[$TOKEN_ONE,$TOKEN_TWO]" --suri "$AUTHORITY_SEED" --salt 0x0001 --skip-confirm --output-json --execute | jq -r '.contract')
 
 # spit adresses to a JSON file
