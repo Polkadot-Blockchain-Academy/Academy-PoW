@@ -29,6 +29,7 @@ jobs:
         run: |
           rustup toolchain install ${RUST_CONTRACTS_TOOLCHAIN}
           rustup component add rust-src --toolchain ${RUST_CONTRACTS_TOOLCHAIN}
+          rustup component add rustfmt --toolchain ${RUST_CONTRACTS_TOOLCHAIN}
 
           mkdir -p /tmp/$RUST_CONTRACTS_TOOLCHAIN/
 
