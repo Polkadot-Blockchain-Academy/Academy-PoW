@@ -1,5 +1,4 @@
-use academy_pow_runtime::Runtime;
-use academy_pow_runtime::{Randomness, RandomnessCollectiveFlip};
+use crate::{Randomness, RandomnessCollectiveFlip, Runtime};
 use frame_support::log::{debug, error};
 use pallet_contracts::chain_extension::{
     ChainExtension, Environment, Ext, InitState, RetVal, SysConfig,
@@ -17,6 +16,8 @@ pub const RANDOM_FUNCTION_ID: u16 = 10;
 // Return codes
 pub const RANDOM_FUNCTION_OK: u32 = 10_000;
 
+// TODO : make it generic over Runtime as Config and move to the extension crate
+// this would allow us to e.g. have one definition of the return and error codes
 impl ChainExtension<Runtime> for AcademyPowChainExtension {
     fn call<E: Ext>(&mut self, env: Environment<E, InitState>) -> Result<RetVal, DispatchError>
     where

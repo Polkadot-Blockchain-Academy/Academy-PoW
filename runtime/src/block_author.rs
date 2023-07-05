@@ -4,9 +4,13 @@
 //! runtime's AccountId type can be created from an sr25519 public key.
 
 pub use pallet::*;
-use parity_scale_codec::{Decode, Encode};
+#[cfg(feature = "std")]
+use parity_scale_codec::Decode;
+use parity_scale_codec::Encode;
 use sp_core::sr25519;
-use sp_inherents::{InherentData, InherentIdentifier, IsFatalError};
+#[cfg(feature = "std")]
+use sp_inherents::InherentData;
+use sp_inherents::{InherentIdentifier, IsFatalError};
 use sp_runtime::RuntimeString;
 use sp_std::vec::Vec;
 

@@ -83,6 +83,8 @@ pub mod difficulty;
 /// The faucet to allow users to claim free tokens
 pub mod faucet;
 
+mod chain_extension;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -325,7 +327,7 @@ impl pallet_contracts::Config for Runtime {
     type DepositPerByte = DepositPerByte;
     type WeightPrice = pallet_transaction_payment::Pallet<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-    type ChainExtension = ();
+    type ChainExtension = chain_extension::AcademyPowChainExtension;
     type Schedule = Schedule;
     type CallStack = [pallet_contracts::Frame<Self>; 16];
     type AddressGenerator = pallet_contracts::DefaultAddressGenerator;

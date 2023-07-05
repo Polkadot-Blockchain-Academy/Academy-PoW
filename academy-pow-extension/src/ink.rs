@@ -1,7 +1,7 @@
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
-
 use ink::env::chain_extension::FromStatusCode;
 use ink::env::Environment;
+
+pub const RANDOM_FUNCTION_OK: u32 = 10_000;
 
 #[ink::chain_extension]
 pub trait AcademyPowExtension {
@@ -22,9 +22,7 @@ impl FromStatusCode for AcademyPowExtensionError {
     fn from_status_code(status_code: u32) -> Result<(), Self> {
         match status_code {
             // Success code
-            crate::RANDOM_FUNCTION_OK => Ok(()),
-
-            // 1 => Err(Self::FailGetRandomSource),
+            RANDOM_FUNCTION_OK => Ok(()),
 
             // avoid panic in the runtime
             _ => Err(Self::UnknownError),
