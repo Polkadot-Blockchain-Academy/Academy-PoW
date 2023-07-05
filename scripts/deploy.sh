@@ -23,7 +23,7 @@ CONTRACTS_PATH=$(pwd)/contracts
 function run_ink_dev() {
   docker start ink_dev || docker run \
                                  --network host \
-                                 -v "${CONTRACTS_PATH}:/code" \
+                                 -v "${PWD}:/code" \
                                  -v ~/.cargo/git:/usr/local/cargo/git \
                                  -v ~/.cargo/registry:/usr/local/cargo/registry \
                                  -u "$(id -u):$(id -g)" \
@@ -37,7 +37,7 @@ function cargo_contract() {
   contract_dir=$(basename "${PWD}")
   docker exec \
          -u "$(id -u):$(id -g)" \
-         -w "/code/$contract_dir" \
+         -w "/code/contracts/$contract_dir" \
          -e RUST_LOG=info \
          ink_dev cargo contract "$@"
 }
