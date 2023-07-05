@@ -26,22 +26,18 @@ EVE_SEED=//Eve
 function run_ink_dev() {
   docker start ink_dev || docker run \
                                  --network host \
-                                 -v "${CONTRACTS_PATH}:/code" \
-                                 -v ~/.cargo/git:/usr/local/cargo/git \
-                                 -v ~/.cargo/registry:/usr/local/cargo/registry \
-                                 -u "$(id -u):$(id -g)" \
+                                 -v "${PWD}:/sources" \
                                  --name ink_dev \
-                                 --platform linux/amd64 \
                                  --detach \
-                                 --rm public.ecr.aws/p6e8q1z1/ink-dev:1.5.0 sleep 1d
+                                 --rm paritytech/contracts-ci-linux:9a513893-20230620 sleep 1d
 }
 
 function cargo_contract() {
   contract_dir=$(basename "${PWD}")
   docker exec \
-         -u "$(id -u):$(id -g)" \
-         -w "/code/$contract_dir" \
+         -w "/sources/contracts/$contract_dir" \
          -e RUST_LOG=info \
+         -e CARGO_TARGET_DIR=/tmp/ \
          ink_dev cargo contract "$@"
 }
 
