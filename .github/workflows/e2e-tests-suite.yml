@@ -53,10 +53,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: TEMP list docker build context
-        run: |
-          ls -l --block-size=MB /tmp/academy-pow
-
       - name: Build docker image
         run: |
           make image
