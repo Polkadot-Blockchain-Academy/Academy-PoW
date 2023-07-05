@@ -44,9 +44,9 @@ for p in ${packages[@]}; do
   pushd "$p"
 
   if [[ $p =~ .*contracts.* ]]; then
-    cargo +${RUST_CONTRACTS_TOOLCHAIN} contract check
+    CARGO_TARGET_DIR=/tmp/academy-pow/${p}/target/ cargo +${RUST_CONTRACTS_TOOLCHAIN} contract check
   fi
 
-  cargo fmt --all --check
+  cargo +${RUST_CONTRACTS_TOOLCHAIN} fmt --all --check
   popd
 done

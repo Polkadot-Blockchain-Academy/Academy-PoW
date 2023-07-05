@@ -1,5 +1,4 @@
-use ink::env::chain_extension::FromStatusCode;
-use ink::env::Environment;
+use ink::env::{chain_extension::FromStatusCode, Environment};
 
 pub const RANDOM_FUNCTION_OK: u32 = 10_000;
 

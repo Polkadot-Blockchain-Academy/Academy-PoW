@@ -4,8 +4,7 @@ use sc_cli::{
     RunCmd,
 };
 use sc_service::ChainType;
-use sp_core::crypto::Ss58Codec;
-use sp_core::sr25519;
+use sp_core::{crypto::Ss58Codec, sr25519};
 
 #[derive(Debug, Parser)]
 #[clap(subcommand_negates_reqs(true), version(env!("SUBSTRATE_CLI_IMPL_VERSION")))]

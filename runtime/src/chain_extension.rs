@@ -1,11 +1,11 @@
-use crate::{Randomness, RandomnessCollectiveFlip, Runtime};
 use frame_support::log::{debug, error};
 use pallet_contracts::chain_extension::{
     ChainExtension, Environment, Ext, InitState, RetVal, SysConfig,
 };
-use sp_core::crypto::UncheckedFrom;
-use sp_core::Encode;
+use sp_core::{crypto::UncheckedFrom, Encode};
 use sp_runtime::DispatchError;
+
+use crate::{Randomness, RandomnessCollectiveFlip, Runtime};
 
 #[derive(Default)]
 pub struct AcademyPowChainExtension;
