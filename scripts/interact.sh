@@ -170,12 +170,12 @@ function get_values() {
 
   cd "$CONTRACTS_PATH"/$contract_name
 
-  cargo_contract call --url "$NODE" --contract "$contract_address" --message get_values --suri "$AUTHORITY_SEED" --output-json
+  cargo_contract call --url "$NODE" --contract "$contract_address" --message get_values --suri "$AUTHORITY_SEED" --output-json | jq  -r '.data.Tuple.values'  | jq '.[].Tuple.values'
 }
 
 function set_values() {
   local contract_name=$1
-  local contract_address=$(get_address old_a)
+  local contract_address=$2
   local values=${@:3}
 
   cd "$CONTRACTS_PATH"/$contract_name
@@ -253,5 +253,7 @@ echo "OldA values after set "$(get_values old_a $OLD_A)" "
 cd "$CONTRACTS_PATH"/old_a
 
 cargo_contract call --url "$NODE" --contract "$OLD_A" --message set_code --args $NEW_A_CODE_HASH "Some(0x4D475254)" --suri "$AUTHORITY_SEED" --execute --skip-confirm
+
+NEW_A=$OLD_A
 
 echo "NewA values after upgrade and storage migration "$(get_values new_a $NEW_A)" "
