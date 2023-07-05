@@ -67,6 +67,19 @@ DEX_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --o
 
 DEX=$(cargo_contract instantiate --url "$NODE" --constructor new --args 0 "[$TOKEN_ONE,$TOKEN_TWO]" --suri "$AUTHORITY_SEED" --salt 0x0001 --skip-confirm --output-json --execute | jq -r '.contract')
 
+cd "$CONTRACTS_PATH"/old_a
+cargo_contract build --release
+OLD_A_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
+OLD_A=$(cargo_contract instantiate --url "$NODE" --constructor new --suri "$AUTHORITY_SEED" --skip-confirm --output-json --execute | jq -r '.contract')
+
+cd "$CONTRACTS_PATH"/new_a
+cargo_contract build --release
+NEW_A_CODE_HASH=$(cargo_contract upload --url "$NODE" --suri "$AUTHORITY_SEED" --output-json --execute | jq -s . | jq -r '.[1].code_hash')
+
+echo "OLD_A_CODE_HASH" $OLD_A_CODE_HASH
+echo "OLD_A" $OLD_A
+echo "NEW_A_CODE_HASH" $NEW_A_CODE_HASH
+
 # spit adresses to a JSON file
 cd "$CONTRACTS_PATH"
 
@@ -78,6 +91,9 @@ jq -n \
    --arg psp22_code_hash "$PSP22_CODE_HASH" \
    --arg dex "$DEX" \
    --arg dex_code_hash "$DEX_CODE_HASH" \
+   --arg old_a_code_hash "$OLD_A_CODE_HASH" \
+   --arg old_a "$OLD_A" \
+   --arg new_a_code_hash "$NEW_A_CODE_HASH" \
    '{
       roulette: $roulette,
       roulette_code_hash: $roulette_code_hash,
@@ -85,7 +101,10 @@ jq -n \
       token_two: $token_two,
       psp22_code_hash: $psp22_code_hash,
       dex: $dex,
-      dex_code_hash: $dex_code_hash
+      dex_code_hash: $dex_code_hash,
+      old_a_code_hash: $old_a_code_hash,
+      old_a: $old_a,
+      new_a_code_hash: $new_a_code_hash
     }' > addresses.json
 
 cat addresses.json

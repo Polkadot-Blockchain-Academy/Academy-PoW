@@ -1,0 +1,24 @@
+[package]
+name = "a"
+version = "0.2.0"
+authors = ["fbielejec"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "=4.2.1",  default-features = false }
+# old_a = { package = "a", path = "../old_a", default-features = false, features = ["ink-as-dependency"] }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+
+[lib]
+name = "a"
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale-info/std",
+    "scale/std",
+]
