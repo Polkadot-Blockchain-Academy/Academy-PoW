@@ -2,4 +2,4 @@
 
 mod ink;
 
-pub use crate::ink::{AcademyPowEnvironment, AcademyPowExtension};
+pub use crate::ink::{AcademyPowEnvironment, AcademyPowExtension, AcademyPowExtensionError};

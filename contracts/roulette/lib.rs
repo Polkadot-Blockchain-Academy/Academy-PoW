@@ -4,9 +4,11 @@
 /// - there is a window of length N blocks for users to place their bets
 /// - there are M bets allowed in each such block
 /// - after that no more bets can be placed until spin is called and the winnings are paid out
-#[ink::contract]
+
+#[ink::contract(env = academy_pow_extension::AcademyPowEnvironment)]
 mod roulette {
 
+    use academy_pow_extension::AcademyPowExtensionError;
     #[cfg(feature = "std")]
     use ink::storage::traits::StorageLayout;
     use ink::{
@@ -32,11 +34,18 @@ mod roulette {
         NativeTransferFailed(String),
         NotEnoughBalance,
         CallerIsNotTheHouseOwner,
+        ChainExtensionError(AcademyPowExtensionError),
     }
 
     impl From<InkEnvError> for RouletteError {
         fn from(e: InkEnvError) -> Self {
             RouletteError::InkEnvError(format!("{e:?}"))
+        }
+    }
+
+    impl From<AcademyPowExtensionError> for RouletteError {
+        fn from(e: AcademyPowExtensionError) -> Self {
+            RouletteError::ChainExtensionError(e)
         }
     }
 
@@ -223,7 +232,12 @@ mod roulette {
 
             // generate a "random" number between 1 and 36
             // NOTE: this is a poor source of randomness, what other sources could we use?
-            let winning_number = (self.env().block_timestamp() % 36 + 1) as u8;
+            // let winning_number = (self.env().block_timestamp() % 36 + 1) as u8;
+            let bytes = self.env().block_timestamp().to_be_bytes();
+            let mut seed: [u8; 32] = [0; 32];
+            seed[24..32].copy_from_slice(&bytes);
+
+            let winning_number = self.env().extension().random(seed)?[0];
 
             self.distribute_payouts(winning_number)?;
             self.reset()?;
