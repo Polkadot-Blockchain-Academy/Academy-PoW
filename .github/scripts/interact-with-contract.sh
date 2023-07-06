@@ -22,7 +22,7 @@ $CC cargo contract build --release --manifest-path=/sources/flipper/Cargo.toml
 # https://github.com/paritytech/cargo-contract/issues/1182
 
 # ADDRESS=$($CC cargo contract instantiate --suri //Alice --skip-confirm --args false -x --output-json /sources/flipper/target/ink/flipper.wasm | jq -jr '.contract')
-polkadot-js-api --seed $ALITH_SEED --sign ethereum tx.contracts.instantiateWithCode 0 '{"refTime": 1000000000, "proofSize": 1000000000}' 1000000000000 @/sources/flipper/target/ink/flipper.wasm 0xed4b9d1b 0x
+polkadot-js-api --seed $ALITH_SEED --sign ethereum tx.contracts.instantiateWithCode 0 '{"refTime": 1000000000, "proofSize": 1000000000}' 1000000000000 @flipper/target/ink/flipper.wasm 0xed4b9d1b 0x
 # TODO parse the contract address from the output
 # "event": {
 #     "index": "0x0003",
