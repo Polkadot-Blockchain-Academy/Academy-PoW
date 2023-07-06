@@ -70,11 +70,12 @@ mod a {
         }
 
         /// Performs a contract storage migration.
-        ///
-        /// Call it only once
         #[ink(message, selector = 0x4D475254)]
         pub fn migrate(&mut self) -> Result<()> {
-            if let Some(_old_state @ OldState { field_1, field_2 }) = get_contract_storage(&123)? {
+            // NOTE: in a production code this tx should be guarded with access control
+            // limited to only some priviledged accounts.
+            // You should also make sure the migration can be called only once
+            if let Some(OldState { field_1, field_2 }) = get_contract_storage(&123)? {
                 // performs field swap
                 self.updated_old_state.set(&UpdatedOldState {
                     field_1: field_2,
