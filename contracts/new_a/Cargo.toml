@@ -1,5 +1,5 @@
 [package]
-name = "new_a"
+name = "a"
 version = "0.2.0"
 authors = ["fbielejec"]
 edition = "2021"
@@ -9,7 +9,6 @@ ink = { version = "=4.2.1",  default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
-old_a = { path = "../old_a", default-features = false }
 
 [lib]
 name = "a"
@@ -21,5 +20,4 @@ std = [
     "ink/std",
     "scale-info/std",
     "scale/std",
-    "old_a/std",
 ]

@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "a"
+version = "0.2.0"
+dependencies = [
+ "ink",
+ "parity-scale-codec",
+ "scale-info",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -553,31 +562,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
-name = "new_a"
-version = "0.2.0"
-dependencies = [
- "ink",
- "old_a",
- "parity-scale-codec",
- "scale-info",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "old_a"
-version = "0.1.0"
-dependencies = [
- "ink",
- "parity-scale-codec",
- "scale-info",
 ]
 
 [[package]]

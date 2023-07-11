@@ -1,7 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-pub use self::a::OldState;
-
 #[ink::contract]
 mod a {
     use ink::{
