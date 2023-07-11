@@ -6,6 +6,7 @@ members = [
     'node',
     'runtime',
     'node/sha3pow',
+    'account',
 ]
 
 exclude = [
