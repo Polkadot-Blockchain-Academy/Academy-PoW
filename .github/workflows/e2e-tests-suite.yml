@@ -51,7 +51,7 @@ jobs:
           name: academy-pow-node
           path: /tmp/academy-pow/target/release/academy-pow
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 7
 
       - name: Build docker image
         run: |
@@ -64,7 +64,7 @@ jobs:
           name: academy-pow-docker
           path: academy-pow.tar
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 7
 
   e2e-tests:
     needs: [build-node]
@@ -96,3 +96,11 @@ jobs:
       - name: Verify contract interaction
         shell: bash
         run: ./.github/scripts/interact-with-contract.sh
+
+      - name: Deploy contracts
+        shell: bash
+        run: ./scripts/deploy.sh
+
+      - name: Test basic contract interactions
+        shell: bash
+        run: ./scripts/interact.sh

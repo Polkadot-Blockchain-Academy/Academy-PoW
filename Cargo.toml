@@ -11,3 +11,10 @@ members = [
     'modified-sp-consensus-pow',
     'modified-sc-consensus-pow',
 ]
+
+exclude = [
+    "contracts/roulette",
+    "contracts/psp22-traits",
+    "contracts/psp22",
+    "contracts/simple-dex",
+]
