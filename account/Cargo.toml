@@ -9,27 +9,22 @@ version = "0.1.1"
 targets = [ "x86_64-unknown-linux-gnu" ]
 
 [dependencies]
-blake2-rfc = { version = "0.2.18", default-features = false, optional = true }
-hex = { version = "0.4.3", default-features = false }
-impl-serde = { version = "0.3.1", default-features = false }
-libsecp256k1 = { version = "0.7", default-features = false , features = [ "hmac" ] }
-log = { version = "0.4", default-features = false }
-serde = { version = "1.0.101", default-features = false, optional = true, features = [ "derive" ] }
-sha3 = { version = "0.10", default-features = false }
+blake2-rfc = { workspace = true , default-features = false, optional = true }
+hex = { workspace = true , default-features = false }
+impl-serde = { workspace = true , default-features = false }
+libsecp256k1 = { workspace = true , default-features = false , features = [ "hmac" ] }
+log = { workspace = true, default-features = false }
+serde = { workspace = true , default-features = false, optional = true, features = [ "derive" ] }
+sha3 = { workspace = true, default-features = false }
 
 # Substrate
-parity-scale-codec = {version = "3.1.2", default-features = false, features = ["derive"] }
-scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-runtime-interface = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-
-# I don't think we need this because it is already a full dependency.
-# Maybe fix this upstream in moonbeam too.
-# [dev-dependencies]
-# hex = { workspace = true }
+parity-scale-codec = { workspace = true , default-features = false, features = ["derive"] }
+scale-info = { workspace = true , default-features = false, features = ["derive"] }
+sp-core = { default-features = false, workspace = true  }
+sp-io = { default-features = false, workspace = true  }
+sp-runtime = { default-features = false, workspace = true  }
+sp-runtime-interface = { default-features = false, workspace = true  }
+sp-std = { default-features = false, workspace = true }
 
 [features]
 default = [ "std" ]
