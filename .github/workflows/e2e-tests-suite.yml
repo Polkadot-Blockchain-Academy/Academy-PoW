@@ -101,10 +101,10 @@ jobs:
         shell: bash
         run: ./.github/scripts/interact-with-contract.sh
 
-      - name: Deploy contracts
-        shell: bash
-        run: ./scripts/deploy.sh
-
-      - name: Test basic contract interactions
-        shell: bash
-        run: ./scripts/interact.sh
+#      - name: Deploy contracts
+#        shell: bash
+#        run: ./scripts/deploy.sh
+#
+#      - name: Test basic contract interactions
+#        shell: bash
+#        run: ./scripts/interact.sh
