@@ -122,6 +122,8 @@ pub mod opaque {
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
+    // We use this name as a hint to Polkadot JS to use Ethereum signatures.
+    // see https://github.com/polkadot-js/apps/issues/9632 for the status on a proper fix.
     spec_name: create_runtime_str!("frontier-template"),
     impl_name: create_runtime_str!("frontier-template"),
     authoring_version: 1,
