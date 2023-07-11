@@ -201,23 +201,30 @@ mod psp22 {
 
     #[cfg(test)]
     mod e2e_tests {
-        use std::rc::Rc;
+        use std::error::Error;
 
         use drink::{
             runtime::MinimalRuntime,
-            session::{contract_transcode::ContractMessageTranscoder, Session},
-            Weight,
+            session::{contract_transcode::Value, Session},
         };
-
-        fn get_transcoder() -> Rc<ContractMessageTranscoder> {
-            Rc::new(ContractMessageTranscoder::load("target/ink/psp22.json").unwrap())
-        }
+        use test_utils::{get_transcoder, get_wasm, ok, ALICE, BOB};
 
         #[test]
-        fn check_if_works() {
-            let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder())).unwrap();
-            session.set_gas_limit(Weight::from(12));
-            assert_eq!(2 + 2, 5);
+        fn simple_transfer() -> Result<(), Box<dyn Error>> {
+            let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder("psp22")))?;
+            session.deploy(get_wasm("psp22"), "new", &["10".to_string()], vec![])?;
+            session.call(
+                "PSP22::transfer",
+                &[BOB.to_string(), "3".to_string(), "[]".to_string()],
+            )?;
+
+            let alice_tokens = session.call("PSP22::balance_of", &[ALICE.to_string()])?;
+            let bob_tokens = session.call("PSP22::balance_of", &[BOB.to_string()])?;
+
+            assert_eq!(alice_tokens, ok(Value::UInt(7)));
+            assert_eq!(bob_tokens, ok(Value::UInt(3)));
+
+            Ok(())
         }
     }
 }

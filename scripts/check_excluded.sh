@@ -43,9 +43,13 @@ for p in ${packages[@]}; do
   echo "Checking package $p ..."
   pushd "$p"
 
-  if [[ $p =~ .*contracts.* ]]; then
+  if [[ $p = contracts/test-utils ]]; then
+    cargo check
+  elif [[ $p =~ .*contracts.*trait.* ]]; then
+    cargo +${RUST_CONTRACTS_TOOLCHAIN} contract check
+  elif [[ $p =~ .*contracts.* ]]; then
     cargo +${RUST_CONTRACTS_TOOLCHAIN} contract build --release
-    cargo test
+    cargo test -j 10
   fi
 
   cargo fmt --all --check
