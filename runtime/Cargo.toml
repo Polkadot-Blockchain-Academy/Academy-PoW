@@ -11,6 +11,8 @@ scale-info = { version = "2.1.2", default-features = false, features = ["derive"
 serde = { version = '1.0.137', optional = true }
 async-trait = { version = '0.1.53', optional = true }
 
+account = { path = "../account", default-features = false}
+
 
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 pallet-sudo = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -43,6 +45,18 @@ pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "
 frame-system-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 
 
+# Frontier
+pallet-base-fee = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-chain-id = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-ethereum = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+fp-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+fp-rpc = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+fp-self-contained = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+
 [dev-dependencies]
 hex-literal = "0.4.1"
 
@@ -52,6 +66,7 @@ substrate-wasm-builder = { default-features = false, git = "https://github.com/p
 [features]
 default = ['std']
 std = [
+    'account/std',
     'pallet-balances/std',
     'parity-scale-codec/std',
     'frame-executive/std',
@@ -71,9 +86,17 @@ std = [
     'sp-version/std',
     'pallet-sudo/std',
     'frame-system/std',
+    'frame-system-rpc-runtime-api/std',
     'pallet-timestamp/std',
     'async-trait',
     'sp-keystore',
+    'pallet-evm/std',
+    'pallet-evm-chain-id/std',
+    'pallet-ethereum/std',
+    'pallet-base-fee/std',
+    'fp-evm/std',
+    'fp-rpc/std',
+    'fp-self-contained/std',
     'pallet-contracts/std',
     "pallet-contracts-primitives/std",
     "pallet-transaction-payment/std",

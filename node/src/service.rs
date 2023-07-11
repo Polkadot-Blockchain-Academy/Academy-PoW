@@ -1,7 +1,14 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
+use crate::eth::{
+    db_config_dir, new_frontier_partial, EthConfiguration, FrontierBackend,
+    FrontierPartialComponents,
+};
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
+use account::AccountId20;
 use core::clone::Clone;
+use fc_storage::overrides_handle;
+use futures::channel::mpsc;
 use multi_pow::{Sha3Algorithm, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
@@ -9,7 +16,6 @@ use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_api::TransactionFor;
-use sp_core::sr25519;
 use std::sync::Arc;
 
 // Our native executor instance.
@@ -29,31 +35,28 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 
 //TODO We'll need the mining worker. Can probably copy from recipes
 
-type FullClient =
+pub type FullClient =
     sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
-type FullBackend = sc_service::TFullBackend<Block>;
-type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
+pub type FullBackend = sc_service::TFullBackend<Block>;
+pub type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
-type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
-type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
+pub type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
+pub type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
+pub type ServicePartialComponents = PartialComponents<
+    FullClient,
+    FullBackend,
+    FullSelectChain,
+    BasicImportQueue,
+    sc_transaction_pool::FullPool<Block, FullClient>,
+    (BoxBlockImport, Option<Telemetry>),
+>;
 
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain
-#[allow(clippy::type_complexity)]
 pub fn new_partial<BIQ>(
     config: &Configuration,
     build_import_queue: BIQ,
-) -> Result<
-    PartialComponents<
-        FullClient,
-        FullBackend,
-        FullSelectChain,
-        BasicImportQueue,
-        sc_transaction_pool::FullPool<Block, FullClient>,
-        (BoxBlockImport, Option<Telemetry>),
-    >,
-    ServiceError,
->
+) -> Result<ServicePartialComponents, ServiceError>
 where
     BIQ: FnOnce(
         Arc<FullClient>,
@@ -170,9 +173,10 @@ pub fn build_pow_import_queue(
 /// Builds a new service for a full client.
 pub fn new_full(
     config: Configuration,
-    sr25519_public_key: sr25519::Public,
+    mining_account_id: AccountId20,
     instant_seal: bool,
     mining_algo: SupportedHashes,
+    eth_config: &EthConfiguration,
 ) -> Result<TaskManager, ServiceError> {
     let build_import_queue = if instant_seal {
         build_manual_seal_import_queue
@@ -191,6 +195,12 @@ pub fn new_full(
         other: (pow_block_import, mut telemetry),
     } = new_partial(&config, build_import_queue)?;
 
+    let FrontierPartialComponents {
+        filter_pool: _filter_pool,
+        fee_history_cache,
+        fee_history_cache_limit,
+    } = new_frontier_partial(eth_config)?;
+
     let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
@@ -205,17 +215,62 @@ pub fn new_full(
     let role = config.role.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
 
-    let rpc_extensions_builder = {
+    let frontier_backend = Arc::new(FrontierBackend::open(
+        client.clone(),
+        &config.database,
+        &db_config_dir(&config),
+    )?);
+
+    // for ethereum-compatibility rpc.
+    // config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider)); // TODO: wants mut...
+    let overrides = overrides_handle(client.clone());
+    let eth_rpc_params = crate::rpc::EthDeps {
+        client: client.clone(),
+        pool: transaction_pool.clone(),
+        graph: transaction_pool.pool().clone(),
+        is_authority: config.role.is_authority(),
+        enable_dev_signer: eth_config.enable_dev_signer,
+        network: network.clone(),
+        sync: sync_service.clone(),
+        frontier_backend,
+        overrides: overrides.clone(),
+        block_data_cache: Arc::new(fc_rpc::EthBlockDataCacheTask::new(
+            task_manager.spawn_handle(),
+            overrides,
+            eth_config.eth_log_block_cache,
+            eth_config.eth_statuses_cache,
+            prometheus_registry.clone(),
+        )),
+        filter_pool: None,
+        max_past_logs: eth_config.max_past_logs,
+        fee_history_cache,
+        fee_history_cache_limit,
+        execute_gas_limit_multiplier: eth_config.execute_gas_limit_multiplier,
+        forced_parent_hashes: None,
+    };
+
+    // Channel for the rpc handler to communicate with the authorship task.
+    let (command_sink, _commands_stream) = mpsc::channel(1000);
+
+    let rpc_builder = {
         let client = client.clone();
         let pool = transaction_pool.clone();
 
-        Box::new(move |deny_unsafe, _| {
+        Box::new(move |deny_unsafe, subscription_task_executor| {
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
                 deny_unsafe,
+                command_sink: if instant_seal {
+                    Some(command_sink.clone())
+                } else {
+                    None
+                },
+                eth: eth_rpc_params.clone(),
             };
-            crate::rpc::create_full(deps).map_err(Into::into)
+
+            crate::rpc::create_full(deps, subscription_task_executor)
+                .map_err(Into::<ServiceError>::into)
         })
     };
 
@@ -225,7 +280,7 @@ pub fn new_full(
         keystore: keystore_container.keystore(),
         task_manager: &mut task_manager,
         transaction_pool: transaction_pool.clone(),
-        rpc_builder: rpc_extensions_builder,
+        rpc_builder,
         backend,
         system_rpc_tx,
         tx_handler_controller,
@@ -279,7 +334,7 @@ pub fn new_full(
                     let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
                     let author = academy_pow_runtime::block_author::InherentDataProvider(
-                        sr25519_public_key.encode(),
+                        mining_account_id.encode(),
                     );
 
                     Ok((timestamp, author))
