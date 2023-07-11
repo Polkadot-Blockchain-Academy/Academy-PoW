@@ -132,7 +132,7 @@ mod psp22 {
             self._approve_from_to(owner, spender, amount)
         }
 
-        /// Incrase `spender`'s allowance to withdraw from the caller's account by the `by` amount.
+        /// Increase `spender`'s allowance to withdraw from the caller's account by the `by` amount.
         #[ink(message)]
         fn increase_allowance(
             &mut self,
@@ -206,25 +206,126 @@ mod psp22 {
         use drink::{
             runtime::MinimalRuntime,
             session::{contract_transcode::Value, Session},
+            AccountId32,
         };
-        use test_utils::{get_transcoder, get_wasm, ok, ALICE, BOB};
+        use test_utils::{get_initialized_session, ok, ALICE, BOB};
+
+        fn assert_total_supply_is(
+            session: &mut Session<MinimalRuntime>,
+            expected: u128,
+        ) -> Result<(), Box<dyn Error>> {
+            let total_supply = session.call("PSP22::total_supply", &[])?;
+            assert_eq!(total_supply, ok(Value::UInt(expected)));
+            Ok(())
+        }
+
+        fn assert_balance_is(
+            session: &mut Session<MinimalRuntime>,
+            account: &AccountId32,
+            expected: u128,
+        ) -> Result<(), Box<dyn Error>> {
+            let balance = session.call("PSP22::balance_of", &[account.to_string()])?;
+            assert_eq!(balance, ok(Value::UInt(expected)));
+            Ok(())
+        }
+
+        fn assert_allowance_is(
+            session: &mut Session<MinimalRuntime>,
+            owner: &AccountId32,
+            spender: &AccountId32,
+            expected: u128,
+        ) -> Result<(), Box<dyn Error>> {
+            let allowance = session.call(
+                "PSP22::allowance",
+                &[owner.to_string(), spender.to_string()],
+            )?;
+            assert_eq!(allowance, ok(Value::UInt(expected)));
+            Ok(())
+        }
+
+        #[test]
+        fn initialization() -> Result<(), Box<dyn Error>> {
+            let mut session = get_initialized_session("psp22", "new", &["10".to_string()])?;
+            assert_balance_is(&mut session, &ALICE, 10)?;
+            assert_total_supply_is(&mut session, 10)
+        }
 
         #[test]
         fn simple_transfer() -> Result<(), Box<dyn Error>> {
-            let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder("psp22")))?;
-            session.deploy(get_wasm("psp22"), "new", &["10".to_string()], vec![])?;
+            let mut session = get_initialized_session("psp22", "new", &["10".to_string()])?;
+
             session.call(
                 "PSP22::transfer",
                 &[BOB.to_string(), "3".to_string(), "[]".to_string()],
             )?;
 
-            let alice_tokens = session.call("PSP22::balance_of", &[ALICE.to_string()])?;
-            let bob_tokens = session.call("PSP22::balance_of", &[BOB.to_string()])?;
+            assert_balance_is(&mut session, &ALICE, 7)?;
+            assert_balance_is(&mut session, &BOB, 3)?;
+            assert_total_supply_is(&mut session, 10)
+        }
 
-            assert_eq!(alice_tokens, ok(Value::UInt(7)));
-            assert_eq!(bob_tokens, ok(Value::UInt(3)));
+        #[test]
+        fn simple_transfer_from() -> Result<(), Box<dyn Error>> {
+            let mut session = get_initialized_session("psp22", "new", &["10".to_string()])?;
 
-            Ok(())
+            session.call("PSP22::approve", &[BOB.to_string(), "5".to_string()])?;
+
+            assert_allowance_is(&mut session, &ALICE, &BOB, 5)?;
+
+            session.set_actor(BOB.clone());
+            session.call(
+                "PSP22::transfer_from",
+                &[
+                    ALICE.to_string(),
+                    BOB.to_string(),
+                    "3".to_string(),
+                    "[]".to_string(),
+                ],
+            )?;
+
+            assert_balance_is(&mut session, &ALICE, 7)?;
+            assert_balance_is(&mut session, &BOB, 3)?;
+            assert_allowance_is(&mut session, &ALICE, &BOB, 2)?;
+            assert_total_supply_is(&mut session, 10)
+        }
+
+        #[test]
+        fn allowance_fluctuation() -> Result<(), Box<dyn Error>> {
+            let mut session = get_initialized_session("psp22", "new", &["10".to_string()])?;
+
+            session.call("PSP22::approve", &[BOB.to_string(), "2".to_string()])?;
+            session.call(
+                "PSP22::increase_allowance",
+                &[BOB.to_string(), "4".to_string()],
+            )?;
+            session.call(
+                "PSP22::decrease_allowance",
+                &[BOB.to_string(), "1".to_string()],
+            )?;
+
+            assert_allowance_is(&mut session, &ALICE, &BOB, 5)?;
+
+            session.set_actor(BOB.clone());
+            session.call(
+                "PSP22::transfer_from",
+                &[
+                    ALICE.to_string(),
+                    BOB.to_string(),
+                    "3".to_string(),
+                    "[]".to_string(),
+                ],
+            )?;
+
+            session.set_actor(ALICE.clone());
+            session.call(
+                "PSP22::decrease_allowance",
+                &[BOB.to_string(), "2".to_string()],
+            )?;
+
+            assert_balance_is(&mut session, &ALICE, 7)?;
+            assert_balance_is(&mut session, &BOB, 3)?;
+            assert_allowance_is(&mut session, &ALICE, &BOB, 0)?;
+            assert_total_supply_is(&mut session, 10)
         }
     }
 }
