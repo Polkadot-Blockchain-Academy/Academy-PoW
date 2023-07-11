@@ -44,7 +44,8 @@ for p in ${packages[@]}; do
   pushd "$p"
 
   if [[ $p =~ .*contracts.* ]]; then
-    cargo +${RUST_CONTRACTS_TOOLCHAIN} contract check
+    cargo +${RUST_CONTRACTS_TOOLCHAIN} contract build --release
+    cargo test
   fi
 
   cargo fmt --all --check

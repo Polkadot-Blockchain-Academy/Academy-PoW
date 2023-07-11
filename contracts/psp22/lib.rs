@@ -2,7 +2,6 @@
 
 #[ink::contract]
 mod psp22 {
-
     use ink::{
         codegen::EmitEvent, prelude::vec::Vec, reflect::ContractEventBase, storage::Mapping,
     };
@@ -197,6 +196,28 @@ mod psp22 {
                 .insert((&from, &caller), &(allowance - value));
 
             Ok(())
+        }
+    }
+
+    #[cfg(test)]
+    mod e2e_tests {
+        use std::rc::Rc;
+
+        use drink::{
+            runtime::MinimalRuntime,
+            session::{contract_transcode::ContractMessageTranscoder, Session},
+            Weight,
+        };
+
+        fn get_transcoder() -> Rc<ContractMessageTranscoder> {
+            Rc::new(ContractMessageTranscoder::load("target/ink/psp22.json").unwrap())
+        }
+
+        #[test]
+        fn check_if_works() {
+            let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder())).unwrap();
+            session.set_gas_limit(Weight::from(12));
+            assert_eq!(2 + 2, 5);
         }
     }
 }
