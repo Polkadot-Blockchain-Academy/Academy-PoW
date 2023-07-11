@@ -50,6 +50,7 @@ pallet-evm-chain-id = { default-features = false, git = "https://github.com/pari
 pallet-ethereum = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-evm = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-rpc = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
+fp-self-contained = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
@@ -93,6 +94,7 @@ std = [
     'pallet-base-fee/std',
     'fp-evm/std',
     'fp-rpc/std',
+    'fp-self-contained/std',
     'pallet-contracts/std',
     "pallet-contracts-primitives/std",
     "pallet-transaction-payment/std",
