@@ -5,7 +5,9 @@
   "bootNodes": [
     "/dns4/academy.bootnodes.net/tcp/30333/p2p/12D3KooWEF1XvEo8W4sw2VuMGVo9cC3cervnKDCMFLmjczbofyDd"
   ],
-  "telemetryEndpoints": null,
+  "telemetryEndpoints": [
+    ["/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F", 0]
+  ],
   "protocolId": null,
   "properties": null,
   "codeSubstitutes": {},
