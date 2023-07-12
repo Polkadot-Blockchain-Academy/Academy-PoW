@@ -3,7 +3,11 @@
 ![Unit Tests](https://github.com/Polkadot-Blockchain-Academy/Academy-PoW/actions/workflows/unit-tests-suite.yml/badge.svg)
 ![E2E Tests](https://github.com/Polkadot-Blockchain-Academy/Academy-PoW/actions/workflows/e2e-tests-suite.yml/badge.svg)
 
-This repo houses a Proof of Work based blockchain node for use in the Polkadot Blockchain Academy. It happens to be based on Substrate, but no Substrate knowledge is required.
+A Proof of Work blockchain node for use in the Polkadot Blockchain Academy.
+It happens to be based on Substrate, but no Substrate knowledge is required.
+Students will use this node to start their own network, perform hard and soft forks, and execute smart contracts.
+
+Instructors, planning to host such an activity should see the docs on [setting up a bootnode](./SettingUpTheBootnode.md).
 
 ## Connecting the UI
 
