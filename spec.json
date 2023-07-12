@@ -3,6 +3,7 @@
   "id": "academy_pow",
   "chainType": "Local",
   "bootNodes": [
+    "/dns4/academy.bootnodes.net/tcp/80/p2p/12D3KooWEF1XvEo8W4sw2VuMGVo9cC3cervnKDCMFLmjczbofyDd",
     "/dns4/academy.bootnodes.net/tcp/30333/p2p/12D3KooWEF1XvEo8W4sw2VuMGVo9cC3cervnKDCMFLmjczbofyDd"
   ],
   "telemetryEndpoints": [
