@@ -78,27 +78,27 @@ pub fn run() -> sc_cli::Result<()> {
     match &cli.subcommand {
         Some(Subcommand::Key(cmd)) => cmd.run(&cli),
         Some(Subcommand::BuildSpec(cmd)) => {
-            let BuildSpecCmd {
-                base,
-                chain_name,
-                chain_id,
-                endowed_accounts,
-                initial_difficulty,
-                ..
-            } = cmd;
+            // let BuildSpecCmd {
+            //     base,
+            //     chain_name,
+            //     chain_id,
+            //     endowed_accounts,
+            //     initial_difficulty,
+            //     ..
+            // } = cmd;
 
-            let endowed_accounts = endowed_accounts.clone().unwrap_or_default();
+            // let endowed_accounts = endowed_accounts.clone().unwrap_or_default();
 
-            let spec = chain_spec::custom_config(
-                chain_name,
-                chain_id,
-                endowed_accounts,
-                *initial_difficulty,
-            )?;
+            // let spec = chain_spec::custom_config(
+            //     chain_name,
+            //     chain_id,
+            //     endowed_accounts,
+            //     *initial_difficulty,
+            // )?;
 
-            let runner = cli.create_runner(base)?;
+            let runner = cli.create_runner(&cmd.base)?;
 
-            runner.sync_run(|config| base.run(Box::new(spec), config.network))
+            runner.sync_run(|config| cmd.base.run(config.chain_spec, config.network))
         }
         Some(Subcommand::CheckBlock(cmd)) => {
             let runner = cli.create_runner(cmd)?;
