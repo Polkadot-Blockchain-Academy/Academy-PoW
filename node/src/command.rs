@@ -20,7 +20,7 @@ use sc_service::PartialComponents;
 
 use crate::{
     chain_spec,
-    cli::{BuildSpecCmd, Cli, Subcommand},
+    cli::{Cli, Subcommand},
     service,
 };
 

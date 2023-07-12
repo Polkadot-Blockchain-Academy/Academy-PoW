@@ -59,27 +59,27 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
     ))
 }
 
-pub fn custom_config(
-    chain_name: &str,
-    chain_id: &str,
-    endowed_accounts: Vec<AccountId>,
-    initial_difficulty: u32,
-) -> Result<ChainSpec, String> {
-    let wasm_binary = WASM_BINARY.ok_or_else(|| "runtime WASM binary not available".to_string())?;
+// pub fn custom_config(
+//     chain_name: &str,
+//     chain_id: &str,
+//     endowed_accounts: Vec<AccountId>,
+//     initial_difficulty: u32,
+// ) -> Result<ChainSpec, String> {
+//     let wasm_binary = WASM_BINARY.ok_or_else(|| "runtime WASM binary not available".to_string())?;
 
-    Ok(ChainSpec::from_genesis(
-        chain_name,
-        chain_id,
-        sc_service::ChainType::Live,
-        move || genesis(wasm_binary, endowed_accounts.clone(), initial_difficulty),
-        vec![],
-        None,
-        None,
-        None,
-        None,
-        None,
-    ))
-}
+//     Ok(ChainSpec::from_genesis(
+//         chain_name,
+//         chain_id,
+//         sc_service::ChainType::Live,
+//         move || genesis(wasm_binary, endowed_accounts.clone(), initial_difficulty),
+//         vec![],
+//         None,
+//         None,
+//         None,
+//         None,
+//         None,
+//     ))
+// }
 
 fn genesis(
     wasm_binary: &[u8],
