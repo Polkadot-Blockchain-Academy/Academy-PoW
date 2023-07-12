@@ -17,6 +17,7 @@ The basic pieces you need and the tool these notes recommend to achieve it.
 VPS - digital ocean
 OS - Ubuntu 22.04
 SSL cert - Let's encrypt
+Domain name for the cert - I register bootnodes .net
 Reverse proxy - nginx
 Academy PoW node - copied in binary
 
@@ -27,8 +28,21 @@ If this is not important to you, you can save some trouble by skipping the SSL s
 
 Create a new VPS starting with Ubuntu 22.04 with SSH permissions.
 I use a digital ocean droplet for these purposes.
+The hardware does not need to be too beefy.
+
+* 8GB memory
+* 4 AMD CPUs
+* 160 GB NVMe
+* 5TB transfer
 
 Many of the following commands need to be run as root, so it is convenient to start a persistent sudo session with `sudo -i`.
+
+Before installing anything specific, I do general OS updates.
+
+```bash
+apt update
+apt upgrade
+```
 
 ## Nginx Webserver and Reverse Proxy
 
@@ -40,61 +54,61 @@ We use `apt` start by installing it.
 apt install nginx
 ```
 
-Confirm the server is working by going directly to your IP in the browser. Should see the nginx test page. The file you just viewed lives at `/var/www/html/index.nginx-debian.html`. This file is only used when a regular `index.html` file is not present. Let's create our own index file.
+Confirm the server is working by going directly to your IP in the browser.
+You should see the nginx test page.
+The file you just viewed lives at `/var/www/html/index.nginx-debian.html`.
+This file is only used when a regular `index.html` file is not present.
+Create your own index file at `/var/www/html/index.html` with content like the following.
 
-```bash
-cd /var/www/html
-vim index.html
-```
-
-Then paste in this content
 ```html
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Denver Substrate Testnet</title>
+		<title>Academy PoW Blockchain Network</title>
 		<style>
 			body {
-				width: 35em;
+				width: 45em;
 				margin: 0 auto;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>Denver Substrate Testnet</h1>
-		<p>Thanks for joining our Substrate testnet!</p>
-
+		<h1>Academy PoW Blockchain Network</h1>
 		<ul>
-			<li>Follow along with <a href="https://substrate.dev/substrate-beginner-workshop/#/0/">The Workshop</a></li>
-			<li>Clone the <a href="https://github.com/substrate-developer-hub/substrate-node-template">Substrate Node Template</a>.</li>
-			<li>Download the <a href="spec.json">Chain Specification</a>.</li>
-			<li>Download the <a href="alice.json">Prefunded Alice Key</a>.</li>
-			<li>Connect to <a href="https://polkadot.js.org/apps?rpc=wss://denver.bootnodes.net/alice">Alice's Node</a></li>
-			<li>Connect to <a href="https://polkadot.js.org/apps?rpc=wss://denver.bootnodes.net/bob">Bob's Node</a></li>
+			<li>Clone the <a href="https://github.com/Polkadot-Blockchain-Academy/Academy-PoW">Academy PoW</a> project on github.</li>
+			<li>Connect a <a href="https://polkadot.js.org/apps?rpc=wss://academy.bootnodes.net/websocket">Wallet to the bootnode</a>.</li>
+			<li>Connect a <a href="https://polkadot.js.org/apps?rpc=ws://127.0.0.1:9944">Wallet to your local node</a>.</li>
 		</ul>
-
 	</body>
 </html>
-
 ```
 
-We'll create those linked files later. Confirm the new webpage loads.
+We'll make those links work shortly.
+For now just confirm the new webpage loads.
+
+## Domain Name
+
+In order for a certificate authority to sign your SSL certificate, you will need a properly registered domain name.
+Choose a registrar and pay the fee.
+Specify the name servers for your VPS; digital ocean in my case.
+This process varies a lot by registrar.
+When your domain loads the webpage we just created, you may proceed to setup SSL.
+
+In some cases you might want to use a subdomain.
+For example, I usually use academy.bootnodes.net
+This just takes an additional A record at your host.
+`academy   A   1.2.3.4   3600`
 
 ## Adding SSL
-We need a domain in order to use SSL. Register it and setup dns so it points to your server. This process varies a lot by registrar. When your domain loads the webpage we just created, you may proceed to setup SSL.
-
-For setting up subdomains like sfbw.bootnodes.net just use an A record
-`sfbw   A   1.2.3.4   3600`
 
 Install certbot, a tool that makes it easy to register new SSL certificates.
 ```bash
-add-apt-repository ppa:certbot/certbot
-apt install python-certbot-nginx
+snap install --classic certbot
 ```
-Configure nginx to work as a reverse proxy for both Alice's and Bob's nodes
+Configure nginx to work as a reverse proxy for the bootnode that we will start shortly.
 ```bash
 cd /etc/nginx/sites-available
-vim sfbw.bootnodes.net
+vim academy.bootnodes.net
 ```
 
 Replace the contents of the file with this
@@ -102,7 +116,7 @@ Replace the contents of the file with this
 server {
   listen 80;
 
-  server_name denver.bootnodes.net;
+  server_name academy.bootnodes.net;
 
   root /var/www/html;
   index index.html;
@@ -111,32 +125,22 @@ server {
     try_files $uri $uri/ =404;
   }
 
-  location /alice {
+  location /websocket {
     proxy_buffers 16 4k;
     proxy_buffer_size 2k;
     proxy_pass http://localhost:9944;
     proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400;
   }
 
-  location /bob {
-    proxy_buffers 16 4k;
-    proxy_buffer_size 2k;
-    proxy_pass http://localhost:9945;
-    proxy_http_version 1.1;
-  }
-
-# Uncomment these lines to enable reverse proxy for http rpcs as well
+# Uncomment these lines to enable reverse proxy for http rpc port as well
+# This might need updated; it hasn't been tested since circa 2020.
 #  location /alice/rpc {
 #    proxy_buffers 16 4k;
 #    proxy_buffer_size 2k;
 #    proxy_pass http://localhost:9933;
-#    proxy_http_version 1.1;
-#  }
-
-#  location /bob/rpc {
-#    proxy_buffers 16 4k;
-#    proxy_buffer_size 2k;
-#    proxy_pass http://localhost:9934;
 #    proxy_http_version 1.1;
 #  }
 }
@@ -146,7 +150,7 @@ server {
 Enable the new config by linking it from `sites-available` to `sites-enabled`.
 
 ```bash
-ln -s /etc/nginx/sites-available/sfbw.bootnodes.net /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/academy.bootnodes.net /etc/nginx/sites-enabled/
 ```
 
 Confirm config format is ok, and if it is, reload nginx.
@@ -154,116 +158,34 @@ Confirm config format is ok, and if it is, reload nginx.
 # Check nginx config syntax
 nginx -t
 
-# Reload the server
+# Reload or restart the server (or both for good measure)
 systemctl reload nginx
+systemctl restart nginx
 ```
 
-Use certbot to setup ssl
-`certbot --nginx -d sfbw.bootnodes.net --register-unsafely-without-email`
-You could also fork over your email. It only goes to EFF. I chose not to redirect http, but we should experiment with it. If it doesn't break anything, we should do it.
-
-Confirm your site loads with ssl https://sfbw.bootnodes.net
-
-## Build and Run Substrate Node
+Use certbot to setup ssl.
+Notice that this command modifies the nginx config you just made in the previous step.
+You can look back at it if you are curious.
 ```bash
-# First time around I did the apt/rustup installs manually
-# Script also works as of 1Nov2019
-curl https://getsubstrate.io -sSf | bash -s -- --fast
-
-git clone https://github.com/substrate-developer-hub/substrate-node-template
-cd substrate-node-template
-cargo build --release # If cargo was _just_ installed, start a new shell so it's on your path
+certbot --nginx -d academy.bootnodes.net --register-unsafely-without-email
 ```
 
-To test that our reverse proxy is working, we'll start a node at Alice's ports and confirm we can connect to it throug hApps, then do likewise for Bob's ports.
+Confirm your site loads with ssl by visiting https://academy.bootnodes.net
 
-```bash
-# Test Alice's ports
-./target/release/node-template --dev
+## Academy PoW Node
 
-# Test Bob's ports
-./target/release/node-template --dev --ws-port 9945 --rpc-port 9934 --port 30303
-```
+At this point the server is configured and you just need to start your blockchain node.
+You have a few options for getting a node onto your server including:
+* Compile it on the server
+* Copy a compiled binary to the server
+* Pull a docker image
 
-Confirm you can connect with hosted apps. On settings tab use `wss://sfbw.bootnodes.net/alice` and /bob.
+I happen to have the same x86-64 architecture as the server, so I usually compile locally and copy the binary up with `scp`.
 
-## Create a shared chainspec
-Create a basic chainspec based on local testnet
-`node-template build-spec --chain local > spec.json`
+Once you have the node up, run whatever command you need to.
+For a simple dev chain you could do `academy-pow --dev` but for a live workshop, you probably want a dedicated spec baked into the node.
 
-Edit the name and id of the network, the root key, the prefunded accounts etc.
-
-Before we can add bootnodes to the chainspec, we need to know their node identities. That means we need to start each node once to let it generate node keys.
-
-Start Alice's node like
-`node-template --chain=spec.json --alice`
-Once the node starts, observe its node identity, then kill it with ^C.
-Repeat this for any other nodes you'd like in the chainspec's bootnodes section.
-
-
-Now edit the chainspec again, adding each bootnode in the format
-```json
-"bootNodes": [
-    "/dns4/sfbw.bootnodes.net/tcp/30333/p2p/QmNdzun5tXSo7TPEntmujvU3eLEjTJKfXpJAvwp1ikpa6T",
-    "/ip4/167.71.86.67/tcp/30333/p2p/QmdP4qG1ZSgzmsdFpBwuPAVWG9zjPRHV3dSkTT8v4TGP4J"
-],
-```
-
-Warning: You should not delete the node's entire data directory from this point on. You may purge the chain with the `purge-chain` sub command, but if you delete the entire directory, it will delete the node key and change the node's identity.
-
-Finally, publish the chainspec by copying it to the web directory
-
-`cp spec.json /var/www/html/spec.json`
-
-Comfirm you can access it over the web
-`https://sfbw.bootnodes.net/spec.json`
-
-## Startup scripts (optional)
-If your nodes need many flags, it may be wise to make a startup script just so you don't mess it up live. I usually write one like this.
-
-```bash
-# Purge any old chain.
-# Only wise for chains that will be restarted frequently (eg workshops)
-# Long running chains should not be purged to avoid constant re-syncs
-./target/release/node-template purge-chain --chain=spec.json -y
-
-./target/release/node-template \
-        --chain=spec.json \
-        --alice \
-        --ws-port 9994 \
-        --rpc-port 9993
-```
-
-## Share the prefunded account
-Remember at that our website offers users to download the pre-funded key. Add the Alice key to apps and export it to json.
-[Dev phrase](https://github.com/paritytech/substrate/blob/93123cc63eac37fed7a6cc6cc58e7e43d666ee03/core/primitives/src/crypto.rs#L40)
-
-bottom drive obey lake curtain smoke basket hold race lonely fit walk
-//Alice
-I use password: Alice
-Upload the json key to the server
-
-## Host a frontend
-Back in /root, clone the front end template
-`git clone https://github.com/substrate-developer-hub/substrate-front-end-template/`
-
-Install yarn following https://yarnpkg.com/lang/en/docs/install/#debian-stable
-```bash
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-apt update
-apt install yarn
-```
-
-install dependencies `yarn`
-modify production server to match your needs
-`vim src/config/production.json`
-and use wss://sfbw.bootnodes.net:9944
-
-build production release with `yarn build`
-then move build output directory inside of web root
-`mv build /var/www/html/front-end`
-
-This is where I'm stuck. Loading https://sfbw.bootnodes.net/front-end shows a blank page, and the console shows warnings about scripts that didn't load.
-
-I've failed many different ways at this point, and rarely even succeeded.
+You should now have a working node!
+Confirm you can:
+* connect the hosted Apps UI by visiting https://polkadot.js.org/apps?rpc=wss://academy.bootnodes.net/websocket
+* peer with the bootnode from a local node by using the `--bootnodes` flag.
