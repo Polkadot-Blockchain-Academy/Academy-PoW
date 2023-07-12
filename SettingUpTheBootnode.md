@@ -78,6 +78,7 @@ Create your own index file at `/var/www/html/index.html` with content like the f
 			<li>Clone the <a href="https://github.com/Polkadot-Blockchain-Academy/Academy-PoW">Academy PoW</a> project on github.</li>
 			<li>Connect a <a href="https://polkadot.js.org/apps?rpc=wss://academy.bootnodes.net/websocket">Wallet to the bootnode</a>.</li>
 			<li>Connect a <a href="https://polkadot.js.org/apps?rpc=ws://127.0.0.1:9944">Wallet to your local node</a>.</li>
+			<li>View the <a href="https://telemetry.polkadot.io/#list/TODO_GENESIS_BLOCK_HASH">Node Telemetry</a>.</li>
 		</ul>
 	</body>
 </html>
@@ -189,3 +190,10 @@ You should now have a working node!
 Confirm you can:
 * connect the hosted Apps UI by visiting https://polkadot.js.org/apps?rpc=wss://academy.bootnodes.net/websocket
 * peer with the bootnode from a local node by using the `--bootnodes` flag.
+
+## Telemetry Link
+
+The last thing to do is make the telemetry link work.
+The telemetry app distinguishes chains based on genesis block hash.
+The easiest thing is to go to https://telemetry.polkadot.io/ and search for your chain name.
+Once you find it, copy the link back into your `/var/www/html/index.html` file.
