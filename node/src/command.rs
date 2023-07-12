@@ -55,11 +55,14 @@ impl SubstrateCli for Cli {
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
         Ok(match id {
-            "" => Box::new(chain_spec::ChainSpec::from_json_bytes(
-                &include_bytes!("../../spec.json")[..],
-            )?),
+            // TODO re-enable the default spec once it is generated right before launch time.
+            // Related: "baked in" specs like our spec.json should always be a _raw_ specs
+            // Hypothesis: disabling this should also improve compile time because we won't be copying all those bytes each time.
+            // "" => Box::new(chain_spec::ChainSpec::from_json_bytes(
+            //     &include_bytes!("../../spec.json")[..],
+            // )?),
             "dev" => Box::new(chain_spec::development_config()?),
-            "local" => Box::new(chain_spec::testnet_config()?),
+            "" | "local" => Box::new(chain_spec::testnet_config()?),
             path => Box::new(chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),
             )?),
