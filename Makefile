@@ -18,7 +18,6 @@ release:
 
 image:
 	mkdir --parents /tmp/academy-pow/docker/ && \
-	cp docker/docker_entrypoint.sh /tmp/academy-pow/docker/docker_entrypoint.sh && \
 	cp docker/.dockerignore /tmp/academy-pow && \
 	docker build --tag academy-pow-node:latest -f ${PWD}/docker/Dockerfile /tmp/academy-pow  && \
 	docker image tag academy-pow-node:latest academy-pow-node:$(shell git rev-parse --short=10 HEAD)
