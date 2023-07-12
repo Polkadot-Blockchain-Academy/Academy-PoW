@@ -11,7 +11,9 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
-ink_e2e = "4.2.0"
+drink = { version = "0.1.0", features = ["session"] }
+
+test-utils = { path = "../test-utils" }
 
 [lib]
 path = "lib.rs"

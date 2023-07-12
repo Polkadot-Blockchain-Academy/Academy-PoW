@@ -410,4 +410,62 @@ mod roulette {
     fn is_even(number: u8) -> bool {
         number % 2 == 0
     }
+
+    #[cfg(test)]
+    mod tests {
+        use std::error::Error;
+
+        use drink::{
+            runtime::MinimalRuntime,
+            session::{contract_transcode::Value, Session, SessionError},
+        };
+        use test_utils::{get_initialized_session, ok};
+
+        fn init() -> Result<Session<MinimalRuntime>, SessionError> {
+            get_initialized_session(
+                "roulette",
+                "new",
+                &[
+                    "5".to_string(),  // betting period
+                    "3".to_string(),  // max bets
+                    "10".to_string(), // min bet
+                ],
+            )
+        }
+
+        fn assert_betting_period_ends_at(
+            session: &mut Session<MinimalRuntime>,
+            expected: u64,
+        ) -> Result<(), Box<dyn Error>> {
+            let betting_period_ends_at = session.call("betting_period_ends", &[])?;
+            assert_eq!(betting_period_ends_at, ok(Value::UInt(expected as u128)));
+            Ok(())
+        }
+
+        fn assert_betting_period_is_over(
+            session: &mut Session<MinimalRuntime>,
+            over: bool,
+        ) -> Result<(), Box<dyn Error>> {
+            let betting_period_is_over = session.call("is_betting_period_over", &[])?;
+            assert_eq!(betting_period_is_over, ok(Value::Bool(over)));
+            Ok(())
+        }
+
+        fn assert_can_place_bets(
+            session: &mut Session<MinimalRuntime>,
+            can: bool,
+        ) -> Result<(), Box<dyn Error>> {
+            let can_place_bets = session.call("can_place_bets", &[])?;
+            assert_eq!(can_place_bets, ok(Value::Bool(can)));
+            Ok(())
+        }
+
+        #[test]
+        fn initialization() -> Result<(), Box<dyn Error>> {
+            let mut session = init()?;
+            assert_betting_period_ends_at(&mut session, 5)?;
+            assert_betting_period_is_over(&mut session, false)?;
+            assert_can_place_bets(&mut session, true)
+        }
+    }
 }

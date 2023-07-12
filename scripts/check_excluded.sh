@@ -49,7 +49,7 @@ for p in ${packages[@]}; do
     cargo +${RUST_CONTRACTS_TOOLCHAIN} contract check
   elif [[ $p =~ .*contracts.* ]]; then
     cargo +${RUST_CONTRACTS_TOOLCHAIN} contract build --release
-    cargo test -j 10
+    cargo test --release
   fi
 
   cargo fmt --all --check
