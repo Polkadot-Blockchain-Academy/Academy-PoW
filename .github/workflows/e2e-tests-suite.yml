@@ -42,21 +42,13 @@ jobs:
       - name: Install Rust toolchain
         uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
 
-      # When testing the CI, I can't wait for the whole node to be built each time (especially because it hasn't changed on this branch)
-      # So for now I'll just use the public docker image.
-      # TODO revert this before merging
-      # - name: build release binary
-      #   run: make release
+      - name: build release binary
+        run: make release
 
-      # - name: Run a node
-      #   shell: bash
-      #   run: ./target/release/academy-pow --chain local --alice
-
-      - name: Run a node (FROM DOCKER. REVERT THIS.)
+      - name: Run a node
         shell: bash
-        run: |
-           docker run --network=host  ghcr.io/polkadot-blockchain-academy/academy-pow:joshy-publish-docker-image --chain local --alice &
-      #################
+        run: ./target/release/academy-pow --chain local --alice &
+
       - name: Verify chain responds
         shell: bash
         run: |
