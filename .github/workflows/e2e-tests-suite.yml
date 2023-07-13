@@ -47,7 +47,7 @@ jobs:
 
       - name: Run a node
         shell: bash
-        run: ./target/release/academy-pow --chain local --alice &
+        run: /tmp/academy-pow/target/release/academy-pow --chain local --alice &
 
       - name: Verify chain responds
         shell: bash
