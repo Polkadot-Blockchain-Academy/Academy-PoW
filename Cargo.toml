@@ -18,4 +18,7 @@ exclude = [
     "contracts/psp22-traits",
     "contracts/psp22",
     "contracts/simple-dex",
+    "contracts/old_a",
+    "contracts/new_a",
+    "contracts/test-utils",
 ]

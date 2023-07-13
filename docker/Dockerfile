@@ -1,18 +1,35 @@
-FROM ubuntu:jammy-20220531
+# This is a multi-stage docker file. See https://docs.docker.com/build/building/multi-stage/
+# for details about this pattern.
+# It is largely copied from Substrate
+# https://github.com/paritytech/substrate/blob/master/docker/substrate_builder.Dockerfile
 
-RUN apt update && \
-        apt install curl -y && \
-        apt clean && \
-        rm -rf /var/lib/apt/lists/*
+# For the build stage, we use an image provided by Parity
+FROM docker.io/paritytech/ci-linux:production as builder
+WORKDIR /academy-pow
+COPY . /academy-pow
+RUN cargo build --locked --release 
 
-EXPOSE 30333 30343 9933 9944
 
-WORKDIR node
+# For the second stage, we use a minimal Ubuntu image
+# Alpine does't work as explained https://stackoverflow.com/a/66974607/4184410
+# Also, surprisingly, `ubuntu:latest` doesn't work and leads to "OS can't spawn worker thread: Operation not permitted"
+FROM docker.io/library/ubuntu:20.04
+LABEL description="Tuxedo Node Template"
 
-COPY target/release/academy-pow /usr/local/bin/academy-pow
-RUN chmod +x /usr/local/bin/academy-pow
+COPY --from=builder /academy-pow/target/release/academy-pow /usr/local/bin
 
-COPY docker/docker_entrypoint.sh /node/docker_entrypoint.sh
-RUN chmod +x /node/docker_entrypoint.sh
+RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
+  mkdir -p /chain-data /node-dev/.local/share && \
+  chown -R node-dev:node-dev /chain-data && \
+  ln -s /chain-data /node-dev/.local/share/academy-pow && \
+  # unclutter and minimize the attack surface
+  rm -rf /usr/bin /usr/sbin && \
+  # check if executable works in this container
+  /usr/local/bin/academy-pow --version
 
-ENTRYPOINT ["./docker_entrypoint.sh"]
+USER node-dev
+
+EXPOSE 30333 9933 9944 9615
+VOLUME ["/chain-data"]
+
+ENTRYPOINT ["/usr/local/bin/academy-pow"]

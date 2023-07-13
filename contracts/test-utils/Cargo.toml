@@ -1,0 +1,11 @@
+[package]
+name = "test-utils"
+version = "0.1.0"
+edition = "2021"
+authors = ["piotr.mikolajczyk@cardinals.cc"]
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+drink = { version = "0.1.0", features = ["session"] }
