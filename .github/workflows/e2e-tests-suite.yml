@@ -52,10 +52,10 @@ jobs:
       #   shell: bash
       #   run: ./target/release/academy-pow --chain local --alice
 
-        - name: Run a node (FROM DOCKER. REVERT THIS.)
-          shell: bash
-          run: |
-             docker run --network=host  ghcr.io/polkadot-blockchain-academy/academy-pow:joshy-publish-docker-image
+      - name: Run a node (FROM DOCKER. REVERT THIS.)
+        shell: bash
+        run: |
+           docker run --network=host  ghcr.io/polkadot-blockchain-academy/academy-pow:joshy-publish-docker-image
       #################
       - name: Verify chain responds
         shell: bash
