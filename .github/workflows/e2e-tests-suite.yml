@@ -55,7 +55,7 @@ jobs:
       - name: Run a node (FROM DOCKER. REVERT THIS.)
         shell: bash
         run: |
-           docker run --network=host  ghcr.io/polkadot-blockchain-academy/academy-pow:joshy-publish-docker-image
+           docker run --network=host  ghcr.io/polkadot-blockchain-academy/academy-pow:joshy-publish-docker-image --chain local --alice &
       #################
       - name: Verify chain responds
         shell: bash
