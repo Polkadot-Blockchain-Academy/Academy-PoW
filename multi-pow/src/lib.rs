@@ -1,14 +1,25 @@
 //! This crate represents a concrete Substrate PoW algorithm.
 //!
-//! It is multi-pow in the sense that there are multiple supported hashes each with its own difficulty threshold.
+//! It is multi-pow in the sense that there are multiple supported hashing algorithms.
 //! A seal with any of the supported hashing algorithms will be accepted.
 //!
 //! The purpose of this design is to demonstrate hard and soft forks by adding and removing valid hashing algorithms.
+//! While there is no precedent for changing hashing algorithms in the real world yet, it is conceivable that
+//! a chain may want to upgrade to a new algorithm when the old one is suspected weak.
+//! In any case, the point is that we want to demonstrate hard and soft forks in an understandable way,
+//! the multiple hashing algorithms achieves that well.
+//! 
+//! In the future, the hope is that there will be a dedicated difficulty threshold for each hashing algorithm.
+//! But currently the Substrate PoW crates are not that flexible.
+//! We could solve it by adding a pre-digest that includes information about what hashing algo is being used
+//! for the runtime to use later in the difficulty adjustment.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
 use std::sync::Arc;
+
+use sc_client_api::HeaderBackend;
 
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
@@ -16,7 +27,7 @@ use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
-use sp_api::ProvideRuntimeApi;
+use sp_api::{ProvideRuntimeApi, HeaderT};
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
 use sp_consensus_pow::{Seal as RawSeal, TotalDifficulty};
@@ -152,14 +163,14 @@ impl Compute {
 }
 
 #[cfg(feature = "std")]
-/// A complete PoW Algorithm that uses Sha3 hashing.
+/// A complete PoW Algorithm that uses multiple hashing algorithms.
 /// Needs a reference to the client so it can grab the difficulty from the runtime.
-pub struct Sha3Algorithm<C> {
+pub struct MultiPow<C> {
     client: Arc<C>,
 }
 
 #[cfg(feature = "std")]
-impl<C> Sha3Algorithm<C> {
+impl<C> MultiPow<C> {
     pub fn new(client: Arc<C>) -> Self {
         Self { client }
     }
@@ -168,7 +179,7 @@ impl<C> Sha3Algorithm<C> {
 // Manually implement clone. Deriving doesn't work because
 // it'll derive impl<C: Clone> Clone for Sha3Algorithm<C>. But C in practice isn't Clone.
 #[cfg(feature = "std")]
-impl<C> Clone for Sha3Algorithm<C> {
+impl<C> Clone for MultiPow<C> {
     fn clone(&self) -> Self {
         Self::new(self.client.clone())
     }
@@ -176,10 +187,11 @@ impl<C> Clone for Sha3Algorithm<C> {
 
 // Here we implement the general PowAlgorithm trait for our concrete Sha3Algorithm
 #[cfg(feature = "std")]
-impl<B: BlockT<Hash = H256>, C> PowAlgorithm<B> for Sha3Algorithm<C>
+impl<B: BlockT<Hash = H256>, C> PowAlgorithm<B> for MultiPow<C>
 where
     C: ProvideRuntimeApi<B>,
     C::Api: DifficultyApi<B, Threshold>,
+    C: HeaderBackend<B>,
 {
     type Difficulty = Threshold;
 
@@ -200,7 +212,7 @@ where
 
     fn verify(
         &self,
-        _parent: &BlockId<B>,
+        parent_id: &BlockId<B>,
         pre_hash: &H256,
         _pre_digest: Option<&[u8]>,
         seal: &RawSeal,
@@ -211,6 +223,34 @@ where
             Ok(seal) => seal,
             Err(_) => return Ok(false),
         };
+
+        // This is where we handle forks on the verification side.
+        // We will still need to handle it in the mining algorithm somewhere.
+        // Option 1) have the "normal" mining algo try each hash in order for each nonce
+        //           and disable it there.
+        // Option 2) make the miner configure what algo they mine manually with their cli.
+        let parent_number = match parent_id {
+            BlockId::Hash(h) => *self.client
+                .header(*h)
+                .expect("Database should perform lookup successfully")
+                .expect("parent header should be present in the db")
+                .number(),
+            BlockId::Number(n) => *n,
+        };
+
+        // This feels like a really stupid way to declare the fork height.
+        // I just couldn't figure out how to express a literal.
+        let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 10_000u32.into();
+
+        if parent_number < fork_height {
+            // To begin with we only allow md5 hashes for our pow
+            // After the fork height this check is skipped so all the hashes become valid
+            match seal.work.algo {
+                SupportedHashes::Md5 => (),
+                SupportedHashes::Sha3 => return Ok(false),
+                SupportedHashes::Keccak => return Ok(false),
+            }
+        }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
         if !multi_hash_meets_difficulty(&seal.work, difficulty) {

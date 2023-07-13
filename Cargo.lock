@@ -4542,6 +4542,7 @@ dependencies = [
  "modified-sc-consensus-pow",
  "modified-sp-consensus-pow",
  "parity-scale-codec",
+ "sc-client-api",
  "scale-info",
  "sha3",
  "sp-api",
