@@ -45,47 +45,9 @@ jobs:
       - name: build release binary
         run: make release
 
-      - name: Upload binary to GH Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: academy-pow-node
-          path: /tmp/academy-pow/target/release/academy-pow
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Build docker image
-        run: |
-          make image
-          docker save -o academy-pow.tar academy-pow-node:latest
-
-      - name: Upload release docker image
-        uses: actions/upload-artifact@v3
-        with:
-          name: academy-pow-docker
-          path: academy-pow.tar
-          if-no-files-found: error
-          retention-days: 7
-
-  e2e-tests:
-    needs: [build-node]
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout source code
-        uses: actions/checkout@v3
-
-      - name: Download artifact with docker image
-        uses: actions/download-artifact@v3
-        with:
-          name: academy-pow-docker
-
-      - name: Load node docker image
+      - name: Run a node
         shell: bash
-        run: docker load -i academy-pow.tar
-
-      - name: Run two node chain
-        shell: bash
-        run: sudo make chain &
+        run: ./target/release/academy-pow --chain local --alice
 
       - name: Verify chain responds
         shell: bash
