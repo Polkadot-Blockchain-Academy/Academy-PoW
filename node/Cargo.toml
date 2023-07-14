@@ -30,7 +30,7 @@ sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", branch = "po
 sp-block-builder = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 
-sc-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sc-consensus-pow = {package = "modified-sc-consensus-pow", path = "../modified-sc-consensus-pow" }
 sc-consensus-manual-seal = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-basic-authorship = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-cli = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -47,12 +47,13 @@ sc-transaction-pool-api = {git = "https://github.com/paritytech/substrate.git", 
 sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-blockchain = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-consensus = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-consensus-pow = {package = "modified-sp-consensus-pow", path = "../modified-sp-consensus-pow" }
 sp-core = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-inherents = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-timestamp = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+multi-pow = {path = '../multi-pow'}
 fc-consensus = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fc-db = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fc-mapping-sync = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
@@ -60,7 +61,6 @@ fc-rpc = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polk
 fc-rpc-core = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fc-storage = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 fp-rpc = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-sha3pow = {path = './sha3pow'}
 hex = "0.4"
 
 [[bin]]

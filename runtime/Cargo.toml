@@ -21,7 +21,7 @@ frame-executive = { default-features = false, git = "https://github.com/parityte
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-api = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sp-consensus-pow = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sp-consensus-pow = { default-features = false, path = "../modified-sp-consensus-pow", package = "modified-sp-consensus-pow" }
 sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -37,6 +37,8 @@ pallet-contracts = { default-features = false, git = "https://github.com/parityt
 pallet-contracts-primitives = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 pallet-insecure-randomness-collective-flip = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+
+multi-pow = { path = "../multi-pow", default-features = false }
 
 # Used for the node's RPCs
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -101,4 +103,5 @@ std = [
     "pallet-transaction-payment-rpc-runtime-api/std",
     "pallet-insecure-randomness-collective-flip/std",
     "frame-system-rpc-runtime-api/std",
+    "multi-pow/std",
 ]

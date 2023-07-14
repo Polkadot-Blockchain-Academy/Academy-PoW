@@ -816,9 +816,16 @@ impl_runtime_apis! {
         }
     }
 
-    impl sp_consensus_pow::DifficultyApi<Block, U256> for Runtime {
-        fn difficulty() -> U256 {
-            DifficultyAdjustment::difficulty()
+    impl sp_consensus_pow::DifficultyApi<Block, multi_pow::Threshold> for Runtime {
+        fn difficulty() -> multi_pow::Threshold {
+            // TODO we will eventually need three independent difficulty adjustment algorithms: one for each hash algorithm.
+            // For now we just hard-code the difficulties for the new hashes and use the pre-existing adjustment algo for sha3
+            let sha3_difficulty = DifficultyAdjustment::difficulty();
+            multi_pow::Threshold {
+                md5: U256::from(4_000_000),
+                sha3: sha3_difficulty,
+                keccak: U256::from(4_000_000),
+            }
         }
     }
 

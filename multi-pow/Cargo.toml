@@ -1,0 +1,27 @@
+[package]
+authors = ['Anonymous']
+edition = '2021'
+name = 'multi-pow'
+description = 'a concrete Substrate PoW algorithm that supports multiple hashing algorithms'
+version = '3.0.0'
+
+[dependencies]
+parity-scale-codec = {version = "3.6.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
+sha3 = { version = "0.10.1", optional = true, default-features = false }
+md5 = "0.7.0"
+
+sc-consensus-pow = {package = "modified-sc-consensus-pow", path = "../modified-sc-consensus-pow", default-features = false, optional = true }
+sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sp-consensus-pow = {package = "modified-sp-consensus-pow", path = "../modified-sp-consensus-pow", default-features = false }
+sp-core = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sc-client-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", optional = true }
+
+[features]
+default = ['std']
+std = [
+    'sha3',
+    'sc-consensus-pow',
+    'sc-client-api',
+]

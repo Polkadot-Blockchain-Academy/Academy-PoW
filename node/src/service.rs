@@ -9,12 +9,12 @@ use account::AccountId20;
 use core::clone::Clone;
 use fc_storage::overrides_handle;
 use futures::channel::mpsc;
+use multi_pow::{MultiPow, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sha3pow::Sha3Algorithm;
 use sp_api::TransactionFor;
 use std::sync::Arc;
 
@@ -145,7 +145,7 @@ pub fn build_pow_import_queue(
     let pow_block_import = sc_consensus_pow::PowBlockImport::new(
         client.clone(),
         client.clone(),
-        Sha3Algorithm::new(client.clone()),
+        MultiPow::new(client.clone()),
         0, // check inherents starting at block 0
         select_chain.clone(),
         move |_, ()| async move {
@@ -162,7 +162,7 @@ pub fn build_pow_import_queue(
     let import_queue = sc_consensus_pow::import_queue(
         Box::new(pow_block_import.clone()),
         None,
-        Sha3Algorithm::new(client),
+        MultiPow::new(client),
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
     )?;
@@ -175,6 +175,7 @@ pub fn new_full(
     config: Configuration,
     mining_account_id: AccountId20,
     instant_seal: bool,
+    mining_algo: SupportedHashes,
     eth_config: &EthConfiguration,
 ) -> Result<TaskManager, ServiceError> {
     let build_import_queue = if instant_seal {
@@ -323,7 +324,7 @@ pub fn new_full(
                 Box::new(pow_block_import),
                 client.clone(),
                 select_chain,
-                Sha3Algorithm::new(client),
+                MultiPow::new(client),
                 proposer,
                 sync_service.clone(),
                 sync_service,
@@ -348,9 +349,9 @@ pub fn new_full(
                 mining_worker_task,
             );
 
-            // Start Mining
-            //TODO Some of this should move into the sha3pow crate.
-            use sha3pow::{hash_meets_difficulty, Compute};
+            // Start Mining worker.
+            //TODO Some of this should move into the multi_pow crate.
+            use multi_pow::{multi_hash_meets_difficulty, Compute};
             use sp_core::U256;
             let mut nonce: U256 = U256::from(0);
             std::thread::spawn(move || loop {
@@ -362,8 +363,8 @@ pub fn new_full(
                         pre_hash: metadata.pre_hash,
                         nonce,
                     };
-                    let seal = compute.compute();
-                    if hash_meets_difficulty(&seal.work, seal.difficulty) {
+                    let seal = compute.compute(mining_algo);
+                    if multi_hash_meets_difficulty(&seal.work, seal.difficulty) {
                         nonce = U256::from(0);
                         let _ = futures::executor::block_on(worker.submit(seal.encode()));
                     } else {

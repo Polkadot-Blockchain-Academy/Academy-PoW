@@ -2,10 +2,14 @@
 panic = 'unwind'
 
 [workspace]
+resolver = "2"
+
 members = [
     'node',
     'runtime',
-    'node/sha3pow',
+    'multi-pow',
+    'modified-sp-consensus-pow',
+    'modified-sc-consensus-pow',
     'account',
 ]
 
