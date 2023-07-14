@@ -177,8 +177,6 @@ impl<C> MultiPow<C> {
     }
 }
 
-// Manually implement clone. Deriving doesn't work because
-// it'll derive impl<C: Clone> Clone for Sha3Algorithm<C>. But C in practice isn't Clone.
 #[cfg(feature = "std")]
 impl<C> Clone for MultiPow<C> {
     fn clone(&self) -> Self {
@@ -186,7 +184,7 @@ impl<C> Clone for MultiPow<C> {
     }
 }
 
-// Here we implement the general PowAlgorithm trait for our concrete Sha3Algorithm
+// Here we implement the general PowAlgorithm trait for our concrete algorithm.
 #[cfg(feature = "std")]
 impl<B: BlockT<Hash = H256>, C> PowAlgorithm<B> for MultiPow<C>
 where

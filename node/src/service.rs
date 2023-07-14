@@ -9,7 +9,7 @@ use account::AccountId20;
 use core::clone::Clone;
 use fc_storage::overrides_handle;
 use futures::channel::mpsc;
-use multi_pow::{Sha3Algorithm, SupportedHashes};
+use multi_pow::{MultiPow, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
@@ -145,7 +145,7 @@ pub fn build_pow_import_queue(
     let pow_block_import = sc_consensus_pow::PowBlockImport::new(
         client.clone(),
         client.clone(),
-        Sha3Algorithm::new(client.clone()),
+        MultiPow::new(client.clone()),
         0, // check inherents starting at block 0
         select_chain.clone(),
         move |_, ()| async move {
@@ -162,7 +162,7 @@ pub fn build_pow_import_queue(
     let import_queue = sc_consensus_pow::import_queue(
         Box::new(pow_block_import.clone()),
         None,
-        Sha3Algorithm::new(client),
+        MultiPow::new(client),
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
     )?;
@@ -324,7 +324,7 @@ pub fn new_full(
                 Box::new(pow_block_import),
                 client.clone(),
                 select_chain,
-                Sha3Algorithm::new(client),
+                MultiPow::new(client),
                 proposer,
                 sync_service.clone(),
                 sync_service,
