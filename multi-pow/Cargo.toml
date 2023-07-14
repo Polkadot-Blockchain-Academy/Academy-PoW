@@ -16,8 +16,12 @@ sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkado
 sp-consensus-pow = {package = "modified-sp-consensus-pow", path = "../modified-sp-consensus-pow", default-features = false }
 sp-core = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
 sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
-sc-client-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", default-features = false }
+sc-client-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42", optional = true }
 
 [features]
 default = ['std']
-std = ['sha3', 'sc-consensus-pow']
+std = [
+    'sha3',
+    'sc-consensus-pow',
+    'sc-client-api',
+]

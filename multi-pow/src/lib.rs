@@ -19,8 +19,6 @@
 #[cfg(feature = "std")]
 use std::sync::Arc;
 
-use sc_client_api::HeaderBackend;
-
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use sc_consensus_pow::{Error, PowAlgorithm};
@@ -30,10 +28,13 @@ use sha3::{Digest, Keccak256, Sha3_256};
 use sp_api::{ProvideRuntimeApi, HeaderT};
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
-use sp_consensus_pow::{Seal as RawSeal, TotalDifficulty};
+use sp_consensus_pow::TotalDifficulty;
+#[cfg(feature = "std")]
+use sp_consensus_pow::Seal as RawSeal;
 use sp_core::{H256, U256};
-use sp_runtime::{generic::BlockId, traits::Block as BlockT};
-
+use sp_runtime::traits::Block as BlockT;
+#[cfg(feature = "std")]
+use sp_runtime::generic::BlockId;
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
 #[derive(
@@ -191,7 +192,7 @@ impl<B: BlockT<Hash = H256>, C> PowAlgorithm<B> for MultiPow<C>
 where
     C: ProvideRuntimeApi<B>,
     C::Api: DifficultyApi<B, Threshold>,
-    C: HeaderBackend<B>,
+    C: sc_client_api::HeaderBackend<B>,
 {
     type Difficulty = Threshold;
 
