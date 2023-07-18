@@ -3,9 +3,20 @@ use academy_pow_runtime::{
     SystemConfig, WASM_BINARY,
 };
 use hex_literal::hex;
+use sc_telemetry::serde_json;
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
+
+/// Returns the chain spec properties for Academy Pow networks
+pub fn spec_properties() -> serde_json::map::Map<String, serde_json::Value> {
+	serde_json::json!({
+		"tokenDecimals": 18,
+	})
+	.as_object()
+	.expect("Map given; qed")
+	.clone()
+}
 
 pub fn development_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
@@ -28,7 +39,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
         None,
         None,
         None,
-        None,
+        Some(spec_properties()),
         None,
     ))
 }
@@ -54,7 +65,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
         None,
         None,
         None,
-        None,
+        Some(spec_properties()),
         None,
     ))
 }

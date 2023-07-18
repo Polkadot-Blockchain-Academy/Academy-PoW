@@ -152,7 +152,7 @@ pub const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
 );
 
 // native chain currency
-pub const TOKEN_DECIMALS: u32 = 12;
+pub const TOKEN_DECIMALS: u32 = 18;
 pub const TOKEN: u128 = 10u128.pow(TOKEN_DECIMALS);
 
 parameter_types! {
