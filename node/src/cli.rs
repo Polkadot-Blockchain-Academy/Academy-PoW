@@ -13,7 +13,7 @@ pub struct Cli {
     pub eth: crate::eth::EthConfiguration,
 
     /// The mining algorithm to use
-    #[clap(long, value_parser = parse_algo, default_value = "sha3")]
+    #[clap(long, value_parser = parse_algo, default_value = "md5")]
     pub mining_algo: multi_pow::SupportedHashes,
 
     /// whether to use instant seal

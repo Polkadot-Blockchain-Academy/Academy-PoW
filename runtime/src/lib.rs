@@ -257,7 +257,7 @@ impl pallet_balances::Config for Runtime {
 // }
 
 parameter_types! {
-    pub const TargetBlockTime: u128 = 3_000;
+    pub const TargetBlockTime: u128 = 5_000;
     pub const DampFactor: u128 = 3;
     pub const ClampFactor: u128 = 2;
     pub const MaxDifficulty: u128 = u128::max_value();
