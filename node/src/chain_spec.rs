@@ -105,7 +105,7 @@ fn genesis(
             balances: endowed_accounts
                 .iter()
                 .cloned()
-                .map(|k| (k, 1 << 60))
+                .map(|k| (k, 1 << 65))
                 .collect(),
         },
         // sudo: SudoConfig {
