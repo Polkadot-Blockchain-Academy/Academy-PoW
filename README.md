@@ -11,7 +11,7 @@ Instructors, planning to host such an activity should see the docs on [setting u
 
 ## Building the Node
 
-To help decentralize the network, you can compile the node by
+First you will need a [Substrate developer environment](https://docs.substrate.io/install/).
 
 1. Cloning this repo
 2. Running `cargo build --release`
