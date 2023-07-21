@@ -238,14 +238,23 @@ where
         };
 
         // Declare a threshold height at which to perform a fork
-        let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
+        let remove_md5_fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
+        let remove_sha3_fork_height: <<B as BlockT>::Header as HeaderT>::Number = 8200u32.into();
 
         // To begin with we only allow md5 hashes for our pow
         // After the fork height this check is skipped so all the hashes become valid
-        if parent_number > fork_height {
+        if parent_number > remove_md5_fork_height {
             match seal.work.algo {
                 SupportedHashes::Md5 => {return Ok(false)},
                 SupportedHashes::Sha3 => (),
+                SupportedHashes::Keccak => (),
+            }
+        }
+
+        if parent_number > remove_sha3_fork_height {
+            match seal.work.algo {
+                SupportedHashes::Md5 => {return Ok(false)},
+                SupportedHashes::Sha3 => {return Ok(false)},
                 SupportedHashes::Keccak => (),
             }
         }
