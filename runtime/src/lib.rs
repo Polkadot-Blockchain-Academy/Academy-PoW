@@ -13,7 +13,7 @@ use sp_std::prelude::*;
 // Frontier
 use fp_evm::weight_per_gas;
 use fp_rpc::TransactionStatus;
-use pallet_ethereum::{PostLogContent, Transaction as EthereumTransaction};
+use pallet_ethereum::{Call::transact, PostLogContent, Transaction as EthereumTransaction};
 use pallet_evm::{
     Account as EVMAccount, EnsureAddressNever, EnsureAddressOrigin, FeeCalculator,
     IdentityAddressMapping, Runner,
@@ -778,15 +778,12 @@ impl_runtime_apis! {
         }
 
         fn extrinsic_filter(
-            _xts: Vec<<Block as BlockT>::Extrinsic>,
+            xts: Vec<<Block as BlockT>::Extrinsic>,
         ) -> Vec<EthereumTransaction> {
-            /*
             xts.into_iter().filter_map(|xt| match xt.0.function {
                 RuntimeCall::Ethereum(transact { transaction }) => Some(transaction),
                 _ => None
             }).collect::<Vec<EthereumTransaction>>()
-            */
-            todo!() // fix `xt.0` above (maybe not needed, this looks to be used in pubsub)
         }
 
         fn elasticity() -> Option<Permill> {

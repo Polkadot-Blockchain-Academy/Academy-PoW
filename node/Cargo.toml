@@ -24,6 +24,9 @@ hex-literal = "0.4.1"
 account = { path = "../account" }
 
 # These dependencies are used for the node template's RPCs
+ethereum = { version = "0.14", features = ["with-codec"] }
+ethereum-types = { version = "0.14" }
+rlp = { version = "0.5.2" }
 jsonrpsee = { version = "0.16.0", features = ["server"] }
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -44,6 +47,7 @@ sc-service = {git = "https://github.com/paritytech/substrate.git", branch = "pol
 sc-telemetry = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-transaction-pool-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
+sc-utils = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-blockchain = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-consensus = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
