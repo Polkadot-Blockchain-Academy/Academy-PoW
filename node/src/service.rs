@@ -51,11 +51,11 @@ pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 pub fn open_frontier_backend<C>(
     client: Arc<C>,
     config: &Configuration,
-) -> Result<fc_db::Backend<Block>, String>
+) -> Result<Arc<fc_db::Backend<Block>>, String>
 where
     C: sp_blockchain::HeaderBackend<Block>,
 {
-    Ok(fc_db::Backend::<Block>::new(
+    Ok(Arc::new(fc_db::Backend::<Block>::new(
         client,
         &fc_db::DatabaseSettings {
             source: DatabaseSource::RocksDb {
@@ -63,7 +63,7 @@ where
                 cache_size: 0,
             },
         },
-    )?)
+    )?))
 }
 
 //TODO We'll need the mining worker. Can probably copy from recipes
@@ -81,7 +81,7 @@ pub type ServicePartialComponents = PartialComponents<
     FullSelectChain,
     BasicImportQueue,
     sc_transaction_pool::FullPool<Block, FullClient>,
-    (BoxBlockImport, Option<Telemetry>, FrontierBackend),
+    (BoxBlockImport, Option<Telemetry>, Arc<FrontierBackend>),
 >;
 
 /// Returns most parts of a service. Not enough to run a full chain,
@@ -249,12 +249,6 @@ pub fn new_full(
 
     let role = config.role.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
-
-    let frontier_backend = Arc::new(FrontierBackend::open(
-        client.clone(),
-        &config.database,
-        &db_config_dir(&config),
-    )?);
 
     // Sinks for pubsub notifications.
 	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
