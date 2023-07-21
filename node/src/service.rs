@@ -1,12 +1,11 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use crate::eth::{
-    db_config_dir, new_frontier_partial, EthConfiguration, FrontierBackend,
+    new_frontier_partial, EthConfiguration, FrontierBackend,
     FrontierPartialComponents,
 };
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use account::AccountId20;
-use fc_rpc_core::types::pubsub;
 use core::clone::Clone;
 use fc_db::DatabaseSource;
 use fc_mapping_sync::MappingSyncWorker;
