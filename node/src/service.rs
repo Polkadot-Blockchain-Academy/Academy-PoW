@@ -221,8 +221,15 @@ pub fn new_full(
         &db_config_dir(&config),
     )?);
 
-    // for ethereum-compatibility rpc.
-    // config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider)); // TODO: wants mut...
+    // Sinks for pubsub notifications.
+	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
+	// The MappingSyncWorker sends through the channel on block import and the subscription emits a notification to the subscriber on receiving a message through this channel.
+	// This way we avoid race conditions when using native substrate block import notification stream.
+	let pubsub_notification_sinks: fc_mapping_sync::EthereumBlockNotificationSinks<
+        fc_mapping_sync::EthereumBlockNotification<Block>,
+    > = Default::default();
+    let pubsub_notification_sinks = Arc::new(pubsub_notification_sinks);
+
     let overrides = overrides_handle(client.clone());
     let eth_rpc_params = crate::rpc::EthDeps {
         client: client.clone(),
@@ -269,7 +276,7 @@ pub fn new_full(
                 eth: eth_rpc_params.clone(),
             };
 
-            crate::rpc::create_full(deps, subscription_task_executor)
+            crate::rpc::create_full(deps, subscription_task_executor, pubsub_notification_sinks.clone())
                 .map_err(Into::<ServiceError>::into)
         })
     };
