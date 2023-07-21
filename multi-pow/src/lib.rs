@@ -228,7 +228,7 @@ where
         // Option 1) have the "normal" mining algo try each hash in order for each nonce
         //           and disable it there.
         // Option 2) make the miner configure what algo they mine manually with their cli.
-        let parent_number = match parent_id {
+        let _parent_number = match parent_id {
             BlockId::Hash(h) => *self.client
                 .header(*h)
                 .expect("Database should perform lookup successfully")
@@ -237,18 +237,15 @@ where
             BlockId::Number(n) => *n,
         };
 
-        // This feels like a really stupid way to declare the fork height.
-        // I just couldn't figure out how to express a literal.
-        let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 10_000u32.into();
+        // Declare a threshold height at which to perform a fork
+        // let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 10_000u32.into();
 
-        if parent_number < fork_height {
-            // To begin with we only allow md5 hashes for our pow
-            // After the fork height this check is skipped so all the hashes become valid
-            match seal.work.algo {
-                SupportedHashes::Md5 => (),
-                SupportedHashes::Sha3 => return Ok(false),
-                SupportedHashes::Keccak => return Ok(false),
-            }
+        // To begin with we only allow md5 hashes for our pow
+        // After the fork height this check is skipped so all the hashes become valid
+        match seal.work.algo {
+            SupportedHashes::Md5 => (),
+            SupportedHashes::Sha3 => return Ok(false),
+            SupportedHashes::Keccak => return Ok(false),
         }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.

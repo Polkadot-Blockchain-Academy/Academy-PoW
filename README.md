@@ -9,22 +9,12 @@ Students will use this node to start their own network, perform hard and soft fo
 
 Instructors, planning to host such an activity should see the docs on [setting up a bootnode](./SettingUpTheBootnode.md).
 
-## Connecting the UI
-
-You can connect a UI to a public node by going to https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Facademy.bootnodes.net%2Falice#/explorer
-
 ## Building the Node
 
-To help decentralize the network, you can compile the node by
+First you will need a [Substrate developer environment](https://docs.substrate.io/install/).
 
 1. Cloning this repo
 2. Running `cargo build --release`
-
-## Connect UI to Your Node
-
-Once you have your own node running, you can connect your UI to your own node instead of the public bootnode.
-
-In the left panel of the UI, switch to the `Local Node` endpoint.
 
 ## More Help
 

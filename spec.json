@@ -3,8 +3,8 @@
   "id": "academy_pow",
   "chainType": "Local",
   "bootNodes": [
-    "/dns4/academy.bootnodes.net/tcp/80/p2p/12D3KooWEF1XvEo8W4sw2VuMGVo9cC3cervnKDCMFLmjczbofyDd",
-    "/dns4/academy.bootnodes.net/tcp/30333/p2p/12D3KooWEF1XvEo8W4sw2VuMGVo9cC3cervnKDCMFLmjczbofyDd"
+    "/dns4/academy.bootnodes.net/tcp/30333/p2p/12D3KooWEF1XvEo8W4sw2VuMGVo9cC3cervnKDCMFLmjczbofyDd",
+    "/ip4/137.184.227.28/tcp/80/p2p/12D3KooWMmwq9UKB9oBfWFamDtkNcFw5HtC4BowmQP34fCSUn4uz"
   ],
   "telemetryEndpoints": [
     ["/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F", 0]
