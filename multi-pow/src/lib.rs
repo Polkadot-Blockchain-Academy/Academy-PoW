@@ -8,7 +8,7 @@
 //! a chain may want to upgrade to a new algorithm when the old one is suspected weak.
 //! In any case, the point is that we want to demonstrate hard and soft forks in an understandable way,
 //! the multiple hashing algorithms achieves that well.
-//! 
+//!
 //! In the future, the hope is that there will be a dedicated difficulty threshold for each hashing algorithm.
 //! But currently the Substrate PoW crates are not that flexible.
 //! We could solve it by adding a pre-digest that includes information about what hashing algo is being used
@@ -25,16 +25,17 @@ use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
-use sp_api::{ProvideRuntimeApi, HeaderT};
+use sp_api::{HeaderT, ProvideRuntimeApi};
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
-use sp_consensus_pow::TotalDifficulty;
 #[cfg(feature = "std")]
 use sp_consensus_pow::Seal as RawSeal;
+use sp_consensus_pow::TotalDifficulty;
 use sp_core::{H256, U256};
-use sp_runtime::traits::Block as BlockT;
 #[cfg(feature = "std")]
 use sp_runtime::generic::BlockId;
+use sp_runtime::traits::Block as BlockT;
+
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
 #[derive(
@@ -56,21 +57,10 @@ pub struct Threshold {
     pub keccak: U256,
 }
 
+// This trait is not fully baked in the Substrate PoW code, so I will not use it for now.
 impl TotalDifficulty for Threshold {
-    type Incremental = MultiHash;
-
-    fn increment(&mut self, other: MultiHash) {
-        match other.algo {
-            SupportedHashes::Md5 => {
-                self.md5 += U256::from(&other.value[..]);
-            }
-            SupportedHashes::Sha3 => {
-                self.sha3 += U256::from(&other.value[..]);
-            }
-            SupportedHashes::Keccak => {
-                self.keccak += U256::from(&other.value[..]);
-            }
-        }
+    fn increment(&mut self, _: Threshold) {
+        unimplemented!()
     }
 }
 
@@ -177,6 +167,7 @@ impl<C> MultiPow<C> {
     }
 }
 
+//TODO could maybe derive clone_no_bound
 #[cfg(feature = "std")]
 impl<C> Clone for MultiPow<C> {
     fn clone(&self) -> Self {
@@ -229,7 +220,8 @@ where
         //           and disable it there.
         // Option 2) make the miner configure what algo they mine manually with their cli.
         let parent_number = match parent_id {
-            BlockId::Hash(h) => *self.client
+            BlockId::Hash(h) => *self
+                .client
                 .header(*h)
                 .expect("Database should perform lookup successfully")
                 .expect("parent header should be present in the db")
@@ -269,13 +261,13 @@ where
         Ok(true)
     }
 
-    fn actual_work(
-        seal: &RawSeal,
-    ) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
-        let seal = Seal::decode(&mut &seal[..]).map_err(|_| {
-            sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into())
-        })?;
+    // fn actual_work(
+    //     seal: &RawSeal,
+    // ) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
+    //     let seal = Seal::decode(&mut &seal[..]).map_err(|_| {
+    //         sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into())
+    //     })?;
 
-        Ok(seal.work)
-    }
+    //     Ok(seal.work)
+    // }
 }
