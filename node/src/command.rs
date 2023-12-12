@@ -17,6 +17,7 @@
 use academy_pow_runtime::Block;
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
+use sp_core::sr25519::Public;
 
 use crate::{
     chain_spec,
@@ -167,14 +168,17 @@ pub fn run() -> sc_cli::Result<()> {
             runner.sync_run(|config| cmd.run::<Block>(&config))
         }
         None => {
+            let bytes: [u8; 32] = cli.pow.public_key_bytes();
+            let sr25519_public_key = Public(bytes);
+
             let runner = cli.create_runner(&cli.run)?;
             runner.run_node_until_exit(|config| async move {
                 service::new_full(
                     config,
-                    cli.mining_account_id,
-                    cli.instant_seal,
-                    cli.mining_algo,
-                    &cli.eth,
+                    //TODO make sure this is sound. Joshy F'ed with it when reverting the ethereum stuff.
+                    sr25519_public_key,                    
+                    cli.pow.instant_seal,
+                    cli.pow.mining_algo,
                 )
                 .map_err(sc_cli::Error::Service)
             })

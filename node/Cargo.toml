@@ -19,9 +19,6 @@ clap = { version = "4.3.0", features = ["derive"] }
 parity-scale-codec = '3.1.2'
 sha3 = "0.10.1"
 rand = { version = "0.8.5", features = ["small_rng"] }
-hex-literal = "0.4.1"
-
-account = { path = "../account" }
 
 # These dependencies are used for the node template's RPCs
 jsonrpsee = { version = "0.16.0", features = ["server"] }
@@ -38,8 +35,6 @@ sc-client-api = {git = "https://github.com/paritytech/substrate.git", branch = "
 sc-consensus = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-executor = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-network = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sc-network-sync = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
-sc-rpc = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-service = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-telemetry = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sc-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
@@ -54,13 +49,6 @@ sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "pol
 sp-timestamp = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 sp-transaction-pool = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.42" }
 multi-pow = {path = '../multi-pow'}
-fc-consensus = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-fc-db = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-fc-mapping-sync = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-fc-rpc = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-fc-rpc-core = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-fc-storage = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
-fp-rpc = {git = "https://github.com/paritytech/frontier.git", branch = "bar/polkadot-v0.9.42" }
 hex = "0.4"
 
 [[bin]]
