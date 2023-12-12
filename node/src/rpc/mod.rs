@@ -20,11 +20,7 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use academy_pow_runtime::{opaque::Block, AccountId, Balance, Hash, Index};
 
 mod eth;
-mod eth_pubsub;
-pub use self::{
-    eth::{create_eth, EthDeps},
-    eth_pubsub::EthPubSub,
-};
+pub use self::eth::{create_eth, EthDeps};
 
 /// Full client dependencies.
 pub struct FullDeps<C, P, A: ChainApi> {
@@ -56,11 +52,6 @@ where
 pub fn create_full<C, P, BE, A>(
     deps: FullDeps<C, P, A>,
     subscription_task_executor: SubscriptionTaskExecutor,
-        pubsub_notification_sinks: Arc<
-            fc_mapping_sync::EthereumBlockNotificationSinks<
-            fc_mapping_sync::EthereumBlockNotification<Block>,
-        >,
-    >,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     C: CallApiAt<Block> + ProvideRuntimeApi<Block>,
@@ -103,7 +94,7 @@ where
 
     // Ethereum compatibility RPCs
     let io =
-        create_eth::<_, _, _, _, _, DefaultEthConfig<C, BE>>(io, eth, subscription_task_executor, pubsub_notification_sinks)?;
+        create_eth::<_, _, _, _, _, DefaultEthConfig<C, BE>>(io, eth, subscription_task_executor)?;
 
     Ok(io)
 }

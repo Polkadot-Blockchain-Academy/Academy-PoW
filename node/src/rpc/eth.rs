@@ -23,8 +23,6 @@ pub use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 pub use fc_storage::overrides_handle;
 use fp_rpc::{ConvertTransactionRuntimeApi, EthereumRuntimeRPCApi, NoTransactionConverter};
 
-use crate::rpc::EthPubSub;
-
 /// Extra dependencies for Ethereum compatibility.
 pub struct EthDeps<C, P, A: ChainApi, B: BlockT> {
     /// The client instance to use.
@@ -89,12 +87,7 @@ impl<C, P, A: ChainApi, B: BlockT> Clone for EthDeps<C, P, A, B> {
 pub fn create_eth<C, BE, P, A, B, EC: EthConfig<B, C>>(
     mut io: RpcModule<()>,
     deps: EthDeps<C, P, A, B>,
-    subscription_task_executor: SubscriptionTaskExecutor,
-    pubsub_notification_sinks: Arc<
-		fc_mapping_sync::EthereumBlockNotificationSinks<
-			fc_mapping_sync::EthereumBlockNotification<B>,
-		>,
-	>,
+    _subscription_task_executor: SubscriptionTaskExecutor,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     B: BlockT,
@@ -107,7 +100,7 @@ where
     A: ChainApi<Block = B> + 'static,
 {
     use fc_rpc::{
-        Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer, EthPubSubApiServer, EthSigner, Net,
+        Eth, EthApiServer, EthDevSigner, EthFilter, EthFilterApiServer, EthSigner, Net,
         NetApiServer, Web3, Web3ApiServer,
     };
 
@@ -138,12 +131,12 @@ where
     io.merge(
         Eth::new(
             client.clone(),
-            pool.clone(),
+            pool,
             graph,
             None::<NoTransactionConverter>,
-            sync.clone(),
+            sync,
             vec![],
-            overrides.clone(),
+            overrides,
             frontier_backend.clone(),
             is_authority,
             block_data_cache.clone(),
@@ -169,18 +162,6 @@ where
             .into_rpc(),
         )?;
     }
-
-	io.merge(
-		EthPubSub::new(
-			pool,
-			client.clone(),
-			sync,
-			subscription_task_executor,
-			overrides,
-			pubsub_notification_sinks,
-		)
-		.into_rpc(),
-	)?; 
 
     io.merge(
         Net::new(

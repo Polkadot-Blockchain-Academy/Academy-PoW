@@ -1,24 +1,22 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use crate::eth::{
-    new_frontier_partial, EthConfiguration, FrontierBackend,
+    db_config_dir, new_frontier_partial, EthConfiguration, FrontierBackend,
     FrontierPartialComponents,
 };
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use account::AccountId20;
 use core::clone::Clone;
-use fc_db::DatabaseSource;
-use fc_mapping_sync::MappingSyncWorker;
 use fc_storage::overrides_handle;
 use futures::channel::mpsc;
 use multi_pow::{MultiPow, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
-use sc_service::{BasePath, error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
+use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_api::TransactionFor;
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -33,36 +31,6 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
     fn native_version() -> sc_executor::NativeVersion {
         academy_pow_runtime::native_version()
     }
-}
-
-pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
-	let config_dir = config
-		.base_path
-		.as_ref()
-		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
-		.unwrap_or_else(|| {
-			BasePath::from_project("", "", "academy-pow")
-				.config_dir(config.chain_spec.id())
-		});
-	config_dir.join("frontier").join("db")
-}
-
-pub fn open_frontier_backend<C>(
-    client: Arc<C>,
-    config: &Configuration,
-) -> Result<Arc<fc_db::Backend<Block>>, String>
-where
-    C: sp_blockchain::HeaderBackend<Block>,
-{
-    Ok(Arc::new(fc_db::Backend::<Block>::new(
-        client,
-        &fc_db::DatabaseSettings {
-            source: DatabaseSource::RocksDb {
-                path: frontier_database_dir(config),
-                cache_size: 0,
-            },
-        },
-    )?))
 }
 
 //TODO We'll need the mining worker. Can probably copy from recipes
@@ -80,7 +48,7 @@ pub type ServicePartialComponents = PartialComponents<
     FullSelectChain,
     BasicImportQueue,
     sc_transaction_pool::FullPool<Block, FullClient>,
-    (BoxBlockImport, Option<Telemetry>, Arc<FrontierBackend>),
+    (BoxBlockImport, Option<Telemetry>),
 >;
 
 /// Returns most parts of a service. Not enough to run a full chain,
@@ -135,8 +103,6 @@ where
         client.clone(),
     );
 
-    let frontier_backend = open_frontier_backend(client.clone(), config)?;
-
     let (import_queue, block_import) =
         build_import_queue(client.clone(), config, &select_chain, &task_manager)?;
 
@@ -148,7 +114,7 @@ where
         keystore_container,
         select_chain,
         transaction_pool,
-        other: (block_import, telemetry, frontier_backend),
+        other: (block_import, telemetry),
     })
 }
 
@@ -226,7 +192,7 @@ pub fn new_full(
         keystore_container,
         select_chain,
         transaction_pool,
-        other: (pow_block_import, mut telemetry, frontier_backend),
+        other: (pow_block_import, mut telemetry),
     } = new_partial(&config, build_import_queue)?;
 
     let FrontierPartialComponents {
@@ -249,15 +215,14 @@ pub fn new_full(
     let role = config.role.clone();
     let prometheus_registry = config.prometheus_registry().cloned();
 
-    // Sinks for pubsub notifications.
-	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
-	// The MappingSyncWorker sends through the channel on block import and the subscription emits a notification to the subscriber on receiving a message through this channel.
-	// This way we avoid race conditions when using native substrate block import notification stream.
-	let pubsub_notification_sinks: fc_mapping_sync::EthereumBlockNotificationSinks<
-        fc_mapping_sync::EthereumBlockNotification<Block>,
-    > = Default::default();
-    let pubsub_notification_sinks = Arc::new(pubsub_notification_sinks);
+    let frontier_backend = Arc::new(FrontierBackend::open(
+        client.clone(),
+        &config.database,
+        &db_config_dir(&config),
+    )?);
 
+    // for ethereum-compatibility rpc.
+    // config.rpc_id_provider = Some(Box::new(fc_rpc::EthereumSubIdProvider)); // TODO: wants mut...
     let overrides = overrides_handle(client.clone());
     let eth_rpc_params = crate::rpc::EthDeps {
         client: client.clone(),
@@ -267,11 +232,11 @@ pub fn new_full(
         enable_dev_signer: eth_config.enable_dev_signer,
         network: network.clone(),
         sync: sync_service.clone(),
-        frontier_backend: frontier_backend.clone(),
+        frontier_backend,
         overrides: overrides.clone(),
         block_data_cache: Arc::new(fc_rpc::EthBlockDataCacheTask::new(
             task_manager.spawn_handle(),
-            overrides.clone(),
+            overrides,
             eth_config.eth_log_block_cache,
             eth_config.eth_statuses_cache,
             prometheus_registry.clone(),
@@ -290,7 +255,6 @@ pub fn new_full(
     let rpc_builder = {
         let client = client.clone();
         let pool = transaction_pool.clone();
-        let pubsub_notification_sinks = pubsub_notification_sinks.clone();
 
         Box::new(move |deny_unsafe, subscription_task_executor| {
             let deps = crate::rpc::FullDeps {
@@ -305,7 +269,7 @@ pub fn new_full(
                 eth: eth_rpc_params.clone(),
             };
 
-            crate::rpc::create_full(deps, subscription_task_executor, pubsub_notification_sinks.clone())
+            crate::rpc::create_full(deps, subscription_task_executor)
                 .map_err(Into::<ServiceError>::into)
         })
     };
@@ -317,7 +281,7 @@ pub fn new_full(
         task_manager: &mut task_manager,
         transaction_pool: transaction_pool.clone(),
         rpc_builder,
-        backend: backend.clone(),
+        backend,
         system_rpc_tx,
         tx_handler_controller,
         sync_service: sync_service.clone(),
@@ -332,28 +296,6 @@ pub fn new_full(
             transaction_pool.clone(),
             prometheus_registry.as_ref(),
             telemetry.as_ref().map(|x| x.handle()),
-        );
-
-        use futures::StreamExt;
-        use sc_client_api::BlockchainEvents;
-
-        task_manager.spawn_essential_handle().spawn(
-            "frontier-mapping-sync-worker",
-            Some("academy-pow"),
-            MappingSyncWorker::new(
-                client.import_notification_stream(),
-                Duration::new(6, 0),
-                client.clone(),
-                backend.clone(),
-                overrides,
-                frontier_backend.clone(),
-                3,
-                0,
-                fc_mapping_sync::SyncStrategy::Normal,
-                sync_service.clone(),
-                pubsub_notification_sinks,
-            )
-            .for_each(|()| futures::future::ready(())),
         );
 
         // If instant seal is requested, we just start it. Otherwise, we do the full PoW setup.

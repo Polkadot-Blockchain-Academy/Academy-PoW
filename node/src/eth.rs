@@ -1,10 +1,11 @@
 use std::{
     collections::BTreeMap,
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
 
 // Substrate
-use sc_service::{error::Error as ServiceError};
+use sc_service::{error::Error as ServiceError, BasePath, Configuration};
 use sp_runtime::traits::BlakeTwo256;
 // Frontier
 pub use fc_consensus::FrontierBlockImport;
@@ -15,6 +16,17 @@ use academy_pow_runtime::opaque::Block;
 
 /// Frontier DB backend type.
 pub type FrontierBackend = fc_db::Backend<Block>;
+
+pub fn db_config_dir(config: &Configuration) -> PathBuf {
+    let application = &config.impl_name;
+    config
+        .base_path
+        .as_ref()
+        .map(|base_path| base_path.config_dir(config.chain_spec.id()))
+        .unwrap_or_else(|| {
+            BasePath::from_project("", "", application).config_dir(config.chain_spec.id())
+        })
+}
 
 /// The ethereum-compatibility configuration used to run a node.
 #[derive(Clone, Debug, clap::Parser)]
