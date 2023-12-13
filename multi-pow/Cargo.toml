@@ -11,12 +11,12 @@ scale-info = { version = "2.1.2", default-features = false, features = ["derive"
 sha3 = { version = "0.10.1", optional = true, default-features = false }
 md5 = "0.7.0"
 
-sc-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0", default-features = false, optional = true }
-sp-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0", default-features = false }
-sp-consensus-pow = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0", default-features = false }
-sp-core = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0", default-features = false }
-sp-runtime = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0", default-features = false }
-sc-client-api = {git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0", optional = true }
+sc-consensus-pow = { workspace = true, optional = true }
+sp-api = { workspace = true }
+sp-consensus-pow = { workspace = true }
+sp-core = { workspace = true }
+sp-runtime = { workspace = true }
+sc-client-api = { workspace = true, optional = true }
 
 [features]
 default = ['std']
@@ -25,3 +25,4 @@ std = [
     'sc-consensus-pow',
     'sc-client-api',
 ]
+ 
