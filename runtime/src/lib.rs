@@ -9,7 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 pub use frame_support::{
-    construct_runtime, log, parameter_types,
+    construct_runtime, parameter_types,
     traits::{
         Currency, EstimateNextNewSession, Imbalance, KeyOwnerProofSystem, LockIdentifier, Nothing,
         OnUnbalanced, Randomness, ValidatorSet,
@@ -66,6 +66,9 @@ pub type AccountIndex = u32;
 pub type Balance = u128;
 
 /// Index of a transaction in the chain.
+pub type Nonce = u32;
+
+/// Index of a transaction in the chain.
 pub type Index = u32;
 
 /// A hash of some data used by the chain.
@@ -77,8 +80,8 @@ pub mod block_author;
 /// The Issuance trait in `./issuance.rs`
 pub mod issuance;
 
-/// The Difficulty Adjustment Algorithm in `./difficulty.rs`
-pub mod difficulty;
+// /// The Difficulty Adjustment Algorithm in `./difficulty.rs`
+// pub mod difficulty;
 
 /// The faucet to allow users to claim free tokens
 pub mod faucet;
@@ -153,16 +156,10 @@ impl frame_system::Config for Runtime {
     type RuntimeCall = RuntimeCall;
     /// The lookup mechanism to get account ID from whatever is passed in dispatchers.
     type Lookup = AccountIdLookup<AccountId, ()>;
-    /// The index type for storing how many extrinsics an account has signed.
-    type Index = Index;
-    /// The index type for blocks.
-    type BlockNumber = BlockNumber;
     /// The type for hashing blocks and tries.
     type Hash = Hash;
     /// The hashing algorithm used.
     type Hashing = BlakeTwo256;
-    /// The header type.
-    type Header = generic::Header<BlockNumber, BlakeTwo256>;
     /// The ubiquitous event type.
     type RuntimeEvent = RuntimeEvent;
     /// The ubiquitous origin type.
@@ -190,6 +187,8 @@ impl frame_system::Config for Runtime {
     /// The set code logic, just the default since we're not a parachain.
     type OnSetCode = ();
     type MaxConsumers = frame_support::traits::ConstU32<16>;
+    type Nonce = Nonce;
+    type Block = Block;
 }
 
 parameter_types! {
@@ -218,8 +217,8 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type HoldIdentifier = ();
     type MaxHolds = ();
+    type RuntimeHoldReason = ();
 }
 
 // impl pallet_sudo::Config for Runtime {
@@ -234,15 +233,15 @@ parameter_types! {
     pub const MaxDifficulty: u128 = u128::max_value();
 }
 
-impl difficulty::Config for Runtime {
-    type TimeProvider = Timestamp;
-    type TargetBlockTime = TargetBlockTime;
-    type DampFactor = DampFactor;
-    type ClampFactor = ClampFactor;
-    type MaxDifficulty = MaxDifficulty;
-    // Setting min difficulty to damp factor per recommendation
-    type MinDifficulty = DampFactor;
-}
+// impl difficulty::Config for Runtime {
+//     type TimeProvider = Timestamp;
+//     type TargetBlockTime = TargetBlockTime;
+//     type DampFactor = DampFactor;
+//     type ClampFactor = ClampFactor;
+//     type MaxDifficulty = MaxDifficulty;
+//     // Setting min difficulty to damp factor per recommendation
+//     type MinDifficulty = DampFactor;
+// }
 
 impl faucet::Config for Runtime {
     // type Event = Event;
@@ -348,7 +347,7 @@ construct_runtime!(
         Balances: pallet_balances,
         // Sudo: pallet_sudo
         TransactionPayment: pallet_transaction_payment,
-        DifficultyAdjustment: difficulty,
+        // DifficultyAdjustment: difficulty,
         BlockAuthor: block_author,
         Faucet: faucet,
         Contracts: pallet_contracts,
@@ -384,6 +383,11 @@ pub type Executive = frame_executive::Executive<
     frame_system::ChainContext<Runtime>,
     Runtime,
     AllPalletsWithSystem,
+>;
+
+type EventRecord = frame_system::EventRecord<
+	<Runtime as frame_system::Config>::RuntimeEvent,
+	<Runtime as frame_system::Config>::Hash,
 >;
 
 impl_runtime_apis! {
@@ -468,10 +472,10 @@ impl_runtime_apis! {
         fn difficulty() -> multi_pow::Threshold {
             // TODO we will eventually need three independent difficulty adjustment algorithms: one for each hash algorithm.
             // For now we just hard-code the difficulties for the new hashes and use the pre-existing adjustment algo for sha3
-            let sha3_difficulty = DifficultyAdjustment::difficulty();
+            // let sha3_difficulty = DifficultyAdjustment::difficulty();
             multi_pow::Threshold {
                 md5: U256::from(4_000_000),
-                sha3: sha3_difficulty,
+                sha3: U256::from(4_000_000),//sha3_difficulty,
                 keccak: U256::from(4_000_000),
             }
         }
@@ -527,7 +531,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
         }
     }
 
-    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>
+    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord>
         for Runtime
     {
         fn call(
@@ -537,7 +541,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
             gas_limit: Option<Weight>,
             storage_deposit_limit: Option<Balance>,
             input_data: Vec<u8>,
-        ) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+        ) -> pallet_contracts_primitives::ContractExecResult<Balance, EventRecord> {
             let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
             Contracts::bare_call(
                 origin,
@@ -559,7 +563,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
             code: pallet_contracts_primitives::Code<Hash>,
             data: Vec<u8>,
             salt: Vec<u8>,
-        ) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance>
+        ) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance, EventRecord>
         {
             let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
             Contracts::bare_instantiate(
