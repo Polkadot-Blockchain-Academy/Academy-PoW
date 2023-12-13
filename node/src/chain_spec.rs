@@ -1,12 +1,12 @@
 use academy_pow_runtime::{
-    AccountId, BalancesConfig, DifficultyAdjustmentConfig, GenesisConfig, Signature, SystemConfig,
+    AccountId, BalancesConfig, DifficultyAdjustmentConfig, RuntimeGenesisConfig, Signature, SystemConfig,
     WASM_BINARY,
 };
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
+pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -115,10 +115,11 @@ fn genesis(
     wasm_binary: &[u8],
     endowed_accounts: Vec<AccountId>,
     initial_difficulty: u32,
-) -> GenesisConfig {
-    GenesisConfig {
+) -> RuntimeGenesisConfig {
+    RuntimeGenesisConfig {
         system: SystemConfig {
             code: wasm_binary.to_vec(),
+			..Default::default()
         },
         balances: BalancesConfig {
             balances: endowed_accounts
@@ -132,6 +133,7 @@ fn genesis(
         // },
         difficulty_adjustment: DifficultyAdjustmentConfig {
             initial_difficulty: initial_difficulty.into(),
+			..Default::default()
         },
         transaction_payment: Default::default(),
     }

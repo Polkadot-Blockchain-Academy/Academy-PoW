@@ -9,7 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 pub use frame_support::{
-    construct_runtime, log, parameter_types,
+    construct_runtime, parameter_types,
     traits::{
         Currency, EstimateNextNewSession, Imbalance, KeyOwnerProofSystem, LockIdentifier, Nothing,
         OnUnbalanced, Randomness, ValidatorSet,
@@ -66,6 +66,9 @@ pub type AccountIndex = u32;
 pub type Balance = u128;
 
 /// Index of a transaction in the chain.
+pub type Nonce = u32;
+
+/// Index of a transaction in the chain.
 pub type Index = u32;
 
 /// A hash of some data used by the chain.
@@ -77,7 +80,7 @@ pub mod block_author;
 /// The Issuance trait in `./issuance.rs`
 pub mod issuance;
 
-/// The Difficulty Adjustment Algorithm in `./difficulty.rs`
+// /// The Difficulty Adjustment Algorithm in `./difficulty.rs`
 pub mod difficulty;
 
 /// The faucet to allow users to claim free tokens
@@ -101,6 +104,7 @@ pub mod opaque {
 }
 
 /// This runtime version.
+#[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("academy-pow"),
     impl_name: create_runtime_str!("academy-pow"),
@@ -153,16 +157,10 @@ impl frame_system::Config for Runtime {
     type RuntimeCall = RuntimeCall;
     /// The lookup mechanism to get account ID from whatever is passed in dispatchers.
     type Lookup = AccountIdLookup<AccountId, ()>;
-    /// The index type for storing how many extrinsics an account has signed.
-    type Index = Index;
-    /// The index type for blocks.
-    type BlockNumber = BlockNumber;
     /// The type for hashing blocks and tries.
     type Hash = Hash;
     /// The hashing algorithm used.
     type Hashing = BlakeTwo256;
-    /// The header type.
-    type Header = generic::Header<BlockNumber, BlakeTwo256>;
     /// The ubiquitous event type.
     type RuntimeEvent = RuntimeEvent;
     /// The ubiquitous origin type.
@@ -190,6 +188,8 @@ impl frame_system::Config for Runtime {
     /// The set code logic, just the default since we're not a parachain.
     type OnSetCode = ();
     type MaxConsumers = frame_support::traits::ConstU32<16>;
+    type Nonce = Nonce;
+    type Block = Block;
 }
 
 parameter_types! {
@@ -218,8 +218,8 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type HoldIdentifier = ();
     type MaxHolds = ();
+    type RuntimeHoldReason = ();
 }
 
 // impl pallet_sudo::Config for Runtime {
@@ -294,8 +294,6 @@ impl pallet_transaction_payment::Config for Runtime {
     type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
 }
 
-// Prints debug output of the `contracts` pallet to stdout if the node is started with `-lruntime::contracts=debug`.
-const CONTRACTS_DEBUG_OUTPUT: bool = true;
 // The storage per one byte of contract storage: 4*10^{-5} AZERO per byte.
 pub const CONTRACT_DEPOSIT_PER_BYTE: Balance = 4 * (TOKEN / 100_000);
 
@@ -334,14 +332,11 @@ impl pallet_contracts::Config for Runtime {
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
     type DefaultDepositLimit = DefaultDepositLimit;
+    type Migrations = ();
 }
 
 construct_runtime!(
-    pub enum Runtime where
-        Block = Block,
-        NodeBlock = opaque::Block,
-        UncheckedExtrinsic = UncheckedExtrinsic
-    {
+    pub struct Runtime {
         System: frame_system,
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
@@ -384,6 +379,11 @@ pub type Executive = frame_executive::Executive<
     frame_system::ChainContext<Runtime>,
     Runtime,
     AllPalletsWithSystem,
+>;
+
+type EventRecord = frame_system::EventRecord<
+	<Runtime as frame_system::Config>::RuntimeEvent,
+	<Runtime as frame_system::Config>::Hash,
 >;
 
 impl_runtime_apis! {
@@ -468,10 +468,10 @@ impl_runtime_apis! {
         fn difficulty() -> multi_pow::Threshold {
             // TODO we will eventually need three independent difficulty adjustment algorithms: one for each hash algorithm.
             // For now we just hard-code the difficulties for the new hashes and use the pre-existing adjustment algo for sha3
-            let sha3_difficulty = DifficultyAdjustment::difficulty();
+            // let sha3_difficulty = DifficultyAdjustment::difficulty();
             multi_pow::Threshold {
                 md5: U256::from(4_000_000),
-                sha3: sha3_difficulty,
+                sha3: U256::from(4_000_000),//sha3_difficulty,
                 keccak: U256::from(4_000_000),
             }
         }
@@ -527,69 +527,77 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
         }
     }
 
-    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>
-        for Runtime
-    {
-        fn call(
-            origin: AccountId,
-            dest: AccountId,
-            value: Balance,
-            gas_limit: Option<Weight>,
-            storage_deposit_limit: Option<Balance>,
-            input_data: Vec<u8>,
-        ) -> pallet_contracts_primitives::ContractExecResult<Balance> {
-            let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
-            Contracts::bare_call(
-                origin,
-                dest,
-                value,
-                gas_limit,
-                storage_deposit_limit,
-                input_data,
-                CONTRACTS_DEBUG_OUTPUT,
-                pallet_contracts::Determinism::Enforced,
-            )
-        }
+    impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord> for Runtime
+	{
+		fn call(
+			origin: AccountId,
+			dest: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			input_data: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractExecResult<Balance, EventRecord> {
+			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+			Contracts::bare_call(
+				origin,
+				dest,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				input_data,
+				pallet_contracts::DebugInfo::UnsafeDebug,
+				pallet_contracts::CollectEvents::UnsafeCollect,
+				pallet_contracts::Determinism::Enforced,
+			)
+		}
 
-        fn instantiate(
-            origin: AccountId,
-            value: Balance,
-            gas_limit: Option<Weight>,
-            storage_deposit_limit: Option<Balance>,
-            code: pallet_contracts_primitives::Code<Hash>,
-            data: Vec<u8>,
-            salt: Vec<u8>,
-        ) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance>
-        {
-            let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
-            Contracts::bare_instantiate(
-                origin,
-                value,
-                gas_limit,
-                storage_deposit_limit,
-                code,
-                data,
-                salt,
-                CONTRACTS_DEBUG_OUTPUT
-            )
-        }
+		fn instantiate(
+			origin: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
+			data: Vec<u8>,
+			salt: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance, EventRecord>
+		{
+			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+			Contracts::bare_instantiate(
+				origin,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				code,
+				data,
+				salt,
+				pallet_contracts::DebugInfo::UnsafeDebug,
+				pallet_contracts::CollectEvents::UnsafeCollect,
+			)
+		}
 
-        fn upload_code(
-            origin: AccountId,
-            code: Vec<u8>,
-            storage_deposit_limit: Option<Balance>,
-            determinism: pallet_contracts::Determinism,
-        ) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
-        {
-            Contracts::bare_upload_code(origin, code, storage_deposit_limit, determinism)
-        }
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+			determinism: pallet_contracts::Determinism,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+		{
+			Contracts::bare_upload_code(
+				origin,
+				code,
+				storage_deposit_limit,
+				determinism,
+			)
+		}
 
-        fn get_storage(
-            address: AccountId,
-            key: Vec<u8>,
-        ) -> pallet_contracts_primitives::GetStorageResult {
-            Contracts::get_storage(address, key)
-        }
-    }
-
+		fn get_storage(
+			address: AccountId,
+			key: Vec<u8>,
+		) -> pallet_contracts_primitives::GetStorageResult {
+			Contracts::get_storage(
+				address,
+				key
+			)
+		}
+	}
 }

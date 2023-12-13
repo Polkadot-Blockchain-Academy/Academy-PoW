@@ -34,6 +34,7 @@ use sp_consensus_pow::TotalDifficulty;
 use sp_core::{H256, U256};
 #[cfg(feature = "std")]
 use sp_runtime::generic::BlockId;
+#[cfg(feature = "std")]
 use sp_runtime::traits::Block as BlockT;
 
 /// A struct that represents a difficulty threshold.

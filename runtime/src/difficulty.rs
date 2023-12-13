@@ -89,12 +89,13 @@ pub mod pallet {
     pub type InitialDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
 
     #[pallet::genesis_config]
-    pub struct GenesisConfig {
+    pub struct GenesisConfig<T> {
+        pub _ph_data: PhantomData<T>,
         pub initial_difficulty: Difficulty,
     }
 
     #[pallet::genesis_build]
-    impl<T: Config> GenesisBuild<T> for GenesisConfig {
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
             // Initialize the Current difficulty
             CurrentDifficulty::<T>::put(self.initial_difficulty);
@@ -105,10 +106,10 @@ pub mod pallet {
         }
     }
 
-    #[cfg(feature = "std")]
-    impl Default for GenesisConfig {
+    impl<T> Default for GenesisConfig<T> {
         fn default() -> Self {
             GenesisConfig {
+                _ph_data: Default::default(),
                 initial_difficulty: 4_000_000.into(),
             }
         }
@@ -116,7 +117,7 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_finalize(_n: T::BlockNumber) {
+        fn on_finalize(_n: BlockNumberFor<T>) {
             let mut data = PastDifficultiesAndTimestamps::<T>::get();
 
             for i in 1..data.len() {

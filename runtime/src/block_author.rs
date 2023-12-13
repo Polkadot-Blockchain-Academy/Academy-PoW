@@ -4,9 +4,12 @@
 //! runtime's AccountId type can be created from an sr25519 public key.
 
 pub use pallet::*;
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::{Encode, Decode};
+
 use sp_core::sr25519;
-use sp_inherents::{InherentData, InherentIdentifier, IsFatalError};
+use sp_inherents::{InherentIdentifier, IsFatalError};
+#[cfg(feature = "std")]
+use sp_inherents::InherentData;
 use sp_runtime::RuntimeString;
 use sp_std::vec::Vec;
 
@@ -60,7 +63,7 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_initialize(_n: T::BlockNumber) -> Weight {
+        fn on_initialize(_n: BlockNumberFor<T>) -> Weight {
             // Reset the author to None at the beginning of the block
             Author::<T>::kill();
 
@@ -128,8 +131,7 @@ where
 
 pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"author__";
 
-#[derive(Encode)]
-#[cfg_attr(feature = "std", derive(Debug, Decode))]
+#[derive(Encode, Decode, Debug)]
 pub enum InherentError {
     Other(RuntimeString),
 }

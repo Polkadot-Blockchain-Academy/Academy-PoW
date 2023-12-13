@@ -15,7 +15,7 @@
 // along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
 
 use academy_pow_runtime::Block;
-use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
+use sc_cli::SubstrateCli;
 use sc_service::PartialComponents;
 use sp_core::sr25519::Public;
 
@@ -65,10 +65,6 @@ impl SubstrateCli for Cli {
                 std::path::PathBuf::from(path),
             )?),
         })
-    }
-
-    fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-        &academy_pow_runtime::VERSION
     }
 }
 
