@@ -220,6 +220,7 @@ impl pallet_balances::Config for Runtime {
     type MaxFreezes = ();
     type MaxHolds = ();
     type RuntimeHoldReason = RuntimeHoldReason;
+    type RuntimeFreezeReason = RuntimeFreezeReason;
 }
 
 // impl pallet_sudo::Config for Runtime {
