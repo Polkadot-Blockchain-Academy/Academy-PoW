@@ -8,7 +8,6 @@ use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sp_api::TransactionFor;
 use sp_core::sr25519;
 use std::sync::Arc;
 
@@ -34,8 +33,8 @@ type FullClient =
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
-type BasicImportQueue = sc_consensus::DefaultImportQueue<Block, FullClient>;
-type BoxBlockImport = sc_consensus::BoxBlockImport<Block, TransactionFor<FullClient, Block>>;
+type BasicImportQueue = sc_consensus::DefaultImportQueue<Block>;
+type BoxBlockImport = sc_consensus::BoxBlockImport<Block>;
 
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain

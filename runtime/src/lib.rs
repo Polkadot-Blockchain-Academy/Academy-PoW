@@ -219,7 +219,7 @@ impl pallet_balances::Config for Runtime {
     type FreezeIdentifier = ();
     type MaxFreezes = ();
     type MaxHolds = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = RuntimeHoldReason;
 }
 
 // impl pallet_sudo::Config for Runtime {
@@ -309,6 +309,8 @@ parameter_types! {
     pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
     // Fallback value to limit the storage deposit if it's not being set by the caller
     pub const DefaultDepositLimit: Balance = CONTRACT_DEPOSIT_PER_BYTE * 128 * 1024;
+    pub const CodeHashLockupDepositPercent: Perbill = Perbill::from_percent(0);
+	pub const MaxDelegateDependencies: u32 = 32;
 }
 
 impl pallet_contracts::Config for Runtime {
@@ -332,7 +334,13 @@ impl pallet_contracts::Config for Runtime {
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
     type DefaultDepositLimit = DefaultDepositLimit;
-    type Migrations = ();
+    type CodeHashLockupDepositPercent = CodeHashLockupDepositPercent;
+	type MaxDelegateDependencies = MaxDelegateDependencies;
+	type RuntimeHoldReason = RuntimeHoldReason;
+
+	type Environment = ();
+	type Debug = ();
+	type Migrations = ();
 }
 
 construct_runtime!(
