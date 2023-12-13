@@ -1,38 +1,35 @@
 [package]
-authors = ['Anonymous']
-build = 'build.rs'
-edition = '2021'
-name = 'academy-pow'
-version = '3.0.0'
-
-[build-dependencies]
-substrate-build-script-utils = { workspace = true }
+authors = [ "Anonymous" ]
+build = "build.rs"
+edition = "2021"
+name = "academy-pow"
+version = "3.0.0"
 
 [dependencies]
-futures = { workspace = true }
-log = { workspace = true }
 clap = { workspace = true }
-parity-scale-codec = { workspace = true }
-sha3 = { workspace = true }
-rand = { workspace = true }
+futures = { workspace = true }
 hex = { workspace = true }
-
-academy-pow-runtime = { path = "../runtime" }
-multi-pow = {path = '../multi-pow'}
-
-# These dependencies are used for the node template's RPCs
+log = { workspace = true }
+parity-scale-codec = { workspace = true }
+rand = { workspace = true }
+sha3 = { workspace = true }
 jsonrpsee = { workspace = true }
+
+# Local Dependencies
+academy-pow-runtime = { path = "../runtime" }
+multi-pow = { path = "../multi-pow" }
+
+# Polkadot SDK
 pallet-transaction-payment-rpc = { workspace = true }
 sc-rpc-api = { workspace = true }
 sp-block-builder = { workspace = true }
 substrate-frame-rpc-system = { workspace = true }
-
-sc-consensus-pow = { workspace = true }
-sc-consensus-manual-seal = { workspace = true }
 sc-basic-authorship = { workspace = true }
 sc-cli = { workspace = true }
 sc-client-api = { workspace = true }
 sc-consensus = { workspace = true }
+sc-consensus-manual-seal = { workspace = true }
+sc-consensus-pow = { workspace = true }
 sc-executor = { workspace = true }
 sc-network = { workspace = true }
 sc-service = { workspace = true }
@@ -49,6 +46,5 @@ sp-runtime = { workspace = true }
 sp-timestamp = { workspace = true }
 sp-transaction-pool = { workspace = true }
 
-[[bin]]
-name = 'academy-pow'
- 
+[build-dependencies]
+substrate-build-script-utils = { workspace = true }

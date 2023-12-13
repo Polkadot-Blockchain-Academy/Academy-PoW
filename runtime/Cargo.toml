@@ -1,84 +1,83 @@
 [package]
-authors = ['Parity Technologies <admin@parity.io>', 'Joshy Orndorff']
-edition = '2021'
-homepage = 'https://substrate.dev'
-name = 'academy-pow-runtime'
-version = '3.0.0'
+authors = [ "Parity Technologies <admin@parity.io>", "Joshy Orndorff" ]
+edition = "2021"
+homepage = "https://substrate.dev"
+name = "academy-pow-runtime"
+version = "3.0.0"
 
 [dependencies]
+async-trait = { optional = true, workspace = true }
 parity-scale-codec = { workspace = true }
 scale-info = { workspace = true }
-serde = { workspace = true, optional = true }
-async-trait = { workspace = true, optional = true }
+serde = { optional = true, workspace = true }
 
 
-pallet-balances = { workspace = true }
-pallet-sudo = { workspace = true }
-frame-system = { workspace = true }
 frame-executive = { workspace = true }
 frame-support = { workspace = true }
+frame-system = { workspace = true }
+pallet-balances = { workspace = true }
+pallet-contracts = { workspace = true }
+pallet-contracts-primitives = { workspace = true }
+pallet-insecure-randomness-collective-flip = { workspace = true }
+pallet-sudo = { workspace = true }
+pallet-timestamp = { workspace = true }
+pallet-transaction-payment = { workspace = true }
 sp-api = { workspace = true }
 sp-block-builder = { workspace = true }
 sp-consensus-pow = { workspace = true }
 sp-core = { workspace = true }
 sp-inherents = { workspace = true }
 sp-io = { workspace = true }
+sp-keystore = { optional = true, workspace = true }
 sp-offchain = { workspace = true }
 sp-runtime = { workspace = true }
 sp-session = { workspace = true }
 sp-std = { workspace = true }
 sp-transaction-pool = { workspace = true }
 sp-version = { workspace = true }
-pallet-timestamp = { workspace = true }
-sp-keystore = { optional = true, workspace = true }
-pallet-contracts = { workspace = true }
-pallet-contracts-primitives = { workspace = true }
-pallet-transaction-payment = { workspace = true }
-pallet-insecure-randomness-collective-flip = { workspace = true }
 
-multi-pow = { path = "../multi-pow", default-features = false }
+multi-pow = { default-features = false, path = "../multi-pow" }
 
 # Used for the node's RPCs
-pallet-transaction-payment-rpc-runtime-api = { workspace = true }
 frame-system-rpc-runtime-api = { workspace = true }
+pallet-transaction-payment-rpc-runtime-api = { workspace = true }
+[build-dependencies]
+substrate-wasm-builder = { workspace = true }
 
 
 [dev-dependencies]
 hex-literal = { workspace = true }
 
-[build-dependencies]
-substrate-wasm-builder = { workspace = true }
-
 [features]
-default = ['std']
+default = [ "std" ]
 std = [
-    'pallet-balances/std',
-    'parity-scale-codec/std',
-    'frame-executive/std',
-    'frame-support/std',
-    'serde',
-    'sp-api/std',
-    'sp-block-builder/std',
-    'sp-consensus-pow/std',
-    'sp-core/std',
-    'sp-inherents/std',
-    'sp-io/std',
-    'sp-offchain/std',
-    'sp-runtime/std',
-    'sp-session/std',
-    'sp-std/std',
-    'sp-transaction-pool/std',
-    'sp-version/std',
-    'pallet-sudo/std',
-    'frame-system/std',
-    'pallet-timestamp/std',
-    'async-trait',
-    'sp-keystore',
-    'pallet-contracts/std',
-    "pallet-contracts-primitives/std",
-    "pallet-transaction-payment/std",
-    "pallet-transaction-payment-rpc-runtime-api/std",
-    "pallet-insecure-randomness-collective-flip/std",
-    "frame-system-rpc-runtime-api/std",
-    "multi-pow/std",
+	"pallet-balances/std",
+	"parity-scale-codec/std",
+	"frame-executive/std",
+	"frame-support/std",
+	"serde",
+	"sp-api/std",
+	"sp-block-builder/std",
+	"sp-consensus-pow/std",
+	"sp-core/std",
+	"sp-inherents/std",
+	"sp-io/std",
+	"sp-offchain/std",
+	"sp-runtime/std",
+	"sp-session/std",
+	"sp-std/std",
+	"sp-transaction-pool/std",
+	"sp-version/std",
+	"pallet-sudo/std",
+	"frame-system/std",
+	"pallet-timestamp/std",
+	"async-trait",
+	"sp-keystore",
+	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-transaction-payment/std",
+	"pallet-transaction-payment-rpc-runtime-api/std",
+	"pallet-insecure-randomness-collective-flip/std",
+	"frame-system-rpc-runtime-api/std",
+	"multi-pow/std",
 ]
