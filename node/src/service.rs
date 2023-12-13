@@ -202,6 +202,7 @@ pub fn new_full(
             import_queue,
             block_announce_validator_builder: None,
             warp_sync_params: None,
+            block_relay: None,
         })?;
 
     let role = config.role.clone();
