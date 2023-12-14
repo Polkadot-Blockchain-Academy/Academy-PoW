@@ -6,7 +6,7 @@ name = "multi-pow"
 version = "3.0.0"
 
 [dependencies]
-md5 = "0.7.0"
+md5 = { workspace = true }
 parity-scale-codec = { workspace = true }
 scale-info = { workspace = true }
 sha3 = { workspace = true, optional = true }
