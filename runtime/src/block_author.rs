@@ -1,10 +1,15 @@
-//! This pallet allows block authors to self-identify by providing an account id
+//! This pallet allows block authors to self-identify by providing an sr25519 public key
 //!
-//! The included trait allows other pallets to fetch the author's account.
+//! The included trait allows other pallets to fetch the author's account as long as the
+//! runtime's AccountId type can be created from an sr25519 public key.
 
 pub use pallet::*;
-use parity_scale_codec::{Decode, Encode};
-use sp_inherents::{InherentData, InherentIdentifier, IsFatalError};
+use parity_scale_codec::{Encode, Decode};
+
+use sp_core::sr25519;
+use sp_inherents::{InherentIdentifier, IsFatalError};
+#[cfg(feature = "std")]
+use sp_inherents::InherentData;
 use sp_runtime::RuntimeString;
 use sp_std::vec::Vec;
 
@@ -32,22 +37,25 @@ pub mod pallet {
 
     /// Author of current block.
     #[pallet::storage]
-    pub type Author<T: Config> = StorageValue<_, T::AccountId, OptionQuery>;
+    pub type Author<T: Config> = StorageValue<_, sr25519::Public, OptionQuery>;
 
     #[pallet::call]
-    impl<T: Config> Pallet<T> {
+    impl<T: Config> Pallet<T>
+    where
+        <T as frame_system::Config>::AccountId: From<sp_core::sr25519::Public>,
+    {
         /// Inherent to set the author of a block
         #[pallet::weight(1_000_000)]
-        pub fn set_author(origin: OriginFor<T>, author: T::AccountId) -> DispatchResult {
+        pub fn set_author(origin: OriginFor<T>, author: sr25519::Public) -> DispatchResult {
             ensure_none(origin)?;
             ensure!(Author::<T>::get().is_none(), Error::<T>::AuthorAlreadySet);
 
             // Store the author in case other pallets want to fetch it and to let
             // offchain tools inspect it
-            Author::<T>::put(&author);
+            Author::<T>::put(author);
 
             // Call the hook
-            T::on_author_set(author);
+            T::on_author_set(author.into());
 
             Ok(())
         }
@@ -55,7 +63,7 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_initialize(_n: T::BlockNumber) -> Weight {
+        fn on_initialize(_n: BlockNumberFor<T>) -> Weight {
             // Reset the author to None at the beginning of the block
             Author::<T>::kill();
 
@@ -66,7 +74,10 @@ pub mod pallet {
     }
 
     #[pallet::inherent]
-    impl<T: Config> ProvideInherent for Pallet<T> {
+    impl<T: Config> ProvideInherent for Pallet<T>
+    where
+        <T as frame_system::Config>::AccountId: From<sp_core::sr25519::Public>,
+    {
         type Call = Call<T>;
         type Error = InherentError;
         const INHERENT_IDENTIFIER: InherentIdentifier = INHERENT_IDENTIFIER;
@@ -86,7 +97,7 @@ pub mod pallet {
                 .expect("Gets and decodes authorship inherent data")?;
 
             // Decode the Vec<u8> into an actual author
-            let author = T::AccountId::decode(&mut &author_raw[..])
+            let author = sr25519::Public::decode(&mut &author_raw[..])
                 .expect("Decodes author raw inherent data");
 
             Some(Call::set_author { author })
@@ -99,29 +110,28 @@ pub mod pallet {
 }
 
 /// A trait to find the author (miner) of the block.
-pub trait BlockAuthor<AccountId> {
+pub trait BlockAuthor<AccountId: From<sr25519::Public>> {
     fn block_author() -> Option<AccountId>;
 }
 
-impl<AccountId> BlockAuthor<AccountId> for () {
+impl<AccountId: From<sr25519::Public>> BlockAuthor<AccountId> for () {
     fn block_author() -> Option<AccountId> {
         None
     }
 }
 
-impl<T: Config, U> BlockAuthor<U> for Pallet<T>
+impl<T: Config> BlockAuthor<T::AccountId> for Pallet<T>
 where
-    T::AccountId: Into<U>,
+    <T as frame_system::Config>::AccountId: From<sp_core::sr25519::Public>,
 {
-    fn block_author() -> Option<U> {
-        Author::<T>::get().map(|x| x.into())
+    fn block_author() -> Option<T::AccountId> {
+        Author::<T>::get().map(|a| a.into())
     }
 }
 
 pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"author__";
 
-#[derive(Encode)]
-#[cfg_attr(feature = "std", derive(Debug, Decode))]
+#[derive(Encode, Decode, Debug)]
 pub enum InherentError {
     Other(RuntimeString),
 }
