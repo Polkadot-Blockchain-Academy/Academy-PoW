@@ -546,7 +546,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 			gas_limit: Option<Weight>,
 			storage_deposit_limit: Option<Balance>,
 			input_data: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractExecResult<Balance, EventRecord> {
+		) -> pallet_contracts::ContractExecResult<Balance, EventRecord> {
 			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
 			Contracts::bare_call(
 				origin,
@@ -566,10 +566,10 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 			value: Balance,
 			gas_limit: Option<Weight>,
 			storage_deposit_limit: Option<Balance>,
-			code: pallet_contracts_primitives::Code<Hash>,
+			code: pallet_contracts::Code<Hash>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance, EventRecord>
+		) -> pallet_contracts::ContractInstantiateResult<AccountId, Balance, EventRecord>
 		{
 			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
 			Contracts::bare_instantiate(
@@ -590,7 +590,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 			code: Vec<u8>,
 			storage_deposit_limit: Option<Balance>,
 			determinism: pallet_contracts::Determinism,
-		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+		) -> pallet_contracts::CodeUploadResult<Hash, Balance>
 		{
 			Contracts::bare_upload_code(
 				origin,
@@ -603,7 +603,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 		fn get_storage(
 			address: AccountId,
 			key: Vec<u8>,
-		) -> pallet_contracts_primitives::GetStorageResult {
+		) -> pallet_contracts::GetStorageResult {
 			Contracts::get_storage(
 				address,
 				key

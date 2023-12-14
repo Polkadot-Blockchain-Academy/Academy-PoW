@@ -25,7 +25,7 @@ use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
-use sp_api::{HeaderT, ProvideRuntimeApi};
+use sp_api::{ProvideRuntimeApi};
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
 #[cfg(feature = "std")]
@@ -35,7 +35,7 @@ use sp_core::{H256, U256};
 #[cfg(feature = "std")]
 use sp_runtime::generic::BlockId;
 #[cfg(feature = "std")]
-use sp_runtime::traits::Block as BlockT;
+use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
 
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash

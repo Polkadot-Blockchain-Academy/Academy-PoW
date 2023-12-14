@@ -17,7 +17,6 @@ frame-support = { workspace = true }
 frame-system = { workspace = true }
 pallet-balances = { workspace = true }
 pallet-contracts = { workspace = true }
-pallet-contracts-primitives = { workspace = true }
 pallet-insecure-randomness-collective-flip = { workspace = true }
 pallet-sudo = { workspace = true }
 pallet-timestamp = { workspace = true }
@@ -74,7 +73,6 @@ std = [
 	"async-trait",
 	"sp-keystore",
 	"pallet-contracts/std",
-	"pallet-contracts-primitives/std",
 	"pallet-transaction-payment/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-insecure-randomness-collective-flip/std",
