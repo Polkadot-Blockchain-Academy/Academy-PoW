@@ -6,8 +6,9 @@ import { ForceGraph2D, ForceGraph3D } from "react-force-graph";
 
 const MAX_CHAIN_COUNT = 256;
 
-// // Construct
-const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+// use polkadot main
+// comment out for local
+// const wsProvider = new WsProvider("wss://rpc.polkadot.io");
 
 function OtherGraph({ data }) {
     const fgRef = useRef();
@@ -35,7 +36,11 @@ export default function Home() {
     const [running, setRunning] = useState(false);
 
     async function main() {
-        const api = await ApiPromise.create({ provider: wsProvider });
+        // for polkadot main
+        // const api = await ApiPromise.create({ provider: wsProvider });
+
+        // for local
+        const api = await ApiPromise.create();
 
         // We only display a couple, then unsubscribe
         let count = 0;
