@@ -44,8 +44,6 @@ use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
     Copy,
     PartialEq,
     Eq,
-    PartialOrd,
-    Ord,
     Encode,
     Decode,
     Debug,
@@ -58,10 +56,14 @@ pub struct Threshold {
     pub keccak: U256,
 }
 
-// This trait is not fully baked in the Substrate PoW code, so I will not use it for now.
+// This trait does not seem to be fully baked in the Substrate PoW code
+// But we do need some kind of sinsible impl here so the node can import blocks.
+// so I will not use it for now.
 impl TotalDifficulty for Threshold {
-    fn increment(&mut self, _: Threshold) {
-        // I'm pretty sure we don't do anything interesting with this... Let's see.
+    fn increment(&mut self, other: Threshold) {
+        self.md5 += other.md5;
+        self.sha3 += other.sha3;
+        self.keccak += other.keccak;
     }
 }
 
