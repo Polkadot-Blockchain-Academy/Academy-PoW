@@ -5,8 +5,9 @@ import { useState } from "react";
 
 const MAX_CHAIN_COUNT = 256;
 
-// // Construct
-const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+// use polkadot main
+// comment out for local
+// const wsProvider = new WsProvider("wss://rpc.polkadot.io");
 
 export default function Home() {
     const [latestBlock, setLatestBlock] = useState();
@@ -14,7 +15,11 @@ export default function Home() {
     const [running, setRunning] = useState(false);
 
     async function main() {
-        const api = await ApiPromise.create({ provider: wsProvider });
+        // Use main polkadot
+        // const api = await ApiPromise.create({ provider: wsProvider });
+
+        // use local
+        const api = await ApiPromise.create();
 
         // We only display a couple, then unsubscribe
         let count = 0;
