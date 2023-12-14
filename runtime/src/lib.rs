@@ -223,11 +223,6 @@ impl pallet_balances::Config for Runtime {
     type RuntimeFreezeReason = RuntimeFreezeReason;
 }
 
-// impl pallet_sudo::Config for Runtime {
-// 	type Event = Event;
-// 	type Call = Call;
-// }
-
 parameter_types! {
     pub const TargetBlockTime: u128 = 5_000;
     pub const DampFactor: u128 = 3;
@@ -351,7 +346,6 @@ construct_runtime!(
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
         Balances: pallet_balances,
-        // Sudo: pallet_sudo
         TransactionPayment: pallet_transaction_payment,
         DifficultyAdjustment: difficulty,
         BlockAuthor: block_author,
