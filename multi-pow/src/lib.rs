@@ -217,9 +217,7 @@ where
 
         // This is where we handle forks on the verification side.
         // We will still need to handle it in the mining algorithm somewhere.
-        // Option 1) have the "normal" mining algo try each hash in order for each nonce
-        //           and disable it there.
-        // Option 2) make the miner configure what algo they mine manually with their cli.
+        // Currently we make the miner configure what algo they mine manually with their cli.
         let parent_number = match parent_id {
             BlockId::Hash(h) => *self
                 .client
