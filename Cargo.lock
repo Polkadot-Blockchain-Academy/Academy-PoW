@@ -6953,6 +6953,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha3pow"
+version = "3.0.0"
+dependencies = [
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "sc-client-api",
+ "sc-consensus-pow",
+ "scale-info",
+ "sha3",
+ "sp-api",
+ "sp-consensus-pow",
+ "sp-core",
+ "sp-runtime",
+]
+
+[[package]]
 name = "sharded-slab"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"

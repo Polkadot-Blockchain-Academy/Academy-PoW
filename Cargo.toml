@@ -15,6 +15,7 @@ members = [
 	"node",
 	"runtime",
 	"multi-pow",
+	"sha3pow",
 ]
 resolver = "2"
 

@@ -1,0 +1,26 @@
+[package]
+authors = ['Anonymous']
+edition = '2021'
+name = 'sha3pow'
+version = '3.0.0'
+
+[dependencies]
+rand = { workspace = true }
+parity-scale-codec = { workspace = true }
+scale-info = { workspace = true }
+sha3 = { workspace = true, optional = true }
+
+sc-client-api = { optional = true, workspace = true }
+sc-consensus-pow = { optional = true, workspace = true }
+sp-api = { workspace = true }
+sp-consensus-pow = { workspace = true }
+sp-core = { workspace = true }
+sp-runtime = { workspace = true }
+
+[features]
+default = [ "std" ]
+std = [
+	"sha3",
+	"sc-consensus-pow",
+	"sc-client-api",
+]
