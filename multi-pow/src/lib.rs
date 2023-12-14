@@ -218,7 +218,7 @@ where
         // This is where we handle forks on the verification side.
         // We will still need to handle it in the mining algorithm somewhere.
         // Currently we make the miner configure what algo they mine manually with their cli.
-        let parent_number = match parent_id {
+        let _parent_number = match parent_id {
             BlockId::Hash(h) => *self
                 .client
                 .header(*h)
@@ -228,18 +228,19 @@ where
             BlockId::Number(n) => *n,
         };
 
+        // When we are ready to do a fork, this is where to do it.
         // Declare a threshold height at which to perform a fork
-        let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
+        // let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
 
         // To begin with we only allow md5 hashes for our pow
         // After the fork height this check is skipped so all the hashes become valid
-        if parent_number > fork_height {
-            match seal.work.algo {
-                SupportedHashes::Md5 => {return Ok(false)},
-                SupportedHashes::Sha3 => (),
-                SupportedHashes::Keccak => (),
-            }
-        }
+        // if parent_number > fork_height {
+        //     match seal.work.algo {
+        //         SupportedHashes::Md5 => {return Ok(false)},
+        //         SupportedHashes::Sha3 => (),
+        //         SupportedHashes::Keccak => (),
+        //     }
+        // }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
         if !multi_hash_meets_difficulty(&seal.work, difficulty) {
