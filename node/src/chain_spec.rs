@@ -71,28 +71,6 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
     .build())
 }
 
-// pub fn custom_config(
-//     chain_name: &str,
-//     chain_id: &str,
-//     endowed_accounts: Vec<AccountId>,
-//     initial_difficulty: u32,
-// ) -> Result<ChainSpec, String> {
-//     let wasm_binary = WASM_BINARY.ok_or_else(|| "runtime WASM binary not available".to_string())?;
-
-//     Ok(ChainSpec::from_genesis(
-//         chain_name,
-//         chain_id,
-//         sc_service::ChainType::Live,
-//         move || genesis(wasm_binary, endowed_accounts.clone(), initial_difficulty),
-//         vec![],
-//         None,
-//         None,
-//         None,
-//         None,
-//         None,
-//     ))
-// }
-
 fn genesis(
     endowed_accounts: Vec<AccountId>,
     initial_difficulty: u32,
@@ -102,10 +80,9 @@ fn genesis(
 			// Configure endowed accounts with initial balance of 1 << 60.
 			"balances": endowed_accounts.iter().cloned().map(|k| (k, 1u64 << 60)).collect::<Vec<_>>(),
 		},
-        "difficulty_adjustment": {
-            "initial_difficulty": initial_difficulty,
-			// ..Default::default()
-        },
-        // transaction_payment: Default::default(),
+		//TODO Figure out how to convert a u32 into a proper json value here.
+        // "difficultyAdjustment": {
+        //     "initialDifficulty": serde_json::json!(initial_difficulty),
+        // },
     })
 }

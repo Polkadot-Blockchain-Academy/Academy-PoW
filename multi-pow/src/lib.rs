@@ -61,7 +61,7 @@ pub struct Threshold {
 // This trait is not fully baked in the Substrate PoW code, so I will not use it for now.
 impl TotalDifficulty for Threshold {
     fn increment(&mut self, _: Threshold) {
-        unimplemented!()
+        // I'm pretty sure we don't do anything interesting with this... Let's see.
     }
 }
 

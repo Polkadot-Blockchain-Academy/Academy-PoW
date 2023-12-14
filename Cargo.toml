@@ -70,6 +70,7 @@ sp-blockchain = { branch = "release-polkadot-v1.5.0", git = "https://github.com/
 sp-consensus = { branch = "release-polkadot-v1.5.0", git = "https://github.com/paritytech/polkadot-sdk" }
 sp-consensus-pow = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-core = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-genesis-builder = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-inherents = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-io = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-keystore = { branch = "release-polkadot-v1.5.0", git = "https://github.com/paritytech/polkadot-sdk" }

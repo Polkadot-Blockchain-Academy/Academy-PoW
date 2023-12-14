@@ -79,6 +79,7 @@ dependencies = [
  "sp-block-builder",
  "sp-consensus-pow",
  "sp-core",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-keystore",

@@ -24,6 +24,7 @@ sp-api = { workspace = true }
 sp-block-builder = { workspace = true }
 sp-consensus-pow = { workspace = true }
 sp-core = { workspace = true }
+sp-genesis-builder = { workspace = true }
 sp-inherents = { workspace = true }
 sp-io = { workspace = true }
 sp-keystore = { optional = true, workspace = true }
@@ -58,6 +59,7 @@ std = [
 	"sp-block-builder/std",
 	"sp-consensus-pow/std",
 	"sp-core/std",
+	"sp-genesis-builder/std",
 	"sp-inherents/std",
 	"sp-io/std",
 	"sp-offchain/std",
