@@ -114,8 +114,8 @@ pub fn multi_hash_meets_difficulty(hash: &MultiHash, difficulty: Threshold) -> b
 /// `RawSeal` type.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct Seal {
-    pub difficulty: Threshold,
     pub work: MultiHash,
+    pub difficulty: Threshold,
     pub nonce: U256,
 }
 
