@@ -58,11 +58,29 @@ export default function Home() {
             setLatestBlock(header.number.toHuman());
 
             setData(({ nodes, links }) => {
-                const seals = header.digest.logs[0].toHuman().Seal
 
-                // TODO: pull the correct group from the seal
-                const group = seals[1].slice(196,204)
-                console.log(group, seals[1])
+                let group = "genesis";
+
+                // The genesis block (number 0) does not have the normal PoW seal on it.
+                // This avoids a crash when you re-start the node. There is likely a more
+                // idiomatic way to do this is js.
+                if (header.number != 0) {
+                    const seal_data = header.digest.logs[0].toJSON().seal[1];
+                    // Detect the PoW algorithm from the first byte of the seal.
+                    // This corresponds to `pub struct SupportedHashes` in multi-pow/src/lib.rs
+                    switch (seal_data.slice(0, 4)) {
+                        case "0x00":
+                            group = "md5";
+                            break;
+                        case "0x01":
+                            group = "sha3";
+                            break;
+                        case "0x02":
+                            group = "keccak";
+                    }
+                    
+                    console.log(`group: ${group}`);
+                }
 
                 const newNodes = [...nodes, { id: header.hash.toString(), group: group }];
 
