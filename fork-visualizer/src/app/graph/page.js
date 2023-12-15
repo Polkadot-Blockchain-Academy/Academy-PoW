@@ -10,6 +10,8 @@ const MAX_CHAIN_COUNT = 256;
 // comment out for local
 // const wsProvider = new WsProvider("wss://rpc.polkadot.io");
 
+const wsProvider = new WsProvider("ws://localhost:9944");
+
 function OtherGraph({ data }) {
     const fgRef = useRef();
 
@@ -36,11 +38,13 @@ export default function Home() {
     const [running, setRunning] = useState(false);
 
     async function main() {
+        console.log("Starting...")
+
         // for polkadot main
-        // const api = await ApiPromise.create({ provider: wsProvider });
+        const api = await ApiPromise.create({ provider: wsProvider });
 
         // for local
-        const api = await ApiPromise.create();
+        // const api = await ApiPromise.create();
 
         // We only display a couple, then unsubscribe
         let count = 0;
@@ -54,7 +58,13 @@ export default function Home() {
             setLatestBlock(header.number.toHuman());
 
             setData(({ nodes, links }) => {
-                const newNodes = [...nodes, { id: header.hash.toString() }];
+                const seals = header.digest.logs[0].toHuman().Seal
+
+                // TODO: pull the correct group from the seal
+                const group = seals[1].slice(196,204)
+                console.log(group, seals[1])
+
+                const newNodes = [...nodes, { id: header.hash.toString(), group: group }];
 
                 let newLinks = [...links];
                 if (newNodes.filter((h) => h.id === header.parentHash.toString()).length > 0) {
@@ -78,26 +88,6 @@ export default function Home() {
                 setRunning(false);
             }
         });
-
-        // api.query.system.events((events) => {
-        //   console.log(`\nReceived ${events.length} events:`);
-
-        //   // Loop through the Vec<EventRecord>
-        //   events.forEach((record) => {
-        //     // Extract the phase, event and the event types
-        //     const { event, phase } = record;
-        //     const types = event.typeDef;
-
-        //     // Show what we are busy with
-        //     console.log(`\t${event.section}:${event.method}:: (phase=${phase.toString()})`);
-        //     console.log(`\t\t${event.meta.documentation}`);
-
-        //     // Loop through each of the parameters, displaying the type and data
-        //     event.data.forEach((data, index) => {
-        //       console.log(`\t\t\t${types[index].type}: ${data.toHuman()}`);
-        //     });
-        //   });
-        // });
     }
 
     return (
@@ -109,9 +99,11 @@ export default function Home() {
                 </div>
             )}
 
-            <div className="flex items-stretch min-h-screen mx-6">
-                <OtherGraph data={data} />
-            </div>
+            {data && (
+                <div className="flex items-stretch min-h-screen mx-6">
+                    <OtherGraph data={data} />
+                </div>
+            )}
         </>
     );
 }

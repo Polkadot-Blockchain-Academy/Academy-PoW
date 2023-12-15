@@ -8,6 +8,7 @@ const MAX_CHAIN_COUNT = 256;
 // use polkadot main
 // comment out for local
 // const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+const wsProvider = new WsProvider("ws://localhost:9944");
 
 export default function Home() {
     const [latestBlock, setLatestBlock] = useState();
@@ -16,10 +17,8 @@ export default function Home() {
 
     async function main() {
         // Use main polkadot
-        // const api = await ApiPromise.create({ provider: wsProvider });
+        const api = await ApiPromise.create({ provider: wsProvider });
 
-        // use local
-        const api = await ApiPromise.create();
 
         // We only display a couple, then unsubscribe
         let count = 0;
@@ -41,6 +40,9 @@ export default function Home() {
                         number: header.number.toHuman(),
                         stateRoot: header.stateRoot.toHuman(),
                         extrinsicsRoot: header.extrinsicsRoot.toHuman(),
+                        digestLogs: header.digest.logs.map((d) => {
+                            return d.toHuman().Seal
+                        })
                     },
                 ];
 
@@ -81,14 +83,13 @@ export default function Home() {
                     <span className="col-span-3 text-sm">
                         extrinsics root: {node.extrinsicsRoot}
                     </span>
-                    <div className="h-10 col-span-3 overflow-y-scroll">
-                        {node.mappedValidators &&
-                            node.mappedValidators.map((v, j) => {
+                    <div className="h-12 col-span-3 overflow-y-scroll">
+                        {node.digestLogs &&
+                            node.digestLogs.map((d, j) => {
                                 return (
-                                    <div key={j}>
-                                        <span>address: {v.address}</span>
-                                        <span>balance: {v.balance}</span>
-                                        <span>nonce: {v.nonce}</span>
+                                    <div key={`${index}-${j}`}>
+                                        <span>seal1: {d[0]}</span>
+                                        <span>seal2: {d[1]}</span>
                                     </div>
                                 );
                             })}
@@ -107,9 +108,11 @@ export default function Home() {
                 </div>
             )}
 
-            <div className="grid items-stretch min-h-screen grid-cols-1 mx-6 overflow-y-scroll">
-                {nodeData}
-            </div>
+            { nodeData && (
+                <div className="grid items-stretch min-h-screen grid-cols-1 mx-6 overflow-y-scroll">
+                    {nodeData}
+                </div>
+            )}
         </>
     );
 }
