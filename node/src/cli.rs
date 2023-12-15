@@ -86,7 +86,7 @@ pub struct BuildSpecCmd {
 
 fn parse_algo(s: &str) -> Result<SupportedHashes, String> {
     Ok(match s {
-        "md" | "Md" | "md5" | "Md5" => panic!("md5 not supported"),
+        "md" | "Md" | "md5" | "Md5" => SupportedHashes::Md5,
         "sha" | "sha3" | "Sha" | "Sha3" => SupportedHashes::Sha3,
         "keccak" | "Keccak" => SupportedHashes::Keccak,
         s => panic!(

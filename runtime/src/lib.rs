@@ -8,6 +8,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use frame_support::genesis_builder_helper::{build_config, create_default_config};
 pub use frame_support::{
     construct_runtime, parameter_types,
     traits::{
@@ -223,11 +224,6 @@ impl pallet_balances::Config for Runtime {
     type RuntimeFreezeReason = RuntimeFreezeReason;
 }
 
-// impl pallet_sudo::Config for Runtime {
-// 	type Event = Event;
-// 	type Call = Call;
-// }
-
 parameter_types! {
     pub const TargetBlockTime: u128 = 5_000;
     pub const DampFactor: u128 = 3;
@@ -342,6 +338,7 @@ impl pallet_contracts::Config for Runtime {
 	type Environment = ();
 	type Debug = ();
 	type Migrations = ();
+    type Xcm = ();
 }
 
 construct_runtime!(
@@ -350,7 +347,6 @@ construct_runtime!(
         RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
         Timestamp: pallet_timestamp,
         Balances: pallet_balances,
-        // Sudo: pallet_sudo
         TransactionPayment: pallet_transaction_payment,
         DifficultyAdjustment: difficulty,
         BlockAuthor: block_author,
@@ -545,7 +541,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 			gas_limit: Option<Weight>,
 			storage_deposit_limit: Option<Balance>,
 			input_data: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractExecResult<Balance, EventRecord> {
+		) -> pallet_contracts::ContractExecResult<Balance, EventRecord> {
 			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
 			Contracts::bare_call(
 				origin,
@@ -565,10 +561,10 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 			value: Balance,
 			gas_limit: Option<Weight>,
 			storage_deposit_limit: Option<Balance>,
-			code: pallet_contracts_primitives::Code<Hash>,
+			code: pallet_contracts::Code<Hash>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance, EventRecord>
+		) -> pallet_contracts::ContractInstantiateResult<AccountId, Balance, EventRecord>
 		{
 			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
 			Contracts::bare_instantiate(
@@ -589,7 +585,7 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 			code: Vec<u8>,
 			storage_deposit_limit: Option<Balance>,
 			determinism: pallet_contracts::Determinism,
-		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+		) -> pallet_contracts::CodeUploadResult<Hash, Balance>
 		{
 			Contracts::bare_upload_code(
 				origin,
@@ -602,11 +598,21 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
 		fn get_storage(
 			address: AccountId,
 			key: Vec<u8>,
-		) -> pallet_contracts_primitives::GetStorageResult {
+		) -> pallet_contracts::GetStorageResult {
 			Contracts::get_storage(
 				address,
 				key
 			)
+		}
+	}
+
+    impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
+		fn create_default_config() -> Vec<u8> {
+			create_default_config::<RuntimeGenesisConfig>()
+		}
+
+		fn build_config(config: Vec<u8>) -> sp_genesis_builder::Result {
+			build_config::<RuntimeGenesisConfig>(config)
 		}
 	}
 }

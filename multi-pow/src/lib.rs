@@ -25,7 +25,7 @@ use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
-use sp_api::{HeaderT, ProvideRuntimeApi};
+use sp_api::{ProvideRuntimeApi};
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
 #[cfg(feature = "std")]
@@ -35,7 +35,7 @@ use sp_core::{H256, U256};
 #[cfg(feature = "std")]
 use sp_runtime::generic::BlockId;
 #[cfg(feature = "std")]
-use sp_runtime::traits::Block as BlockT;
+use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
 
 /// A struct that represents a difficulty threshold.
 /// Unlike a normal PoW algorithm this struct has a separate threshold for each hash
@@ -58,10 +58,14 @@ pub struct Threshold {
     pub keccak: U256,
 }
 
-// This trait is not fully baked in the Substrate PoW code, so I will not use it for now.
+// This trait does not seem to be fully baked in the Substrate PoW code
+// But we do need some kind of sinsible impl here so the node can import blocks.
+// so I will not use it for now.
 impl TotalDifficulty for Threshold {
-    fn increment(&mut self, _: Threshold) {
-        unimplemented!()
+    fn increment(&mut self, other: Threshold) {
+        self.md5 += other.md5;
+        self.sha3 += other.sha3;
+        self.keccak += other.keccak;
     }
 }
 
@@ -110,8 +114,8 @@ pub fn multi_hash_meets_difficulty(hash: &MultiHash, difficulty: Threshold) -> b
 /// `RawSeal` type.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, Debug)]
 pub struct Seal {
-    pub difficulty: Threshold,
     pub work: MultiHash,
+    pub difficulty: Threshold,
     pub nonce: U256,
 }
 
@@ -217,10 +221,8 @@ where
 
         // This is where we handle forks on the verification side.
         // We will still need to handle it in the mining algorithm somewhere.
-        // Option 1) have the "normal" mining algo try each hash in order for each nonce
-        //           and disable it there.
-        // Option 2) make the miner configure what algo they mine manually with their cli.
-        let parent_number = match parent_id {
+        // Currently we make the miner configure what algo they mine manually with their cli.
+        let _parent_number = match parent_id {
             BlockId::Hash(h) => *self
                 .client
                 .header(*h)
@@ -230,18 +232,19 @@ where
             BlockId::Number(n) => *n,
         };
 
+        // When we are ready to do a fork, this is where to do it.
         // Declare a threshold height at which to perform a fork
-        let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
+        // let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
 
         // To begin with we only allow md5 hashes for our pow
         // After the fork height this check is skipped so all the hashes become valid
-        if parent_number > fork_height {
-            match seal.work.algo {
-                SupportedHashes::Md5 => {return Ok(false)},
-                SupportedHashes::Sha3 => (),
-                SupportedHashes::Keccak => (),
-            }
-        }
+        // if parent_number > fork_height {
+        //     match seal.work.algo {
+        //         SupportedHashes::Md5 => {return Ok(false)},
+        //         SupportedHashes::Sha3 => (),
+        //         SupportedHashes::Keccak => (),
+        //     }
+        // }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
         if !multi_hash_meets_difficulty(&seal.work, difficulty) {
