@@ -124,11 +124,11 @@ export default function Home({ ws_addr }) {
     return (
         <>
             <div className="bg-blue-800">
-                <Stuff ws_addr={"ws://127.0.0.1:9944"} />
+                <Stuff ws_addr={"ws://100.109.138.126:8844"} />
             </div>
 
             <div className="bg-red-800">
-                <Stuff ws_addr={"ws://127.0.0.1:8844"} />
+                <Stuff ws_addr={"ws://100.109.138.126:7744"} />
             </div>
         </>
     )

@@ -42,8 +42,8 @@ services:
   #   container_name: third_node
   #   restart: always
   #   ports:
-  #     - "8844:9944"
-  #     - "31333:30333"
+  #     - "7744:9944"
+  #     - "32333:30333"
   #   networks:
   #     - nodes
   #   command: [
