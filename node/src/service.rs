@@ -2,7 +2,7 @@
 
 use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use core::clone::Clone;
-use multi_pow::{MultiPow, SupportedHashes};
+use multi_pow::{ForkingConfig, MultiPow, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
 use sc_executor::NativeElseWasmExecutor;
@@ -26,8 +26,6 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
     }
 }
 
-//TODO We'll need the mining worker. Can probably copy from recipes
-
 type FullClient =
     sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
 type FullBackend = sc_service::TFullBackend<Block>;
@@ -39,9 +37,9 @@ type BoxBlockImport = sc_consensus::BoxBlockImport<Block>;
 /// Returns most parts of a service. Not enough to run a full chain,
 /// But enough to perform chain operations like purge-chain
 #[allow(clippy::type_complexity)]
-pub fn new_partial<BIQ>(
+pub fn new_partial(
     config: &Configuration,
-    build_import_queue: BIQ,
+    fork_config: ForkingConfig,
 ) -> Result<
     PartialComponents<
         FullClient,
@@ -52,15 +50,7 @@ pub fn new_partial<BIQ>(
         (BoxBlockImport, Option<Telemetry>),
     >,
     ServiceError,
->
-where
-    BIQ: FnOnce(
-        Arc<FullClient>,
-        &Configuration,
-        &FullSelectChain,
-        &TaskManager,
-    ) -> Result<(BasicImportQueue, BoxBlockImport), ServiceError>,
-{
+> {
     let telemetry = config
         .telemetry_endpoints
         .clone()
@@ -99,8 +89,32 @@ where
         client.clone(),
     );
 
-    let (import_queue, block_import) =
-        build_import_queue(client.clone(), config, &select_chain, &task_manager)?;
+    let block_import = sc_consensus_pow::PowBlockImport::new(
+        client.clone(),
+        client.clone(),
+        MultiPow::new(client.clone(), fork_config),
+        0, // check inherents starting at block 0
+        select_chain.clone(),
+        move |_, ()| async move {
+            let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+            // We don't need the current mining key to check inherents, so we just use a default.
+            // TODO, I don't think we need to do any checking here at all, right?
+            // So can I just remove the author entirely?
+            let author =
+                academy_pow_runtime::block_author::InherentDataProvider(Default::default());
+
+            Ok((timestamp, author))
+        },
+    );
+
+    let import_queue = sc_consensus_pow::import_queue(
+        Box::new(block_import.clone()),
+        None,
+        MultiPow::new(client.clone(), fork_config),
+        &task_manager.spawn_essential_handle(),
+        config.prometheus_registry(),
+    )?;
 
     Ok(PartialComponents {
         client,
@@ -110,75 +124,18 @@ where
         keystore_container,
         select_chain,
         transaction_pool,
-        other: (block_import, telemetry),
+        other: (Box::new(block_import), telemetry),
     })
-}
-
-/// Build the import queue for the manual seal service.
-pub fn build_manual_seal_import_queue(
-    client: Arc<FullClient>,
-    config: &Configuration,
-    _select_chain: &FullSelectChain,
-    task_manager: &TaskManager,
-) -> Result<(BasicImportQueue, BoxBlockImport), ServiceError> {
-    Ok((
-        sc_consensus_manual_seal::import_queue(
-            Box::new(client.clone()),
-            &task_manager.spawn_essential_handle(),
-            config.prometheus_registry(),
-        ),
-        Box::new(client),
-    ))
-}
-
-/// Build the import queue for the pow service
-pub fn build_pow_import_queue(
-    client: Arc<FullClient>,
-    config: &Configuration,
-    select_chain: &FullSelectChain,
-    task_manager: &TaskManager,
-) -> Result<(BasicImportQueue, BoxBlockImport), ServiceError> {
-    let pow_block_import = sc_consensus_pow::PowBlockImport::new(
-        client.clone(),
-        client.clone(),
-        MultiPow::new(client.clone()),
-        0, // check inherents starting at block 0
-        select_chain.clone(),
-        move |_, ()| async move {
-            let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-
-            // We don't need the current mining key to check inherents, so we just use a default.
-            let author =
-                academy_pow_runtime::block_author::InherentDataProvider(Default::default());
-
-            Ok((timestamp, author))
-        },
-    );
-
-    let import_queue = sc_consensus_pow::import_queue(
-        Box::new(pow_block_import.clone()),
-        None,
-        MultiPow::new(client),
-        &task_manager.spawn_essential_handle(),
-        config.prometheus_registry(),
-    )?;
-
-    Ok((import_queue, Box::new(pow_block_import)))
 }
 
 /// Builds a new service for a full client.
 pub fn new_full(
     config: Configuration,
+    fork_config: ForkingConfig,
     sr25519_public_key: sr25519::Public,
     instant_seal: bool,
     mining_algo: SupportedHashes,
 ) -> Result<TaskManager, ServiceError> {
-    let build_import_queue = if instant_seal {
-        build_manual_seal_import_queue
-    } else {
-        build_pow_import_queue
-    };
-
     let sc_service::PartialComponents {
         client,
         backend,
@@ -188,7 +145,7 @@ pub fn new_full(
         select_chain,
         transaction_pool,
         other: (pow_block_import, mut telemetry),
-    } = new_partial(&config, build_import_queue)?;
+    } = new_partial(&config, fork_config)?;
 
     let net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
@@ -272,7 +229,7 @@ pub fn new_full(
                 Box::new(pow_block_import),
                 client.clone(),
                 select_chain,
-                MultiPow::new(client),
+                MultiPow::new(client, fork_config),
                 proposer,
                 sync_service.clone(),
                 sync_service,

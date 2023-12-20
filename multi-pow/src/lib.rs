@@ -16,6 +16,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use core::str::FromStr;
 #[cfg(feature = "std")]
 use std::sync::Arc;
 
@@ -25,7 +26,7 @@ use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
-use sp_api::{ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
 #[cfg(feature = "std")]
@@ -163,12 +164,16 @@ impl Compute {
 /// Needs a reference to the client so it can grab the difficulty from the runtime.
 pub struct MultiPow<C> {
     client: Arc<C>,
+    fork_config: ForkingConfig,
 }
 
 #[cfg(feature = "std")]
 impl<C> MultiPow<C> {
-    pub fn new(client: Arc<C>) -> Self {
-        Self { client }
+    pub fn new(client: Arc<C>, fork_config: ForkingConfig) -> Self {
+        Self {
+            client,
+            fork_config,
+        }
     }
 }
 
@@ -176,7 +181,7 @@ impl<C> MultiPow<C> {
 #[cfg(feature = "std")]
 impl<C> Clone for MultiPow<C> {
     fn clone(&self) -> Self {
-        Self::new(self.client.clone())
+        Self::new(self.client.clone(), self.fork_config)
     }
 }
 
@@ -274,4 +279,51 @@ where
 
     //     Ok(seal.work)
     // }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+///
+pub struct ForkHeights {
+    /// The block height to perform the soft fork that adds sha3 and keccak support.
+    pub add_sha3_keccak: u32,
+    /// The block height to perform the hard fork that removes md5 support.
+    pub remove_md5: u32,
+    /// The block height to perform the contentious fork where some become sha3- or keccak-maxis.
+    pub split_sha3_keccak: u32,
+}
+
+/// Various political positions a node could take when the network is forking into
+/// keccak maxis and sha3 maxis
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MaxiPosition {
+    /// Allow all blocks, both sha3 and keccak
+    NoMaxi,
+    /// Only allow sha3 blocks
+    Sha3Maxi,
+    /// Only allow keccak blocks
+    KeccakMaxi,
+    /// Only allow a single type of blocks. Which type it is is determined by what algo the node is mining.
+    FollowMining,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+/// The actual properly typed config after we're done working around all the BS.
+pub enum ForkingConfig {
+    ///
+    Manual,
+    ///
+    Automatic(ForkHeights, MaxiPosition),
+}
+
+impl FromStr for MaxiPosition {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match &s.to_lowercase()[..] {
+            "allow-all" | "allowall" | "no-maxi" | "nomaxi" => Self::NoMaxi,
+            "sha3-maxi" | "sha3maxi" => Self::Sha3Maxi,
+            "keccak-maxi" | "keccakmaxi" => Self::KeccakMaxi,
+            _ => Self::FollowMining,
+        })
+    }
 }
