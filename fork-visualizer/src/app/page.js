@@ -8,9 +8,11 @@ const MAX_CHAIN_COUNT = 256;
 // use polkadot main
 // comment out for local
 // const wsProvider = new WsProvider("wss://rpc.polkadot.io");
-const wsProvider = new WsProvider("ws://localhost:9944");
+// const wsProvider = new WsProvider("ws://100.109.138.126:9944");
 
-export default function Home() {
+function Stuff({ ws_addr }) {
+    const wsProvider = new WsProvider(ws_addr);
+
     const [latestBlock, setLatestBlock] = useState();
     const [data, setData] = useState({ nodes: [] });
     const [running, setRunning] = useState(false);
@@ -115,4 +117,19 @@ export default function Home() {
             )}
         </>
     );
+}
+
+export default function Home({ ws_addr }) {
+
+    return (
+        <>
+            <div className="bg-blue-800">
+                <Stuff ws_addr={"ws://127.0.0.1:9944"} />
+            </div>
+
+            <div className="bg-red-800">
+                <Stuff ws_addr={"ws://127.0.0.1:8844"} />
+            </div>
+        </>
+    )
 }

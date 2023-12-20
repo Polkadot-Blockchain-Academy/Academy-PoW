@@ -1,0 +1,62 @@
+version: "3.7"
+
+services:
+
+  first_node:
+    image: ghcr.io/polkadot-blockchain-academy/academy-pow:main
+    container_name: first_node
+    restart: always
+    ports:
+      - "9944:9944"
+      - "30333:30333"
+    networks:
+      - nodes
+    command: [
+      "--dev",
+      "--mining-algo=keccak",
+      "--rpc-external",
+      "--name=kcoxe-firstnode",
+      "--node-key=0xf50eb51c7941cfe177b28f0c3a2b1261d579bc1a0c30f7ee112415c544adc0ae"
+    ]
+
+  second_node:
+    image: ghcr.io/polkadot-blockchain-academy/academy-pow:main
+    container_name: second_node
+    restart: always
+    ports:
+      - "8844:9944"
+      - "31333:30333"
+    networks:
+      - nodes
+    command: [
+      "--dev",
+      "--mining-algo=sha3",
+      "--rpc-external",
+      "--bootnodes=/ip4/172.21.0.2/tcp/30333/p2p/12D3KooWMQwdmPwsWNWUJhMNyQE4QzcCivxr7DDhhB3E46xH3QLx"
+    ]
+    depends_on:
+      - first_node
+
+  # third_node:
+  #   image: ghcr.io/polkadot-blockchain-academy/academy-pow:main
+  #   container_name: third_node
+  #   restart: always
+  #   ports:
+  #     - "8844:9944"
+  #     - "31333:30333"
+  #   networks:
+  #     - nodes
+  #   command: [
+  #     "--dev",
+  #     "--mining-algo=md5",
+  #     "--rpc-external",
+  #     "--bootnodes=/ip4/172.21.0.2/tcp/30333/p2p/12D3KooWMQwdmPwsWNWUJhMNyQE4QzcCivxr7DDhhB3E46xH3QLx"
+  #   ]
+  #   depends_on:
+  #     - first_node
+
+
+
+networks:
+  nodes:
+
