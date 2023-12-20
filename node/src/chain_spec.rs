@@ -88,7 +88,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
     Ok(ChainSpec::builder(
         WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
         ForkingExtensions {
-            manual_mode: 1,
+            manual_mode: 0,
             add_sha3_keccak: 10,
             remove_md5: 20,
             split_sha3_keccak: 30,
@@ -116,7 +116,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
     Ok(ChainSpec::builder(
         WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
         ForkingExtensions {
-            manual_mode: 0,
+            manual_mode: 1,
             add_sha3_keccak: 0,
             remove_md5: 0,
             split_sha3_keccak: 0,
