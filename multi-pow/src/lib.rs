@@ -227,7 +227,7 @@ where
         // This is where we handle forks on the verification side.
         // We will still need to handle it in the mining algorithm somewhere.
         // Currently we make the miner configure what algo they mine manually with their cli.
-        let _parent_number = match parent_id {
+        let parent_number: u32 = match parent_id {
             BlockId::Hash(h) => *self
                 .client
                 .header(*h)
@@ -235,21 +235,20 @@ where
                 .expect("parent header should be present in the db")
                 .number(),
             BlockId::Number(n) => *n,
+        }
+        .try_into()
+        .map_err(|_| ())
+        .expect("Block numbers can be converted to u32 (because they are u32)");
+
+        // Here we handle the forking logic according the the node operator's request.
+        let valid_algorithm = match self.fork_config {
+            ForkingConfig::Manual => manual_fork_validation(parent_number),
+            ForkingConfig::Automatic(fork_heights, maxi_position) => auto_fork_validation(parent_number, seal.work.algo, fork_heights, maxi_position),
         };
 
-        // When we are ready to do a fork, this is where to do it.
-        // Declare a threshold height at which to perform a fork
-        // let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
-
-        // To begin with we only allow md5 hashes for our pow
-        // After the fork height this check is skipped so all the hashes become valid
-        // if parent_number > fork_height {
-        //     match seal.work.algo {
-        //         SupportedHashes::Md5 => {return Ok(false)},
-        //         SupportedHashes::Sha3 => (),
-        //         SupportedHashes::Keccak => (),
-        //     }
-        // }
+        if !valid_algorithm {
+            return Ok(false)
+        }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
         if !multi_hash_meets_difficulty(&seal.work, difficulty) {
@@ -315,5 +314,49 @@ impl FromStr for MaxiPosition {
             "keccak-maxi" | "keccakmaxi" => Self::KeccakMaxi,
             _ => Self::FollowMining,
         })
+    }
+}
+
+
+fn manual_fork_validation(_parent_number: u32) -> bool {
+    todo!("You must code up your own validation logic before you can run manual mode.")
+}
+
+fn auto_fork_validation(parent_number: u32, algo: SupportedHashes, fork_heights: ForkHeights, maxi_position: MaxiPosition) -> bool {
+    use MaxiPosition::*;
+    use SupportedHashes::*;
+    
+    if parent_number < fork_heights.add_sha3_keccak {
+        // To begin with we only allow md5 hashes for our pow.
+        // After the fork height this check is skipped so all the hashes become valid.
+        match algo {
+            Md5 => true,
+            Sha3 => false,
+            Keccak => false,
+        }
+    } else if parent_number < fork_heights.remove_md5 {
+        // After the first fork, all three algos become valid.
+        match algo {
+            Md5 => true,
+            Sha3 => true,
+            Keccak => true,
+        }
+    } else if parent_number < fork_heights.split_sha3_keccak {
+        // After the second fork, md5 is no longer valid.
+        match algo {
+            Md5 => false,
+            Sha3 => true,
+            Keccak => true,
+        }
+    } else {
+        // Finally we have the contentious fork.
+        // Our behavior here depends which maxi position we have taken.
+        match (algo, maxi_position) {
+            (Sha3, Sha3Maxi) => true,
+            (Sha3, NoMaxi) => true,
+            (Keccak, KeccakMaxi) => true,
+            (Keccak, NoMaxi) => true,
+            _ => false,
+        }
     }
 }
