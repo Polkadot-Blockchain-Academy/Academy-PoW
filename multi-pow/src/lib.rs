@@ -269,16 +269,6 @@ where
 
         Ok(true)
     }
-
-    // fn actual_work(
-    //     seal: &RawSeal,
-    // ) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
-    //     let seal = Seal::decode(&mut &seal[..]).map_err(|_| {
-    //         sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into())
-    //     })?;
-
-    //     Ok(seal.work)
-    // }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
