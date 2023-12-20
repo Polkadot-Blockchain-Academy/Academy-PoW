@@ -9,6 +9,7 @@ const MAX_CHAIN_COUNT = 256;
 // use polkadot main
 // comment out for local
 // const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+const wsProvider = new WsProvider("ws://localhost:9944");
 
 
 function OtherGraph({ data }) {
@@ -32,20 +33,12 @@ function OtherGraph({ data }) {
 }
 
 export default function Home() {
-    const wsProvider1 = new WsProvider("ws://100.109.138.126:8844");
-    const wsProvider2 = new WsProvider("ws://100.109.138.126:7744");
-    const wsProvider3 = new WsProvider("ws://100.109.138.126:6644");
 
     const [latestBlock, setLatestBlock] = useState();
     const [data, setData] = useState({ nodes: [], links: [] });
     const [running, setRunning] = useState(false);
 
-    async function main() {
-        start_watch(wsProvider1)
-        start_watch(wsProvider2)
-        start_watch(wsProvider3)
-    }
-    async function start_watch(wsProvider) {
+    async function main(wsProvider) {
         console.log("Starting...")
 
         // for polkadot main

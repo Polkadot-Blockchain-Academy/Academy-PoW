@@ -9,8 +9,6 @@ services:
     ports:
       - "9944:9944"
       - "30333:30333"
-    networks:
-      - nodes
     command: [
       "--dev",
       "--mining-algo=keccak",
@@ -19,6 +17,8 @@ services:
       "--node-key=0xf50eb51c7941cfe177b28f0c3a2b1261d579bc1a0c30f7ee112415c544adc0ae"
     ]
 
+  # NOTE: the ip address bellow 172.21.0.2, may be different for your docker network.
+  # Please ensure that it is the correct ip for the "first_node" container
   second_node:
     image: ghcr.io/polkadot-blockchain-academy/academy-pow:main
     container_name: second_node
@@ -26,8 +26,6 @@ services:
     ports:
       - "8844:9944"
       - "31333:30333"
-    networks:
-      - nodes
     command: [
       "--dev",
       "--mining-algo=sha3",
@@ -37,6 +35,8 @@ services:
     depends_on:
       - first_node
 
+  # # NOTE: the ip address bellow 172.21.0.2, may be different for your docker network.
+  # # Please ensure that it is the correct ip for the "first_node" container
   # third_node:
   #   image: ghcr.io/polkadot-blockchain-academy/academy-pow:main
   #   container_name: third_node
@@ -44,8 +44,6 @@ services:
   #   ports:
   #     - "7744:9944"
   #     - "32333:30333"
-  #   networks:
-  #     - nodes
   #   command: [
   #     "--dev",
   #     "--mining-algo=md5",
@@ -54,9 +52,4 @@ services:
   #   ]
   #   depends_on:
   #     - first_node
-
-
-
-networks:
-  nodes:
 
