@@ -38,7 +38,7 @@ export default function Home() {
     const [data, setData] = useState({ nodes: [], links: [] });
     const [running, setRunning] = useState(false);
 
-    async function main(wsProvider) {
+    async function main() {
         console.log("Starting...")
 
         // for polkadot main
@@ -83,14 +83,14 @@ export default function Home() {
                     console.log(`group: ${group}`);
                 }
 
-                const newNodes = [...nodes, { id: header.hash.toString(), group: group }];
+                const newNodes = [...nodes, { id: header.hash.toString(), group: group, name: header.number.toHuman() }];
 
                 let newLinks = [...links];
                 if (newNodes.filter((h) => h.id === header.parentHash.toString()).length > 0) {
                     console.log("parent found");
                     newLinks = [
                         ...links,
-                        { source: header.parentHash.toString(), target: header.hash.toString() },
+                        { target: header.parentHash.toString(),  source: header.hash.toString() },
                     ];
                 } else {
                     console.log("parent not found");

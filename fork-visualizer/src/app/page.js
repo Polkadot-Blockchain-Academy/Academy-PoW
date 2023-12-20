@@ -8,10 +8,9 @@ const MAX_CHAIN_COUNT = 256;
 // use polkadot main
 // comment out for local
 // const wsProvider = new WsProvider("wss://rpc.polkadot.io");
-// const wsProvider = new WsProvider("ws://100.109.138.126:9944");
+const wsProvider = new WsProvider("ws://localhost:9944");
 
-function Stuff({ ws_addr }) {
-    const wsProvider = new WsProvider(ws_addr);
+function Stuff() {
 
     const [latestBlock, setLatestBlock] = useState();
     const [data, setData] = useState({ nodes: [] });
@@ -34,6 +33,35 @@ function Stuff({ ws_addr }) {
             setLatestBlock(header.number.toHuman());
 
             setData(({ nodes }) => {
+
+                let group = "genesis";
+                let groupColor = "bg-green-600"
+
+                // The genesis block (number 0) does not have the normal PoW seal on it.
+                // This avoids a crash when you re-start the node. There is likely a more
+                // idiomatic way to do this is js.
+                if (header.number != 0) {
+                    const seal_data = header.digest.logs[0].toJSON().seal[1];
+                    // Detect the PoW algorithm from the first byte of the seal.
+                    // This corresponds to `pub struct SupportedHashes` in multi-pow/src/lib.rs
+                    switch (seal_data.slice(0, 4)) {
+                        case "0x00":
+                            group = "md5";
+                            groupColor = "bg-red-600"
+                            break;
+                        case "0x01":
+                            group = "sha3";
+                            groupColor = "bg-blue-600"
+                            break;
+                        case "0x02":
+                            group = "keccak";
+                            groupColor = "bg-purple-600"
+                    }
+
+                    console.log(`group: ${group}`);
+                }
+
+
                 const newNodes = [
                     ...nodes,
                     {
@@ -44,7 +72,8 @@ function Stuff({ ws_addr }) {
                         extrinsicsRoot: header.extrinsicsRoot.toHuman(),
                         digestLogs: header.digest.logs.map((d) => {
                             return d.toHuman().Seal
-                        })
+                        }),
+                        groupColor: groupColor
                     },
                 ];
 
@@ -75,8 +104,8 @@ function Stuff({ ws_addr }) {
     const nodeData = nodes?.map((node, index) => {
         return (
             <div key={index} className="col-span-1 m-4" id={node.hash}>
-                <div className="grid grid-cols-3">
-                    <span className={`col-span-3 text-xl ${node.style}`}>
+                <div className={`grid grid-cols-3 ${ node.style }`}>
+                    <span className={`col-span-3 text-xl ${node.groupColor}`}>
                         number: {node.number}
                     </span>
                     <span className="col-span-3 text-sm">hash: {node.hash}</span>
@@ -122,6 +151,8 @@ function Stuff({ ws_addr }) {
 export default function Home({ ws_addr }) {
 
     return (
-        <Stuff ws_addr={"ws://localhost:9944"} />
+        <>
+        <Stuff/>
+        </>
     )
 }
