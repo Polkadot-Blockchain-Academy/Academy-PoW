@@ -48,11 +48,7 @@ export default function Home() {
     async function start_watch(wsProvider) {
         console.log("Starting...")
 
-        // for polkadot main
         const api = await ApiPromise.create({ provider: wsProvider });
-
-        // for local
-        // const api = await ApiPromise.create();
 
         // We only display a couple, then unsubscribe
         let count = 0;
@@ -90,9 +86,19 @@ export default function Home() {
                     console.log(`group: ${group}`);
                 }
 
-                const newNodes = [...nodes, { id: header.hash.toString(), group: group }];
+               let newNodes = [...nodes];
+
+                // If the node is not in the graph already, we add it.
+                // Actually it would be better to use a set datastructure here than a list,
+                // but IDK how convenient / idiomatic sets are in JS.
+                if (!nodes.some((h) => h.id === header.hash.toString())) {
+                    console.log("Block not found. Adding it to graph.")
+                    newNodes = [...nodes, { id: header.hash.toString(), group: group }];
+                }
 
                 let newLinks = [...links];
+                //TODO Check out how I used `.some` above instead of `.filter`.
+                // Perhaps we should do that here as well.
                 if (newNodes.filter((h) => h.id === header.parentHash.toString()).length > 0) {
                     console.log("parent found");
                     newLinks = [
