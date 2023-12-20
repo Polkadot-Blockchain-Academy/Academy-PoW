@@ -78,6 +78,8 @@ docker run --publish-all ghcr.io/polkadot-blockchain-academy/academy-pow:main \
 
 ```
 
+Actually, even the above command doesn't get the nodes to peer properly. The problem is that I don't know the proper ip address to use for the bootnode. It isn't `127.0.0.1` because that is in the container still. See https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach?noredirect=1&lq=1 for possible solutions using docker compose.
+
 ## More Help
 
 ```sh
