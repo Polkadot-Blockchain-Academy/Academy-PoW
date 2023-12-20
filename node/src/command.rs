@@ -163,10 +163,8 @@ pub fn run() -> sc_cli::Result<()> {
                             multi_pow::SupportedHashes::Sha3 => MaxiPosition::Sha3Maxi,
                             multi_pow::SupportedHashes::Keccak => MaxiPosition::KeccakMaxi,
                         };
-
                         ForkingConfig::Automatic(fork_heights, maxi_position)
                     }
-                    ForkingConfig::Manual => panic!("Manual forking not yet implemented."),
                     old_config => old_config,
                 };
 
