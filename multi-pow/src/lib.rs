@@ -214,7 +214,7 @@ where
         &self,
         parent_id: &BlockId<B>,
         pre_hash: &H256,
-        _pre_digest: Option<&[u8]>,
+        pre_digest: Option<&[u8]>,
         seal: &RawSeal,
         difficulty: Self::Difficulty,
     ) -> Result<bool, Error<B>> {
@@ -223,6 +223,18 @@ where
             Ok(seal) => seal,
             Err(_) => return Ok(false),
         };
+
+        let Some(encoded_pre_digest) = pre_digest else { return Ok(false) };
+        let algo_from_predigest = match SupportedHashes::decode(&mut &encoded_pre_digest[..]) {
+            Ok(algo) => algo,
+            Err(_) => return Ok(false),
+        };
+
+        // Check that the pre-digest algo matches the seal algo
+        // TODO it shouldn't be necessary to have both.
+        if seal.work.algo != algo_from_predigest {
+            return Ok(false);
+        }
 
         // This is where we handle forks on the verification side.
         // We will still need to handle it in the mining algorithm somewhere.

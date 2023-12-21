@@ -59,6 +59,15 @@ pub mod pallet {
         /// avoids getting stuck when trying to increase difficulty subject to dampening
         /// Recommended to use same value as DampFactor
         type MinDifficulty: Get<u128>;
+
+        /// Now that the pallet is instantiable, we need a way to decide which blocks are
+        /// relevant to this instance. This function does just that.
+        /// 
+        /// The default implementation assumes that all blocks are relevant which is what
+        /// you probably want when there is only a single instance.
+        fn relevant_to_this_instance() -> bool {
+            true
+        }
     }
 
     #[pallet::pallet]
@@ -118,6 +127,11 @@ pub mod pallet {
     #[pallet::hooks]
     impl<T: Config<I>, I: 'static> Hooks<BlockNumberFor<T>> for Pallet<T, I> {
         fn on_finalize(_n: BlockNumberFor<T>) {
+            // First check if this is block is relevant to this instance of the difficulty adjustment algorithm
+            if !T::relevant_to_this_instance() {
+                return
+            }
+
             let mut data = PastDifficultiesAndTimestamps::<T, I>::get();
 
             for i in 1..data.len() {

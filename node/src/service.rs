@@ -233,7 +233,11 @@ pub fn new_full(
                 proposer,
                 sync_service.clone(),
                 sync_service,
-                None,
+                // Note the mining algorithm in the pre-runtime digest.
+                // This allows us to know which algo it was in the runtime.
+                // TODO This also makes it possible to remove the algo info from
+                // the seal.
+                Some(mining_algo.encode()),
                 // This code is copied from above. Would be better to not repeat it.
                 move |_, ()| async move {
                     let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
