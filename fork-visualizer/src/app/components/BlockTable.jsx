@@ -28,7 +28,6 @@ export default function BlockTable({ nodes, latestBlock }) {
         scrollToBottom()
     }, [nodes]);
 
-
     return (
         <div className='flex flex-col m-6'>
             {latestBlock && (
@@ -36,16 +35,15 @@ export default function BlockTable({ nodes, latestBlock }) {
             )}
 
             <div className='flex items-center justify-center'>
-                <span>auto scrolling: <span className={ autoScroll ? "underline" : "" }>{ autoScroll ? "enabled" : "disabled" }</span></span>
-
-                <button className={`px-4 py-2 m-4 text-white rounded-full ${autoScroll ? "bg-red-600" : "bg-blue-600"}`} onClick={() => setAutoScroll(!autoScroll)}>{ autoScroll ? "Stop Auto Scroll" : "Start Auto Scroll" }</button>
+                <button className={`px-3 py-1 m-4 text-white rounded-full ${autoScroll ? "bg-red-600" : "bg-blue-600"}`} onClick={() => setAutoScroll(!autoScroll)}>{ autoScroll ? "Stop Auto Scroll" : "Start Auto Scroll" }</button>
+                <span className='p-4 m-2'>auto scrolling: <span className={ autoScroll ? "underline" : "" }>{ autoScroll ? "enabled" : "disabled" }</span></span>
 
                 <div className='flex flex-col'>
                     <span className='self-center'>Counts</span>
                     <div className='flex gap-6'>
-                        <span>md5: { md5Count }</span>
-                        <span>sha3: { sha3Count }</span>
-                        <span>keccak: { keccakCount }</span>
+                        <span className='text-red-600'>md5: { md5Count }</span>
+                        <span className='text-blue-600'>sha3: { sha3Count }</span>
+                        <span className='text-purple-600'>keccak: { keccakCount }</span>
                     </div>
                 </div>
             </div>
