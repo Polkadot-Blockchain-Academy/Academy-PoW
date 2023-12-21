@@ -8,8 +8,8 @@ import BlockTable from "@/app/components/BlockTable";
 const MAX_CHAIN_COUNT = 256;
 
 // const wsProvider = new WsProvider("ws://localhost:9944");
-// const wsProvider = new WsProvider("ws://100.109.138.126:9944");
-const wsProvider = new WsProvider("ws://localhost:9944");
+const wsProvider = new WsProvider("ws://100.109.138.126:9944");
+// const wsProvider = new WsProvider("ws://localhost:9944");
 
 export default function Home() {
 
@@ -85,7 +85,7 @@ export default function Home() {
                             newNodes.filter((n) => n.number === node.number && n.hash !== node.hash)
                                 .length === 0
                                 ? ""
-                                : "bg-red-600",
+                                : "bg-rose-900 text-white",
                     };
                 });
 
