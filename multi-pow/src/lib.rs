@@ -16,6 +16,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use core::str::FromStr;
 #[cfg(feature = "std")]
 use std::sync::Arc;
 
@@ -25,7 +26,7 @@ use sc_consensus_pow::{Error, PowAlgorithm};
 #[cfg(feature = "std")]
 use sha3::{Digest, Keccak256, Sha3_256};
 #[cfg(feature = "std")]
-use sp_api::{ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 #[cfg(feature = "std")]
 use sp_consensus_pow::DifficultyApi;
 #[cfg(feature = "std")]
@@ -163,12 +164,16 @@ impl Compute {
 /// Needs a reference to the client so it can grab the difficulty from the runtime.
 pub struct MultiPow<C> {
     client: Arc<C>,
+    fork_config: ForkingConfig,
 }
 
 #[cfg(feature = "std")]
 impl<C> MultiPow<C> {
-    pub fn new(client: Arc<C>) -> Self {
-        Self { client }
+    pub fn new(client: Arc<C>, fork_config: ForkingConfig) -> Self {
+        Self {
+            client,
+            fork_config,
+        }
     }
 }
 
@@ -176,7 +181,7 @@ impl<C> MultiPow<C> {
 #[cfg(feature = "std")]
 impl<C> Clone for MultiPow<C> {
     fn clone(&self) -> Self {
-        Self::new(self.client.clone())
+        Self::new(self.client.clone(), self.fork_config)
     }
 }
 
@@ -222,7 +227,7 @@ where
         // This is where we handle forks on the verification side.
         // We will still need to handle it in the mining algorithm somewhere.
         // Currently we make the miner configure what algo they mine manually with their cli.
-        let _parent_number = match parent_id {
+        let parent_number: u32 = match parent_id {
             BlockId::Hash(h) => *self
                 .client
                 .header(*h)
@@ -230,21 +235,20 @@ where
                 .expect("parent header should be present in the db")
                 .number(),
             BlockId::Number(n) => *n,
+        }
+        .try_into()
+        .map_err(|_| ())
+        .expect("Block numbers can be converted to u32 (because they are u32)");
+
+        // Here we handle the forking logic according the the node operator's request.
+        let valid_algorithm = match self.fork_config {
+            ForkingConfig::Manual => manual_fork_validation(parent_number),
+            ForkingConfig::Automatic(fork_heights, maxi_position) => auto_fork_validation(parent_number, seal.work.algo, fork_heights, maxi_position),
         };
 
-        // When we are ready to do a fork, this is where to do it.
-        // Declare a threshold height at which to perform a fork
-        // let fork_height: <<B as BlockT>::Header as HeaderT>::Number = 7900u32.into();
-
-        // To begin with we only allow md5 hashes for our pow
-        // After the fork height this check is skipped so all the hashes become valid
-        // if parent_number > fork_height {
-        //     match seal.work.algo {
-        //         SupportedHashes::Md5 => {return Ok(false)},
-        //         SupportedHashes::Sha3 => (),
-        //         SupportedHashes::Keccak => (),
-        //     }
-        // }
+        if !valid_algorithm {
+            return Ok(false)
+        }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
         if !multi_hash_meets_difficulty(&seal.work, difficulty) {
@@ -264,14 +268,95 @@ where
 
         Ok(true)
     }
+}
 
-    // fn actual_work(
-    //     seal: &RawSeal,
-    // ) -> Result<<Self::Difficulty as TotalDifficulty>::Incremental, Error<B>> {
-    //     let seal = Seal::decode(&mut &seal[..]).map_err(|_| {
-    //         sc_consensus_pow::Error::Environment("seal didn't decode; we're hosed.".into())
-    //     })?;
+#[derive(Copy, Clone, Eq, PartialEq)]
+///
+pub struct ForkHeights {
+    /// The block height to perform the soft fork that adds sha3 and keccak support.
+    pub add_sha3_keccak: u32,
+    /// The block height to perform the hard fork that removes md5 support.
+    pub remove_md5: u32,
+    /// The block height to perform the contentious fork where some become sha3- or keccak-maxis.
+    pub split_sha3_keccak: u32,
+}
 
-    //     Ok(seal.work)
-    // }
+/// Various political positions a node could take when the network is forking into
+/// keccak maxis and sha3 maxis
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MaxiPosition {
+    /// Allow all blocks, both sha3 and keccak
+    NoMaxi,
+    /// Only allow sha3 blocks
+    Sha3Maxi,
+    /// Only allow keccak blocks
+    KeccakMaxi,
+    /// Only allow a single type of blocks. Which type it is is determined by what algo the node is mining.
+    FollowMining,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+/// The actual properly typed config after we're done working around all the BS.
+pub enum ForkingConfig {
+    ///
+    Manual,
+    ///
+    Automatic(ForkHeights, MaxiPosition),
+}
+
+impl FromStr for MaxiPosition {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match &s.to_lowercase()[..] {
+            "allow-all" | "allowall" | "no-maxi" | "nomaxi" => Self::NoMaxi,
+            "sha3-maxi" | "sha3maxi" => Self::Sha3Maxi,
+            "keccak-maxi" | "keccakmaxi" => Self::KeccakMaxi,
+            _ => Self::FollowMining,
+        })
+    }
+}
+
+
+fn manual_fork_validation(_parent_number: u32) -> bool {
+    todo!("You must code up your own validation logic before you can run manual mode.")
+}
+
+fn auto_fork_validation(parent_number: u32, algo: SupportedHashes, fork_heights: ForkHeights, maxi_position: MaxiPosition) -> bool {
+    use MaxiPosition::*;
+    use SupportedHashes::*;
+    
+    if parent_number < fork_heights.add_sha3_keccak {
+        // To begin with we only allow md5 hashes for our pow.
+        // After the fork height this check is skipped so all the hashes become valid.
+        match algo {
+            Md5 => true,
+            Sha3 => false,
+            Keccak => false,
+        }
+    } else if parent_number < fork_heights.remove_md5 {
+        // After the first fork, all three algos become valid.
+        match algo {
+            Md5 => true,
+            Sha3 => true,
+            Keccak => true,
+        }
+    } else if parent_number < fork_heights.split_sha3_keccak {
+        // After the second fork, md5 is no longer valid.
+        match algo {
+            Md5 => false,
+            Sha3 => true,
+            Keccak => true,
+        }
+    } else {
+        // Finally we have the contentious fork.
+        // Our behavior here depends which maxi position we have taken.
+        match (algo, maxi_position) {
+            (Sha3, Sha3Maxi) => true,
+            (Sha3, NoMaxi) => true,
+            (Keccak, KeccakMaxi) => true,
+            (Keccak, NoMaxi) => true,
+            _ => false,
+        }
+    }
 }
