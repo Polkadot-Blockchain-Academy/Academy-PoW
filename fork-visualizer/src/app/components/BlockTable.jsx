@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-export default function BlockTable({ nodes }) {
+export default function BlockTable({ nodes, latestBlock }) {
     const [ autoScroll, setAutoScroll ] = useState(true);
 
     const [ md5Count, setMd5Count ] = useState(0)
@@ -31,6 +31,10 @@ export default function BlockTable({ nodes }) {
 
     return (
         <div className='flex flex-col m-6'>
+            {latestBlock && (
+                <h1 className='flex self-center'>latest block: {latestBlock}</h1>
+            )}
+
             <div className='flex items-center justify-center'>
                 <span>auto scrolling: <span className={ autoScroll ? "underline" : "" }>{ autoScroll ? "enabled" : "disabled" }</span></span>
 
@@ -41,7 +45,7 @@ export default function BlockTable({ nodes }) {
                     <div className='flex gap-6'>
                         <span>md5: { md5Count }</span>
                         <span>sha3: { sha3Count }</span>
-                        <span>md5: { keccakCount }</span>
+                        <span>keccak: { keccakCount }</span>
                     </div>
                 </div>
             </div>

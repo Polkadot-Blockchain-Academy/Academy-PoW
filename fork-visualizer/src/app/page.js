@@ -103,14 +103,15 @@ export default function Home() {
 
     return (
         <div className="flex flex-col justify-center h-screen overflow-clip">
-            <div className="flex flex-row items-center justify-center flex-grow gap-4">
-                {latestBlock && <h1>latest block: {latestBlock} </h1>}
-                {!running && (
-                    <div>
+            <div className="flex items-center justify-center flex-grow gap-4">
+                <div className="flex flex-col justify-center">
+                    {!running && (
                         <button className="px-4 py-2 text-white bg-blue-600 rounded-full" onClick={() => main()}>start</button>
-                    </div>
+                    )}
+                </div>
+                { data.nodes.length > 0 && (
+                    <BlockTable nodes={data.nodes} latestBlock={latestBlock} />
                 )}
-                <BlockTable nodes={data.nodes} />
             </div>
 
             <HorizontalBlockList nodes={data.nodes} />
