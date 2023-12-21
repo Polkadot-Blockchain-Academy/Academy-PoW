@@ -2,8 +2,8 @@
 
 export default function BlockTable({ nodes }) {
     return (
-        <div className="flex flex-col overflow-y-scroll border rounded-lg w-max h-96">
-            <table class="table-fixed">
+        <div className="flex flex-col p-6 m-6 overflow-y-scroll border rounded-lg w-max h-96">
+            <table className="table-fixed">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -13,7 +13,7 @@ export default function BlockTable({ nodes }) {
                 <tbody>
                     { nodes && nodes.map((node, index) => {
                         return (
-                            <tr className="gap-2">
+                            <tr className="gap-4">
                                 <td>{ node.number }</td>
                                 <td>{ node.hash }</td>
                             </tr>

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 
 const Block = ({ node }) => {
-    console.log(node)
     return (
         <div className={`p-4 w-64 h-64 col-span-1 m-4 overflow-scroll border-2 rounded-md ${node.groupColor}`} id={node.hash}>
             <div className='flex flex-col self-center'>
@@ -76,7 +75,7 @@ export default function HorizontalBlockList({ nodes }) {
                             <span>keccak</span>
                         </div>
                     </div>
-                    <button className='px-4 py-2 m-4 text-white bg-blue-600 rounded-full' onClick={() => setFollowEnd(!followEnd)}>{ followEnd ? "Stop Following" : "Follow" }</button>
+                    <button className={`px-4 py-2 m-4 text-white rounded-full ${followEnd ? "bg-red-600" : "bg-blue-600"}`} onClick={() => setFollowEnd(!followEnd)}>{ followEnd ? "Stop Auto Scroll" : "Start Auto Scroll" }</button>
                 </>
             )}
             <div className="flex flex-row justify-start flex-grow overflow-scroll">
