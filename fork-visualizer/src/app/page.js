@@ -2,22 +2,22 @@
 
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { useState } from "react";
+import HorizontalBlockList from "@/app/components/HorizontalBlockList";
+import BlockTable from "@/app/components/BlockTable";
 
 const MAX_CHAIN_COUNT = 256;
 
-// use polkadot main
-// comment out for local
-// const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+// const wsProvider = new WsProvider("ws://localhost:9944");
+// const wsProvider = new WsProvider("ws://100.109.138.126:9944");
 const wsProvider = new WsProvider("ws://localhost:9944");
 
-function Stuff() {
+export default function Home() {
 
     const [latestBlock, setLatestBlock] = useState();
     const [data, setData] = useState({ nodes: [] });
     const [running, setRunning] = useState(false);
 
     async function main() {
-        // Use main polkadot
         const api = await ApiPromise.create({ provider: wsProvider });
 
 
@@ -73,6 +73,7 @@ function Stuff() {
                         digestLogs: header.digest.logs.map((d) => {
                             return d.toHuman().Seal
                         }),
+                        group: group,
                         groupColor: groupColor
                     },
                 ];
@@ -100,59 +101,19 @@ function Stuff() {
         });
     }
 
-    const { nodes } = data;
-    const nodeData = nodes?.map((node, index) => {
-        return (
-            <div key={index} className="col-span-1 m-4" id={node.hash}>
-                <div className={`grid grid-cols-3 ${ node.style }`}>
-                    <span className={`col-span-3 text-xl ${node.groupColor}`}>
-                        number: {node.number}
-                    </span>
-                    <span className="col-span-3 text-sm">hash: {node.hash}</span>
-                    <span className="col-span-3 text-sm">parent hash: {node.parentHash}</span>
-                    <span className="col-span-3 text-sm">state root: {node.stateRoot}</span>
-                    <span className="col-span-3 text-sm">
-                        extrinsics root: {node.extrinsicsRoot}
-                    </span>
-                    <div className="h-12 col-span-3 overflow-y-scroll">
-                        {node.digestLogs &&
-                            node.digestLogs.map((d, j) => {
-                                return (
-                                    <div key={`${index}-${j}`}>
-                                        <span>seal1: {d[0]}</span>
-                                        <span>seal2: {d[1]}</span>
-                                    </div>
-                                );
-                            })}
+    return (
+        <div className="flex flex-col justify-center h-screen overflow-clip">
+            <div className="flex flex-row items-center justify-center flex-grow gap-4">
+                {latestBlock && <h1>latest block: {latestBlock} </h1>}
+                {!running && (
+                    <div>
+                        <button className="px-4 py-2 text-white bg-blue-600 rounded-full" onClick={() => main()}>start</button>
                     </div>
-                </div>
+                )}
+                <BlockTable nodes={data.nodes} />
             </div>
-        );
-    });
 
-    return (
-        <>
-            {latestBlock && <h1>latest block: {latestBlock} </h1>}
-            {!running && (
-                <div>
-                    <button onClick={() => main()}>start</button>
-                </div>
-            )}
-
-            { nodeData && (
-                <div className="grid items-stretch min-h-screen grid-cols-1 mx-6 overflow-y-scroll">
-                    {nodeData}
-                </div>
-            )}
-        </>
+            <HorizontalBlockList nodes={data.nodes} />
+        </div>
     );
-}
-
-export default function Home({ ws_addr }) {
-
-    return (
-        <>
-        <Stuff/>
-        </>
-    )
 }

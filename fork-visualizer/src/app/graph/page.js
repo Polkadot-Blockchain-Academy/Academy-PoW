@@ -1,36 +1,16 @@
 "use client";
 
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import { useState, useRef } from "react";
-import { ForceGraph2D, ForceGraph3D } from "react-force-graph";
+import { useState } from "react";
+
+import ForceGraph from "@/app/components/ForceGraph"
 
 const MAX_CHAIN_COUNT = 256;
 
-// use polkadot main
-// comment out for local
-// const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+// const wsProvider = new WsProvider("ws://localhost:9944");
+// const wsProvider = new WsProvider("ws://100.109.138.126:9944");
 const wsProvider = new WsProvider("ws://localhost:9944");
 
-
-function OtherGraph({ data }) {
-    const fgRef = useRef();
-
-    return (
-        <div className="flex-grow">
-            <ForceGraph2D
-                graphData={data}
-                nodeLabel="id"
-                nodeAutoColorBy="group"
-                linkDirectionalArrowLength={3.5}
-                linkDirectionalArrowRelPos={1}
-                ref={fgRef}
-                enableNodeDrag={true}
-                cooldownTicks={100}
-                onEngineStop={() => fgRef.current.zoomToFit(500)}
-            />
-        </div>
-    );
-}
 
 export default function Home() {
 
@@ -41,11 +21,7 @@ export default function Home() {
     async function main() {
         console.log("Starting...")
 
-        // for polkadot main
         const api = await ApiPromise.create({ provider: wsProvider });
-
-        // for local
-        // const api = await ApiPromise.create();
 
         // We only display a couple, then unsubscribe
         let count = 0;
@@ -120,7 +96,7 @@ export default function Home() {
 
             {data && (
                 <div className="flex items-stretch min-h-screen mx-6">
-                    <OtherGraph data={data} />
+                    <ForceGraph data={data} />
                 </div>
             )}
         </>
