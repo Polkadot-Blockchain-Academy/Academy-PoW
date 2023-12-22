@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react'
+import { AUTO_SCROLL_DEFAULT } from "@/constants"
 
 const Block = ({ node }) => {
     return (
-        <div className={`p-4 w-64 h-64 col-span-1 m-4 overflow-scroll border-2 rounded-md ${node.groupColor}`} id={node.hash}>
-            <div className='flex flex-col self-center'>
-                <span>Block number: { node.number }</span>
-                <span>Group: { node.group }</span>
+        <div className={`p-4 w-32 h-32 col-span-1 m-4 overflow-scroll ${ node.duplicate ? "border-8 border-rose-900" : "" } rounded-lg ${node.groupColor}`} id={node.hash}>
+            <div className='flex flex-col'>
+                <span className='flex self-center'>{ node.number }</span>
+                <span className='flex self-center'>{ node.group }</span>
             </div>
             {/* <div className={`grid grid-cols-3 ${ node.style }`}>
                 <span className={`col-span-3 text-xl`}>
@@ -37,7 +38,7 @@ const Block = ({ node }) => {
 
 
 export default function HorizontalBlockList({ nodes }) {
-    const [ followEnd, setFollowEnd ] = useState(true);
+    const [ followEnd, setFollowEnd ] = useState(AUTO_SCROLL_DEFAULT);
 
     const blocksEndRef = useRef(null)
 

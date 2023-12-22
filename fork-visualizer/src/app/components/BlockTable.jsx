@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react'
+import { GROUP_TO_COLOR, AUTO_SCROLL_DEFAULT } from '@/constants';
 
 export default function BlockTable({ nodes, latestBlock }) {
-    const [ autoScroll, setAutoScroll ] = useState(true);
+    const [ autoScroll, setAutoScroll ] = useState(AUTO_SCROLL_DEFAULT);
 
     const [ md5Count, setMd5Count ] = useState(0)
     const [ sha3Count, setSha3Count ] = useState(0)
@@ -41,9 +42,9 @@ export default function BlockTable({ nodes, latestBlock }) {
                 <div className='flex flex-col'>
                     <span className='self-center'>Counts</span>
                     <div className='flex gap-6'>
-                        <span className='text-red-600'>md5: { md5Count }</span>
-                        <span className='text-blue-600'>sha3: { sha3Count }</span>
-                        <span className='text-purple-600'>keccak: { keccakCount }</span>
+                        <span className={ GROUP_TO_COLOR["md5"] }>md5: { md5Count }</span>
+                        <span className={ GROUP_TO_COLOR["sha3"] }>sha3: { sha3Count }</span>
+                        <span className={ GROUP_TO_COLOR["keccak"] }>keccak: { keccakCount }</span>
                     </div>
                 </div>
             </div>
@@ -59,7 +60,7 @@ export default function BlockTable({ nodes, latestBlock }) {
                     <tbody>
                         { nodes && nodes.map((node, index) => {
                             return (
-                                <tr className="gap-4" ref={blocksEndRef}>
+                                <tr key={index} className="gap-4" ref={blocksEndRef}>
                                     <td className={`px-2 ${ node.style }`}>{ node.number }</td>
                                     <td className={`px-2 ${ node.groupColor }`}>{ node.group }</td>
                                     <td className="px-2">{ node.hash }</td>

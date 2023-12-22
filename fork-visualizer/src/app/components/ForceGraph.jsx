@@ -12,13 +12,11 @@ export default function ForceGraph({ data }) {
             <ForceGraph2D
                 graphData={data}
                 nodeLabel="id"
-                nodeAutoColorBy="group"
+                nodeColor={d => d.nodeColor}
                 linkDirectionalArrowLength={3.5}
                 linkDirectionalArrowRelPos={1}
                 ref={fgRef}
                 enableNodeDrag={true}
-                cooldownTicks={100}
-                onEngineStop={() => fgRef.current.zoomToFit(500)}
             />
         </div>
     );
