@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import ReactFlow, { useNodesState, useEdgesState, MiniMap, Controls } from 'reactflow';
+import ReactFlow, { useNodesState, useEdgesState, Controls } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 
@@ -48,15 +48,6 @@ const Flow = ({ initialNodes, initialEdges }) => {
             panOnScrollSpeed={2}
             panOnScrollMode={"horizontal"}
         >
-            <MiniMap
-                nodeStrokeColor={(n) => {
-                    if (n.type === 'input') return '#0041d0';
-                    if (n.type === 'output') return '#ff0072';
-                }}
-                nodeColor={(n) => {
-                    return '#fff';
-                }}
-            />
             <Controls />
         </ReactFlow>
     );
