@@ -5,9 +5,11 @@ export const MAX_CHAIN_COUNT = 256
 export const AUTO_SCROLL_DEFAULT = false
 
 export const WS_ADDRESSES = [
-    "ws://localhost:9944",
-    "ws://localhost:8844",
-    "ws://localhost:7744",
+    "ws://100.109.138.126:9944",
+    "ws://100.109.138.126:8844",
+    "ws://100.109.138.126:7744",
+    "ws://100.109.138.126:6644",
+    "ws://100.109.138.126:5544",
 ]
 
 export const SEAL_TO_GROUP = {
