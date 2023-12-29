@@ -15,6 +15,7 @@
 // along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
 
 use academy_pow_runtime::Block;
+use multi_pow::{ForkingConfig, MaxiPosition};
 use sc_cli::SubstrateCli;
 use sc_service::PartialComponents;
 use sp_core::sr25519::Public;
@@ -24,7 +25,6 @@ use crate::{
     cli::{Cli, Subcommand},
     service,
 };
-use multi_pow::{ForkingConfig, MaxiPosition};
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {

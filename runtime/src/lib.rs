@@ -8,7 +8,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::genesis_builder_helper::{build_config, create_default_config};
 pub use frame_support::{
     construct_runtime, parameter_types,
     traits::{
@@ -24,6 +23,7 @@ pub use frame_support::{
     StorageValue,
 };
 use frame_support::{
+    genesis_builder_helper::{build_config, create_default_config},
     sp_runtime::Perquintill,
     traits::{ConstBool, ConstU128, ConstU32, ConstU8},
 };
@@ -307,7 +307,7 @@ parameter_types! {
     // Fallback value to limit the storage deposit if it's not being set by the caller
     pub const DefaultDepositLimit: Balance = CONTRACT_DEPOSIT_PER_BYTE * 128 * 1024;
     pub const CodeHashLockupDepositPercent: Perbill = Perbill::from_percent(0);
-	pub const MaxDelegateDependencies: u32 = 32;
+    pub const MaxDelegateDependencies: u32 = 32;
 }
 
 impl pallet_contracts::Config for Runtime {
@@ -332,12 +332,12 @@ impl pallet_contracts::Config for Runtime {
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
     type DefaultDepositLimit = DefaultDepositLimit;
     type CodeHashLockupDepositPercent = CodeHashLockupDepositPercent;
-	type MaxDelegateDependencies = MaxDelegateDependencies;
-	type RuntimeHoldReason = RuntimeHoldReason;
+    type MaxDelegateDependencies = MaxDelegateDependencies;
+    type RuntimeHoldReason = RuntimeHoldReason;
 
-	type Environment = ();
-	type Debug = ();
-	type Migrations = ();
+    type Environment = ();
+    type Debug = ();
+    type Migrations = ();
     type Xcm = ();
 }
 
@@ -387,8 +387,8 @@ pub type Executive = frame_executive::Executive<
 >;
 
 type EventRecord = frame_system::EventRecord<
-	<Runtime as frame_system::Config>::RuntimeEvent,
-	<Runtime as frame_system::Config>::Hash,
+    <Runtime as frame_system::Config>::RuntimeEvent,
+    <Runtime as frame_system::Config>::Hash,
 >;
 
 impl_runtime_apis! {
@@ -533,86 +533,86 @@ impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block
     }
 
     impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord> for Runtime
-	{
-		fn call(
-			origin: AccountId,
-			dest: AccountId,
-			value: Balance,
-			gas_limit: Option<Weight>,
-			storage_deposit_limit: Option<Balance>,
-			input_data: Vec<u8>,
-		) -> pallet_contracts::ContractExecResult<Balance, EventRecord> {
-			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
-			Contracts::bare_call(
-				origin,
-				dest,
-				value,
-				gas_limit,
-				storage_deposit_limit,
-				input_data,
-				pallet_contracts::DebugInfo::UnsafeDebug,
-				pallet_contracts::CollectEvents::UnsafeCollect,
-				pallet_contracts::Determinism::Enforced,
-			)
-		}
+    {
+        fn call(
+            origin: AccountId,
+            dest: AccountId,
+            value: Balance,
+            gas_limit: Option<Weight>,
+            storage_deposit_limit: Option<Balance>,
+            input_data: Vec<u8>,
+        ) -> pallet_contracts::ContractExecResult<Balance, EventRecord> {
+            let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+            Contracts::bare_call(
+                origin,
+                dest,
+                value,
+                gas_limit,
+                storage_deposit_limit,
+                input_data,
+                pallet_contracts::DebugInfo::UnsafeDebug,
+                pallet_contracts::CollectEvents::UnsafeCollect,
+                pallet_contracts::Determinism::Enforced,
+            )
+        }
 
-		fn instantiate(
-			origin: AccountId,
-			value: Balance,
-			gas_limit: Option<Weight>,
-			storage_deposit_limit: Option<Balance>,
-			code: pallet_contracts::Code<Hash>,
-			data: Vec<u8>,
-			salt: Vec<u8>,
-		) -> pallet_contracts::ContractInstantiateResult<AccountId, Balance, EventRecord>
-		{
-			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
-			Contracts::bare_instantiate(
-				origin,
-				value,
-				gas_limit,
-				storage_deposit_limit,
-				code,
-				data,
-				salt,
-				pallet_contracts::DebugInfo::UnsafeDebug,
-				pallet_contracts::CollectEvents::UnsafeCollect,
-			)
-		}
+        fn instantiate(
+            origin: AccountId,
+            value: Balance,
+            gas_limit: Option<Weight>,
+            storage_deposit_limit: Option<Balance>,
+            code: pallet_contracts::Code<Hash>,
+            data: Vec<u8>,
+            salt: Vec<u8>,
+        ) -> pallet_contracts::ContractInstantiateResult<AccountId, Balance, EventRecord>
+        {
+            let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+            Contracts::bare_instantiate(
+                origin,
+                value,
+                gas_limit,
+                storage_deposit_limit,
+                code,
+                data,
+                salt,
+                pallet_contracts::DebugInfo::UnsafeDebug,
+                pallet_contracts::CollectEvents::UnsafeCollect,
+            )
+        }
 
-		fn upload_code(
-			origin: AccountId,
-			code: Vec<u8>,
-			storage_deposit_limit: Option<Balance>,
-			determinism: pallet_contracts::Determinism,
-		) -> pallet_contracts::CodeUploadResult<Hash, Balance>
-		{
-			Contracts::bare_upload_code(
-				origin,
-				code,
-				storage_deposit_limit,
-				determinism,
-			)
-		}
+        fn upload_code(
+            origin: AccountId,
+            code: Vec<u8>,
+            storage_deposit_limit: Option<Balance>,
+            determinism: pallet_contracts::Determinism,
+        ) -> pallet_contracts::CodeUploadResult<Hash, Balance>
+        {
+            Contracts::bare_upload_code(
+                origin,
+                code,
+                storage_deposit_limit,
+                determinism,
+            )
+        }
 
-		fn get_storage(
-			address: AccountId,
-			key: Vec<u8>,
-		) -> pallet_contracts::GetStorageResult {
-			Contracts::get_storage(
-				address,
-				key
-			)
-		}
-	}
+        fn get_storage(
+            address: AccountId,
+            key: Vec<u8>,
+        ) -> pallet_contracts::GetStorageResult {
+            Contracts::get_storage(
+                address,
+                key
+            )
+        }
+    }
 
     impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
-		fn create_default_config() -> Vec<u8> {
-			create_default_config::<RuntimeGenesisConfig>()
-		}
+        fn create_default_config() -> Vec<u8> {
+            create_default_config::<RuntimeGenesisConfig>()
+        }
 
-		fn build_config(config: Vec<u8>) -> sp_genesis_builder::Result {
-			build_config::<RuntimeGenesisConfig>(config)
-		}
-	}
+        fn build_config(config: Vec<u8>) -> sp_genesis_builder::Result {
+            build_config::<RuntimeGenesisConfig>(config)
+        }
+    }
 }

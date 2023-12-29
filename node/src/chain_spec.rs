@@ -1,13 +1,12 @@
 use std::str::FromStr;
 
 use academy_pow_runtime::{AccountId, RuntimeGenesisConfig, Signature, WASM_BINARY};
+use multi_pow::{ForkHeights, ForkingConfig, MaxiPosition};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-
-use multi_pow::{ForkHeights, ForkingConfig, MaxiPosition};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig, ForkingExtensions>;

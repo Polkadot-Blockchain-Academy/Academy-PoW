@@ -1,7 +1,9 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use core::clone::Clone;
+use std::sync::Arc;
+
+use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
 use multi_pow::{ForkingConfig, MultiPow, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
@@ -9,7 +11,6 @@ use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_core::sr25519;
-use std::sync::Arc;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
