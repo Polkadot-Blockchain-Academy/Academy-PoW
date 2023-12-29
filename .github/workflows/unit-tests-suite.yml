@@ -14,7 +14,6 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
-# TODO: refactor common steps into a workflow
 jobs:
 
   basic-checks:
@@ -40,14 +39,11 @@ jobs:
             /tmp/academy-pow/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
 
-      - name: Install Rust toolchain
-        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
-
       - name: Run fmt
-        run: make fmt
+        run: cargo fmt --all
 
       - name: Run clippy
-        run: make clippy
+        run: cargo clippy --all-targets -- --no-deps -D warnings
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -72,8 +68,5 @@ jobs:
             /tmp/academy-pow/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
 
-      - name: Install Rust toolchain
-        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
-
       - name: Run tests
-        run: make test
+        run: cargo test
