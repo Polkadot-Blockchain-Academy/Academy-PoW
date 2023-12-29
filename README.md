@@ -1,8 +1,5 @@
 # Academy PoW
 
-![Unit Tests](https://github.com/Polkadot-Blockchain-Academy/Academy-PoW/actions/workflows/unit-tests-suite.yml/badge.svg)
-![E2E Tests](https://github.com/Polkadot-Blockchain-Academy/Academy-PoW/actions/workflows/e2e-tests-suite.yml/badge.svg)
-
 A Proof of Work blockchain node for use in the Polkadot Blockchain Academy.
 It happens to be based on Substrate, but no Substrate knowledge is required.
 Students will use this node to start their own network, perform hard and soft forks, and execute smart contracts.
@@ -16,11 +13,9 @@ First you will need a [Substrate developer environment](https://docs.substrate.i
 1. Cloning this repo
 2. Running `cargo build --release`
 
-TODO show how to use `--mining-account-id` to mine to different accounts.
-
 ## Run a Single Development Node
 
-You can use a native binary if you built it in the previous section. Otherwise you can use a Docker.
+You can use a native binary if you built it in the previous section. Otherwise you can use Docker.
 
 ```sh
 ./target/release/academy-pow --dev
@@ -28,7 +23,7 @@ You can use a native binary if you built it in the previous section. Otherwise y
 
 ### Docker Single Node
 
-If you use docker, you need to map the RPC port and specify `--rpc-external` so that the node listens on `0.0.0.0`. Or something like that....
+If you use docker, you need to map the RPC port and specify `--rpc-external` so that the node listens on `0.0.0.0`.
 
 Networking can be challenging for new Docker users, like me. If you are on linux, you may prefer to use `--network host` which allows the containerized node to operate directly on the local network. Consult the Docker docs for more details.
 
