@@ -351,6 +351,7 @@ fn auto_fork_validation(parent_number: u32, algo: SupportedHashes, fork_heights:
     } else {
         // Finally we have the contentious fork.
         // Our behavior here depends which maxi position we have taken.
+        #[allow(clippy::match_like_matches_macro)]
         match (algo, maxi_position) {
             (Sha3, Sha3Maxi) => true,
             (Sha3, NoMaxi) => true,
