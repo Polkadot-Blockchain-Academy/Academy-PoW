@@ -219,7 +219,8 @@ impl pallet_balances::Config for Runtime {
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
     type FreezeIdentifier = ();
     type MaxFreezes = ();
-    type MaxHolds = ();
+    // Holds can be returned to () if pallet contracts is removed
+    type MaxHolds = ConstU32<1>;
     type RuntimeHoldReason = RuntimeHoldReason;
     type RuntimeFreezeReason = RuntimeFreezeReason;
 }
