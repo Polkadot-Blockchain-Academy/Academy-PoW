@@ -1,4 +1,4 @@
-//! A difficuty adjustment algorithm (DAA) to keep the block time close to a particular goal
+//! A difficulty adjustment algorithm (DAA) to keep the block time close to a particular goal
 //! Cribbed from Kulupu https://github.com/kulupu/kulupu/blob/master/runtime/src/difficulty.rs
 //!
 //! It is possible to implement other DAAs such as that of BTC and BCH. This would be an interesting
