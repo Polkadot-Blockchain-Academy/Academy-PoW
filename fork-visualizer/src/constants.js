@@ -1,7 +1,7 @@
 export const ENABLE_GRAPH_VIEW = false
 export const ENABLE_TEST_VIEW = false
 
-export const MAX_CHAIN_COUNT = 256
+export const MAX_CHAIN_COUNT = 1000
 export const AUTO_SCROLL_DEFAULT = false
 
 export const WS_ADDRESSES = [
@@ -33,8 +33,14 @@ export const GROUP_TO_NODE_COLOR = {
 }
 
 
-export const NODE_WIDTH = 172
-export const NODE_HEIGHT = 36
+export const NODE_WIDTH = 1500
+export const NODE_HEIGHT = 500
+
+// export const NODE_WIDTH = 172
+// export const NODE_HEIGHT = 36
 export const DEFAULT_DIRECTION = 'LR'
 export const DEFAULT_POSITION = { x: 0, y: 0 }
 export const DEFAULT_EDGE_TYPE = 'smoothstep'
+export const DEFAULT_CONNECTION_LINE_STYLE = { stroke: '#fff' }
+export const DEFAULT_SNAP_GRID = [20, 20]
+export const DEFAULT_VIEWPORT = { x: 0, y: 0, zoom: .4 }

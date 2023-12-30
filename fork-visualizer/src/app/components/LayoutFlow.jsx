@@ -1,5 +1,6 @@
 "use client"
 
+import dagre from 'dagre';
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
     ConnectionLineType,
@@ -8,7 +9,7 @@ import ReactFlow, {
     Controls,
 } from 'reactflow';
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import dagre from 'dagre';
+
 import 'reactflow/dist/style.css';
 import '@/index.css';
 
@@ -24,15 +25,17 @@ import {
     DEFAULT_DIRECTION,
     DEFAULT_EDGE_TYPE,
     DEFAULT_POSITION,
+    DEFAULT_CONNECTION_LINE_STYLE,
+    DEFAULT_SNAP_GRID,
+    DEFAULT_VIEWPORT,
 } from '@/constants';
 
-const initialNodes = []
-const initialEdges = []
+import CustomBlockNode from './CustomBlockNode';
 
-const connectionLineStyle = { stroke: '#fff' };
-const snapGrid = [20, 20];
+const nodeTypes = {
+    custom: CustomBlockNode,
+};
 
-const defaultViewport = { x: 0, y: 0, zoom: 10.5 };
 
 const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -70,10 +73,7 @@ const getLayoutedElements = (nodes, edges, direction = DEFAULT_DIRECTION) => {
     return { nodes, edges };
 };
 
-const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-    initialNodes,
-    initialEdges
-);
+const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements([], []);
 
 const LayoutFlow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
@@ -85,7 +85,7 @@ const LayoutFlow = () => {
 
 
     const updateStuff = useCallback(
-        (header) => {
+        async (header, api) => {
             let group = "genesis";
             let groupColor = GROUP_TO_COLOR[group]
             // The genesis block (number 0) does not have the normal PoW seal on it.
@@ -97,7 +97,15 @@ const LayoutFlow = () => {
 
                 group = SEAL_TO_GROUP[seal] ?? "genesis"
                 groupColor = GROUP_TO_COLOR[group]
-                console.log(`group: ${group}`);
+            }
+
+
+            let authorAccount = undefined
+            if (group != "genesis") {
+                const apiAt = await api.at(header.parentHash.toHuman())
+                const aAcount = await apiAt.query.blockAuthor.author()
+
+                authorAccount = aAcount.toHuman()
             }
 
             setData(({ nodes: n, edges: e }) => {
@@ -107,13 +115,12 @@ const LayoutFlow = () => {
                 let newNodeData = undefined
                 if (!n.some((h) => h.id === header.hash.toString())) {
                     console.log("Block not found. Adding it to graph.")
+
                     newNodeData = {
                         id: header.hash.toHuman(),
                         key: header.hash.toHuman(),
                         data: {
-                            label: header.number.toHuman(),
-                            x: 0,
-                            y: 0,
+                            label: header.hash.toHuman(),
                             parentHash: header.parentHash.toHuman(),
                             number: header.number.toHuman(),
                             stateRoot: header.stateRoot.toHuman(),
@@ -124,23 +131,28 @@ const LayoutFlow = () => {
                             group: group,
                             groupColor: groupColor,
                             duplicate: false,
+                            authorAccount: authorAccount
                         },
                         position: DEFAULT_POSITION,
                         sourcePosition: 'right',
                         targetPosition: 'left',
-                        style: {
-                            background: GROUP_TO_NODE_COLOR[group],
-                            color: 'white',
-                            width: 100,
-                        },
+                        // style: {
+                        //     background: GROUP_TO_NODE_COLOR[group],
+                        //     color: 'white',
+                        //     width: 5000
+                        // },
+                        type: 'custom',
                     }
                 }
 
                 let newEdge = undefined
-                if (n.filter((h) => h.id === header.parentHash.toHuman()).length > 0) {
+                const edgeId = `${header.number.toHuman()}-${header.hash.toHuman()}-${header.parentHash.toHuman()}`
+                const edgeExists = e.some((_edge) => _edge.id === edgeId)
+                const parentExists = n.filter((h) => h.id === header.parentHash.toHuman()).length > 0
+
+                if (!edgeExists && parentExists) {
                     newEdge = {
-                        id: `${header.number.toHuman()}-${header.hash.toHuman()}-${header.parentHash.toHuman()}`,
-                        key: `${header.number.toHuman()}-${header.hash.toHuman()}-${header.parentHash.toHuman()}`,
+                        id: edgeId,
                         source: header.parentHash.toHuman(),
                         target: header.hash.toHuman(),
                         animated: true,
@@ -170,18 +182,8 @@ const LayoutFlow = () => {
         [ setNodes, setEdges ]
     );
 
-
-
-
-
-
-
-
-
-
-
-
-
+    // start subscribing to nodes on page load
+    // TODO: figure out what to do once we reach MAX_CHAIN_COUNT
     useEffect(() => {
         // We only display a couple, then unsubscribe
         let count = 0
@@ -192,10 +194,10 @@ const LayoutFlow = () => {
             // are found, the call itself returns a promise with a subscription that can be
             // used to unsubscribe from the newHead subscription
             const api = await ApiPromise.create({ provider: wsProvider })
-            const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
+            const unsubscribe = await api.rpc.chain.subscribeNewHeads(async (header) => {
                 console.log("adding new header...")
 
-                updateStuff(header)
+                await updateStuff(header, api)
 
                 if (++count === MAX_CHAIN_COUNT) {
                     unsubscribe();
@@ -205,8 +207,6 @@ const LayoutFlow = () => {
     }, [ updateStuff ])
 
 
-    console.log(data)
-
     return (
         <ReactFlow
             nodes={nodes}
@@ -215,13 +215,16 @@ const LayoutFlow = () => {
             onEdgesChange={onEdgesChange}
             connectionLineType={ConnectionLineType.SmoothStep}
 
-            connectionLineStyle={connectionLineStyle}
+            nodeTypes={nodeTypes}
+
+            connectionLineStyle={DEFAULT_CONNECTION_LINE_STYLE}
             snapToGrid={true}
-            snapGrid={snapGrid}
-            defaultViewport={defaultViewport}
-            fitView
+            snapGrid={DEFAULT_SNAP_GRID}
+            defaultViewport={DEFAULT_VIEWPORT}
             attributionPosition="bottom-left"
             style={{ background: '#1A192B' }}
+
+            minZoom={.3}
 
             nodesDraggable={false}
             nodesConnectable={false}
@@ -230,7 +233,7 @@ const LayoutFlow = () => {
             elementsSelectable={false}
             autoPanOnConnect={false}
             autoPanOnNodeDrag={false}
-            panOnDrag={false}
+            panOnDrag={true}
             panOnScroll={true}
             panOnScrollSpeed={2}
             panOnScrollMode={"horizontal"}
