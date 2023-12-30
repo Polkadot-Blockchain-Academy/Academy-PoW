@@ -7,6 +7,7 @@ import ReactFlow, {
     useNodesState,
     useEdgesState,
     Controls,
+    MiniMap,
 } from 'reactflow';
 import { ApiPromise, WsProvider } from "@polkadot/api";
 
@@ -238,6 +239,12 @@ const LayoutFlow = () => {
             panOnScrollSpeed={2}
             panOnScrollMode={"horizontal"}
         >
+            <MiniMap
+                nodeStrokeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
+                nodeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
+                zoomable={true}
+                pannable={true}
+            />
             <Controls />
         </ReactFlow>
     );
