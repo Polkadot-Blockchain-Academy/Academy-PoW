@@ -15,6 +15,9 @@ import 'reactflow/dist/style.css';
 import '@/index.css';
 
 import {
+    ENABLE_BLOCK_COUNTER,
+    ENABLE_BLOCK_LIST,
+
     WS_ADDRESSES,
     GROUP_TO_COLOR,
     GROUP_TO_NODE_COLOR,
@@ -29,6 +32,8 @@ import {
     DEFAULT_CONNECTION_LINE_STYLE,
     DEFAULT_SNAP_GRID,
     DEFAULT_VIEWPORT,
+    ENABLE_MINIMAP,
+    DEFAULT_MIN_ZOOM,
 } from '@/constants';
 
 import CustomBlockNode from '@/app/components/CustomBlockNode';
@@ -238,7 +243,7 @@ const LayoutFlow = () => {
                 attributionPosition="bottom-left"
                 style={{ background: '#1A192B' }}
 
-                minZoom={.3}
+                minZoom={DEFAULT_MIN_ZOOM}
 
                 nodesDraggable={false}
                 nodesConnectable={false}
@@ -252,16 +257,23 @@ const LayoutFlow = () => {
                 panOnScrollSpeed={2}
                 panOnScrollMode={"horizontal"}
             >
-                <MiniMap
-                    nodeStrokeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
-                    nodeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
-                    zoomable={true}
-                    pannable={true}
-                />
+                { ENABLE_MINIMAP && (
+                    <MiniMap
+                        nodeStrokeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
+                        nodeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
+                        zoomable={true}
+                        pannable={true}
+                    />
+                )}
                 <Controls />
             </ReactFlow>
-            <BlockCounter latestBlockNumber={ latestBlockNumber } />
-            <BlockTracker blocks={ data.nodes }/>
+            { ENABLE_BLOCK_COUNTER && (
+                <BlockCounter latestBlockNumber={ latestBlockNumber } />
+            )}
+
+            { ENABLE_BLOCK_LIST && (
+                <BlockTracker blocks={ data.nodes }/>
+            )}
         </>
     );
 };
