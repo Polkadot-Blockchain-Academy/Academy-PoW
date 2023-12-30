@@ -1,4 +1,4 @@
-export const ENABLE_GRAPH_VIEW = true
+export const ENABLE_GRAPH_VIEW = false
 export const ENABLE_TEST_VIEW = false
 
 export const MAX_CHAIN_COUNT = 256

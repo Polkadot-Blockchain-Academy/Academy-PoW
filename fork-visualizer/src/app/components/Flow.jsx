@@ -19,8 +19,12 @@ const Flow = ({ initialNodes, initialEdges }) => {
 
     useEffect(() => {
         setNodes(initialNodes);
+    }, [initialNodes]);
+
+
+    useEffect(() => {
         setEdges(initialEdges);
-    }, [initialNodes, initialEdges]);
+    }, [initialEdges]);
 
     return (
         <ReactFlow

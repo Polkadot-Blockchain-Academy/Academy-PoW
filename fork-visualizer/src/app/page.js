@@ -15,6 +15,7 @@ import {
 } from "@/constants";
 import ForceGraph from "@/app/components/ForceGraph"
 import Flow from "@/app/components/Flow"
+import LayoutFlow from "@/app/components/LayoutFlow";
 
 
 
@@ -142,38 +143,83 @@ export default function Home() {
             let newFlowNodes = [...flowNodes];
 
 
-            function findParentLevel (pHex) {
+            function findParentLevel (parentHash, newFlowNodeMap) {
                 let parentLevel = 0
 
+                if (newFlowNodeMap[parentLevel].length === 0) return parentLevel
+
                 for (let level = 0; level < newFlowNodeMap.length; level++) {
-                    let blocks = newFlowNodeMap[level]
-
-                    if (blocks.length === 0) return parentLevel
-
-                    let foundParent = blocks.filter(b => b.id === pHex).length > 0
                     parentLevel = level
+
+                    let foundParent = newFlowNodeMap[parentLevel].filter(b => b.id === parentHash).length > 0
+
                     if (foundParent) return parentLevel
                 }
 
                 return parentLevel + 1
             }
 
+            function findParentIndex (parentLevel, parentHash, newData) {
+                if (parentLevel >= newData.length) return -1
+
+                const parentIndex = newData[parentLevel].findIndex(b => b.id === parentHash)
+
+                return parentIndex
+            }
+
+            function findParentPosition (parentLevel, parentIndex, newData) {
+                if (parentLevel >= newData.length || parentIndex >= newData[parentLevel].length || parentIndex < 0) return { x: 0, y: 0 }
+
+                const parent = {...newData[parentLevel][parentIndex]}
+                console.log(parent)
+
+                return parent.position
+            }
+
             function addNode (data, newFlowNodeMap) {
                 const newData = [...newFlowNodeMap]
-                let parentLevel = findParentLevel(data.data.parentHash)
 
-                if (parentLevel >= newFlowNodeMap.length) return [...newFlowNodeMap, [ data ]]
+                const parentLevel = findParentLevel(data.data.parentHash, newData)
+                const parentIndex = findParentIndex(parentLevel, data.data.parentHash, newData)
 
-                const levelData = [...newFlowNodeMap[parentLevel]]
+                const parentPosition = findParentPosition(parentLevel, parentIndex, newData)
 
-                const isFork = levelData.filter(block => block.data.number === data.data.number).length > 0
+                console.log(parentLevel, parentIndex, parentPosition)
 
-                if (isFork) {
-                    console.log("DATA: ", data)
-                    return [...newFlowNodeMap, [ data ]]
+                const newNodeData = {...data, postition: {...parentPosition,
+                    x: parentPosition.x + 200,
+                    y: parentPosition.y
+                }}
+
+                if (newData[parentLevel] === undefined || newData[parentLevel].length === 0) {
+                    newData[parentLevel] = [ newNodeData]
+                    return newData
                 }
 
-                newData[parentLevel] = [...levelData, data]
+                if (parentLevel >= newData.length) return [...newData, [ newNodeData ]]
+
+                const isFork = newData[parentLevel].filter(block => block.data.number === newNodeData.data.number).length > 0
+                if (isFork) {
+
+                    return [...newData, [ {...newNodeData, data: {...newNodeData, label: `${parentPosition.x + 200}`}, position: {
+                        x: parentPosition.x + 200,
+                        y: parentPosition.y + 100
+                    }} ]]
+                }
+                newData[parentLevel] = [...newData[parentLevel], newNodeData]
+
+                // if (parentLevel >= newFlowNodeMap.length) return [...newFlowNodeMap, [ data ]]
+
+                // const levelData = [...newFlowNodeMap[parentLevel]]
+
+                // const isFork = levelData.filter(block => block.data.number === data.data.number).length > 0
+
+                // if (isFork) {
+                //     console.log("DATA: ", data)
+                //     return [...newFlowNodeMap, [ data ]]
+                // }
+
+                // newData[parentLevel] = [...levelData, data]
 
                 return newData
             }
@@ -217,7 +263,7 @@ export default function Home() {
 
             newFlowNodeMap.map((blocks, level) => {
                 blocks.map((block, index) => {
-                    const parentLevel = findParentLevel(block.data.parentHash)
+                    const parentLevel = findParentLevel(block.data.parentHash, newFlowNodeMap)
                     const parent = newFlowNodeMap[parentLevel]?.filter(b => b.id === block.data.parentHash) | undefined
 
                     block.position = {
@@ -296,29 +342,45 @@ export default function Home() {
 
     return (
         <div className="flex flex-col justify-center overflow-y-scroll">
-            <div className="flex items-center justify-center flex-grow h-screen gap-4 ">
-                <div className="flex flex-col justify-center">
-                    {!running && (
+            {!running && (
+                <div className="flex items-center justify-center flex-grow h-screen gap-4 ">
+                    <div className="flex flex-col justify-center">
                         <button className="px-4 py-2 text-white bg-blue-600 rounded-full" onClick={() => main()}>start</button>
-                    )}
+                    </div>
                 </div>
+            )}
 
-                { ENABLE_TEST_VIEW && data.blocks.length > 0 && (
-                    <BlockTable nodes={ data.blocks } latestBlock={ latestBlock } />
-                )}
+            { ENABLE_TEST_VIEW && data.blocks.length > 0 && (
+                <div className="flex items-center justify-center flex-grow h-screen gap-4 ">
+                    <div className="flex items-center justify-center flex-grow h-screen gap-4 ">
+                        <BlockTable nodes={ data.blocks } latestBlock={ latestBlock } />
+                    </div>
+                </div>
+            )}
 
-                { ENABLE_GRAPH_VIEW && data.blocks.length > 0 && (
-                    <ForceGraph data={ data } />
-                )}
-            </div>
+            { ENABLE_GRAPH_VIEW && data.blocks.length > 0 && (
+                <div className="flex items-center justify-center flex-grow h-screen gap-4 ">
+                    <div className="flex items-center justify-center flex-grow h-screen gap-4 ">
+                        <ForceGraph data={ data } />
+                    </div>
+                </div>
+            )}
 
             { ENABLE_TEST_VIEW && (
                 <HorizontalBlockList nodes={ data.blocks } />
             )}
 
-            <div className="flex w-auto h-screen">
-                <Flow initialNodes={data.flowNodes} initialEdges={data.flowEdges} />
-            </div>
+            {false && running && (
+                <div className="flex w-auto h-screen">
+                    <Flow initialNodes={data.flowNodes} initialEdges={data.flowEdges} />
+                </div>
+            )}
+
+            {running && (
+                <div className="flex w-auto h-screen">
+                    <LayoutFlow />
+                </div>
+            )}
 
         </div>
     );
