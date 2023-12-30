@@ -31,3 +31,10 @@ export const GROUP_TO_NODE_COLOR = {
     "sha3": "#0000ff",
     "keccak": "#ff00ff",
 }
+
+
+export const NODE_WIDTH = 172
+export const NODE_HEIGHT = 36
+export const DEFAULT_DIRECTION = 'LR'
+export const DEFAULT_POSITION = { x: 0, y: 0 }
+export const DEFAULT_EDGE_TYPE = 'smoothstep'
