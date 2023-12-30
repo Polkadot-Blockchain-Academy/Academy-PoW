@@ -31,7 +31,9 @@ import {
     DEFAULT_VIEWPORT,
 } from '@/constants';
 
-import CustomBlockNode from './CustomBlockNode';
+import CustomBlockNode from '@/app/components/CustomBlockNode';
+import BlockCounter from '@/app/components/BlockCounter'
+import BlockTracker from '@/app/components/BlockTracker';
 
 const nodeTypes = {
     custom: CustomBlockNode,
@@ -79,6 +81,7 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements([], [
 const LayoutFlow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+    const [ latestBlockNumber, setLatestBlockNumber ] = useState(0)
     const [ data, setData ] = useState({
         nodes: [],
         edges: []
@@ -108,6 +111,14 @@ const LayoutFlow = () => {
 
                 authorAccount = aAcount.toHuman()
             }
+
+            // update block counter
+            setLatestBlockNumber(oldBlockNumber => {
+                const newNumber = header.number.toHuman()
+                if (newNumber > oldBlockNumber) return newNumber
+
+                return oldBlockNumber
+            })
 
             setData(({ nodes: n, edges: e }) => {
                 // If the node is not in the graph already, we add it.
@@ -209,44 +220,49 @@ const LayoutFlow = () => {
 
 
     return (
-        <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            connectionLineType={ConnectionLineType.SmoothStep}
+        <>
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                connectionLineType={ConnectionLineType.SmoothStep}
+                fitView
 
-            nodeTypes={nodeTypes}
+                nodeTypes={nodeTypes}
 
-            connectionLineStyle={DEFAULT_CONNECTION_LINE_STYLE}
-            snapToGrid={true}
-            snapGrid={DEFAULT_SNAP_GRID}
-            defaultViewport={DEFAULT_VIEWPORT}
-            attributionPosition="bottom-left"
-            style={{ background: '#1A192B' }}
+                connectionLineStyle={DEFAULT_CONNECTION_LINE_STYLE}
+                snapToGrid={true}
+                snapGrid={DEFAULT_SNAP_GRID}
+                defaultViewport={DEFAULT_VIEWPORT}
+                attributionPosition="bottom-left"
+                style={{ background: '#1A192B' }}
 
-            minZoom={.3}
+                minZoom={.3}
 
-            nodesDraggable={false}
-            nodesConnectable={false}
-            nodesFocusable={false}
-            edgesFocusable={false}
-            elementsSelectable={false}
-            autoPanOnConnect={false}
-            autoPanOnNodeDrag={false}
-            panOnDrag={true}
-            panOnScroll={true}
-            panOnScrollSpeed={2}
-            panOnScrollMode={"horizontal"}
-        >
-            <MiniMap
-                nodeStrokeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
-                nodeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
-                zoomable={true}
-                pannable={true}
-            />
-            <Controls />
-        </ReactFlow>
+                nodesDraggable={false}
+                nodesConnectable={false}
+                nodesFocusable={false}
+                edgesFocusable={false}
+                elementsSelectable={false}
+                autoPanOnConnect={false}
+                autoPanOnNodeDrag={false}
+                panOnDrag={true}
+                panOnScroll={true}
+                panOnScrollSpeed={2}
+                panOnScrollMode={"horizontal"}
+            >
+                <MiniMap
+                    nodeStrokeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
+                    nodeColor={n => GROUP_TO_NODE_COLOR[n.data.group]}
+                    zoomable={true}
+                    pannable={true}
+                />
+                <Controls />
+            </ReactFlow>
+            <BlockCounter latestBlockNumber={ latestBlockNumber } />
+            <BlockTracker blocks={ data.nodes }/>
+        </>
     );
 };
 
