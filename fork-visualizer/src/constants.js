@@ -1,9 +1,9 @@
 export const ENABLE_GRAPH_VIEW = false
 export const ENABLE_TEST_VIEW = false
 
-// used for the info overlay for latest block number
+// used for the info overlay for latest block number (not working)
 export const ENABLE_BLOCK_COUNTER = false
-// used for the info overlay for block info
+// used for the info overlay for block info (not working)
 export const ENABLE_BLOCK_LIST = false
 export const ENABLE_MINIMAP = true
 
