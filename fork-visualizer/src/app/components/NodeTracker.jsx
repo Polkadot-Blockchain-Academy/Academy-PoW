@@ -20,7 +20,7 @@ export function NodeState ({ wsAddress, updateStuff }) {
         console.log("subscribing...", wsAddress)
 
         const wsProvider = new WsProvider(wsAddress)
-        const api = await ApiPromise.create({ provider: wsProvider })
+        const api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true })
         const unsubscribe = await api.rpc.chain.subscribeNewHeads(async (header) => {
             await updateStuff(header, api, wsAddress)
 
