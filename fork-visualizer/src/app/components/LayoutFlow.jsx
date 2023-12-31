@@ -112,10 +112,10 @@ const LayoutFlow = () => {
 
             let authorAccount = undefined
             if (group != "genesis") {
-                const apiAt = await api.at(header.parentHash.toHuman())
-                const aAcount = await apiAt.query.blockAuthor.author()
+                const apiAt = await api.at(header.hash)
+                const aAccount = await apiAt.query.blockAuthor.author()
 
-                authorAccount = aAcount.toHuman()
+                authorAccount = aAccount.toHuman()
             }
 
             // update block counter
