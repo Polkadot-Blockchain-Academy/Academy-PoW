@@ -5,17 +5,17 @@ export const ENABLE_TEST_VIEW = false
 export const ENABLE_BLOCK_COUNTER = false
 // used for the info overlay for block info (not working)
 export const ENABLE_BLOCK_LIST = false
-export const ENABLE_MINIMAP = true
+export const ENABLE_MINIMAP = false
 
-export const MAX_CHAIN_COUNT = 1000
+export const MAX_CHAIN_COUNT = 50
 export const AUTO_SCROLL_DEFAULT = false
 
 export const WS_ADDRESSES = [
     "ws://100.109.138.126:9944",
-    "ws://100.109.138.126:8844",
-    "ws://100.109.138.126:7744",
-    "ws://100.109.138.126:6644",
-    "ws://100.109.138.126:5544",
+    // "ws://100.109.138.126:8844",
+    // "ws://100.109.138.126:7744",
+    // "ws://100.109.138.126:6644",
+    // "ws://100.109.138.126:5544",
 ]
 
 export const SEAL_TO_GROUP = {

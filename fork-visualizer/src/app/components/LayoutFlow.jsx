@@ -18,7 +18,6 @@ import {
     ENABLE_BLOCK_COUNTER,
     ENABLE_BLOCK_LIST,
 
-    WS_ADDRESSES,
     GROUP_TO_COLOR,
     GROUP_TO_NODE_COLOR,
     SEAL_TO_GROUP,
@@ -39,6 +38,7 @@ import {
 import CustomBlockNode from '@/app/components/CustomBlockNode';
 import BlockCounter from '@/app/components/BlockCounter'
 import BlockTracker from '@/app/components/BlockTracker';
+import NodeTracker, { NodeState } from './NodeTracker';
 
 const nodeTypes = {
     custom: CustomBlockNode,
@@ -91,10 +91,11 @@ const LayoutFlow = () => {
         nodes: [],
         edges: []
     })
+    const [ wsAddresses, setWsAddresses ] = useState([])
 
 
     const updateStuff = useCallback(
-        async (header, api) => {
+        async (header, api, reportingNode) => {
             let group = "genesis";
             let groupColor = GROUP_TO_COLOR[group]
             // The genesis block (number 0) does not have the normal PoW seal on it.
@@ -148,7 +149,8 @@ const LayoutFlow = () => {
                             group: group,
                             groupColor: groupColor,
                             duplicate: false,
-                            authorAccount: authorAccount
+                            authorAccount: authorAccount,
+                            reportingNode: reportingNode
                         },
                         position: DEFAULT_POSITION,
                         sourcePosition: 'right',
@@ -199,29 +201,9 @@ const LayoutFlow = () => {
         [ setNodes, setEdges ]
     );
 
-    // start subscribing to nodes on page load
-    // TODO: figure out what to do once we reach MAX_CHAIN_COUNT
-    useEffect(() => {
-        // We only display a couple, then unsubscribe
-        let count = 0
-
-        WS_ADDRESSES.map(async (ws_addr) => {
-            const wsProvider = new WsProvider(ws_addr)
-            // Subscribe to the new headers on-chain. The callback is fired when new headers
-            // are found, the call itself returns a promise with a subscription that can be
-            // used to unsubscribe from the newHead subscription
-            const api = await ApiPromise.create({ provider: wsProvider })
-            const unsubscribe = await api.rpc.chain.subscribeNewHeads(async (header) => {
-                console.log("adding new header...")
-
-                await updateStuff(header, api)
-
-                if (++count === MAX_CHAIN_COUNT) {
-                    unsubscribe();
-                }
-            });
-        })
-    }, [ updateStuff ])
+    const addNode = async (nodeAddress) => {
+        if (nodeAddress !== "") setWsAddresses([...wsAddresses, nodeAddress])
+    }
 
 
     return (
@@ -274,6 +256,18 @@ const LayoutFlow = () => {
             { ENABLE_BLOCK_LIST && (
                 <BlockTracker blocks={ data.nodes }/>
             )}
+
+            <NodeTracker
+                addNode={addNode}
+            >
+                { wsAddresses && (
+                    <div className="flex flex-col text-white">
+                        { wsAddresses.map((wsAddress, index) => {
+                            return <NodeState key={index} wsAddress={wsAddress} updateStuff={updateStuff} />
+                        })}
+                    </div>
+                )}
+            </NodeTracker>
         </>
     );
 };

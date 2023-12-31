@@ -17,6 +17,7 @@ const CustomBlockNode = Memo(({ data, isConnectable }) => {
                 <span className='text-xl'>parent hash: { data.parentHash }</span>
 
                 <span className='text-xl'>author account: { data.authorAccount }</span>
+                <span className='text-xl'>reporting node: { data.reportingNode }</span>
             </div>
             <Handle
                 type="source"
