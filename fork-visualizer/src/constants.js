@@ -7,7 +7,7 @@ export const ENABLE_BLOCK_COUNTER = false
 export const ENABLE_BLOCK_LIST = false
 export const ENABLE_MINIMAP = false
 
-export const MAX_CHAIN_COUNT = 50
+export const MAX_CHAIN_COUNT = 100
 export const AUTO_SCROLL_DEFAULT = false
 
 export const WS_ADDRESSES = [
