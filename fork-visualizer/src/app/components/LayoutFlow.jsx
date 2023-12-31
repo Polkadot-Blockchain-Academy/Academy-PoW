@@ -1,7 +1,7 @@
 "use client"
 
 import dagre from 'dagre';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import ReactFlow, {
     ConnectionLineType,
     useNodesState,
@@ -9,7 +9,6 @@ import ReactFlow, {
     Controls,
     MiniMap,
 } from 'reactflow';
-import { ApiPromise, WsProvider } from "@polkadot/api";
 
 import 'reactflow/dist/style.css';
 import '@/index.css';
@@ -21,7 +20,6 @@ import {
     GROUP_TO_COLOR,
     GROUP_TO_NODE_COLOR,
     SEAL_TO_GROUP,
-    MAX_CHAIN_COUNT,
 
     NODE_WIDTH,
     NODE_HEIGHT,
@@ -33,6 +31,8 @@ import {
     DEFAULT_VIEWPORT,
     ENABLE_MINIMAP,
     DEFAULT_MIN_ZOOM,
+
+    INITIAL_WS_ADDRESSES,
 } from '@/constants';
 
 import CustomBlockNode from '@/app/components/CustomBlockNode';
@@ -91,7 +91,7 @@ const LayoutFlow = () => {
         nodes: [],
         edges: []
     })
-    const [ wsAddresses, setWsAddresses ] = useState([])
+    const [ wsAddresses, setWsAddresses ] = useState([...INITIAL_WS_ADDRESSES])
 
 
     const updateStuff = useCallback(
@@ -204,7 +204,6 @@ const LayoutFlow = () => {
     const addNode = async (nodeAddress) => {
         if (nodeAddress !== "") setWsAddresses([...wsAddresses, nodeAddress])
     }
-
 
     return (
         <>
