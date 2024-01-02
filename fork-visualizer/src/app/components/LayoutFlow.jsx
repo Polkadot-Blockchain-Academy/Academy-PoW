@@ -45,11 +45,11 @@ const nodeTypes = {
 };
 
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
-
 
 const getLayoutedElements = (nodes, edges, direction = DEFAULT_DIRECTION) => {
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+
     const isHorizontal = direction === 'LR';
     dagreGraph.setGraph({ rankdir: direction });
 
