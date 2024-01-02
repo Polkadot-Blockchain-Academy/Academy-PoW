@@ -271,16 +271,28 @@ const LayoutFlow = () => {
             >
                 { wsAddresses && (
                     <div className="flex flex-col text-white">
-                        { wsAddresses.map((wsAddress, index) => {
-                            return (
-                                <NodeState
-                                    key={index}
-                                    wsAddress={wsAddress}
-                                    updateStuff={updateStuff}
-                                    removeNode={removeNode}
-                                />
-                            )
-                        })}
+                        <table className="content-center justify-center text-center table-auto">
+                            <thead>
+                                <tr>
+                                    <th>Remove</th>
+                                    <th>Websocket Address</th>
+                                    <th>Subscribe</th>
+                                    <th>Best Block Hash</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                { wsAddresses.map((wsAddress, index) => {
+                                    return (
+                                        <NodeState
+                                            key={index}
+                                            wsAddress={wsAddress}
+                                            updateStuff={updateStuff}
+                                            removeNode={removeNode}
+                                        />
+                                    )
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </NodeTracker>
