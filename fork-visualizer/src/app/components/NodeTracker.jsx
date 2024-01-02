@@ -16,7 +16,6 @@ export function NodeState ({ wsAddress, updateStuff, removeNode }) {
 
         setLoading(true)
 
-        let count = 0
         console.log("subscribing...", wsAddress)
 
         try {
@@ -29,8 +28,6 @@ export function NodeState ({ wsAddress, updateStuff, removeNode }) {
             setIsSubscribed(true)
 
             const newUnsubscribe = () => {
-                // would be nice for this to be defined
-                // somewhere for here and above
                 console.log("unsubscribing from ", wsAddress)
                 setLoading(true)
                 unsubscribe();
@@ -38,6 +35,7 @@ export function NodeState ({ wsAddress, updateStuff, removeNode }) {
                 setLoading(false)
             }
 
+            // return a function that we can call later
             setUnsubscribeFromNode(() => newUnsubscribe)
         } catch (error) {
             console.error("failed to subscribe: ", error)
