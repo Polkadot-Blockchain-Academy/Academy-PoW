@@ -8,7 +8,7 @@ The visualizer helps to display several unique things about this network and the
 * Blocks on all forks
 * All sides of a contentious network-splitting fork.
 
-![](TODO Screenshot)
+![Visualizer Screenshot showing fork and different seals](./visualizer-screenshot.png)
 
 ## Docker Compose (Complete Network)
 
