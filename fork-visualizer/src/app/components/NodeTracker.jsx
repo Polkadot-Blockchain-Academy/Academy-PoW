@@ -3,7 +3,6 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { useState } from "react"
 
-
 const defaultFunc = () => console.log("oops this is the default func")
 export function NodeState ({ wsAddress, updateStuff, removeNode }) {
 

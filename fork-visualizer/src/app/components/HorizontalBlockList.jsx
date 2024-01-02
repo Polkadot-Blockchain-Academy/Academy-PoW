@@ -42,14 +42,14 @@ export default function HorizontalBlockList({ nodes }) {
 
     const blocksEndRef = useRef(null)
 
-    const scrollToBottom = () => {
-        if (!followEnd) return;
-        blocksEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }
-
     useEffect(() => {
+        const scrollToBottom = () => {
+            if (!followEnd) return;
+            blocksEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        }
+
         scrollToBottom()
-    }, [nodes]);
+    }, [followEnd]);
 
     return (
         <div className={`flex flex-col ${ nodes.length > 0 ? "flex-grow" : "" }`}>

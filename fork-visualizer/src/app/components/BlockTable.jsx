@@ -27,7 +27,7 @@ export default function BlockTable({ nodes, latestBlock }) {
 
         if (!autoScroll) return;
         scrollToBottom()
-    }, [nodes]);
+    }, [nodes, autoScroll]);
 
     return (
         <div className='flex flex-col m-6'>

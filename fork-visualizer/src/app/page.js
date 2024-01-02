@@ -1,7 +1,6 @@
 "use client"
 
-import LayoutFlow from '@/app/components/LayoutFlow';
-
+import LayoutFlow from '@/app/components/LayoutFlow'
 
 export default function Home () {
     return (
@@ -10,5 +9,5 @@ export default function Home () {
                 <LayoutFlow />
             </div>
         </div>
-    );
-};
+    )
+}
