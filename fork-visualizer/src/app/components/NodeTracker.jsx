@@ -3,8 +3,6 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { useState } from "react"
 
-import { MAX_CHAIN_COUNT } from '@/constants'
-
 
 const defaultFunc = () => console.log("oops this is the default func")
 export function NodeState ({ wsAddress, updateStuff, removeNode }) {
@@ -26,16 +24,6 @@ export function NodeState ({ wsAddress, updateStuff, removeNode }) {
             const api = await ApiPromise.create({ provider: wsProvider })
             const unsubscribe = await api.rpc.chain.subscribeNewHeads(async (header) => {
                 await updateStuff(header, api, wsAddress)
-
-                if (++count === MAX_CHAIN_COUNT) {
-                    // would be nice for this to be defined
-                    // somewhere for here and below
-                    console.log("unsubscribing from ", wsAddress)
-                    setLoading(true)
-                    unsubscribe();
-                    setIsSubscribed(false)
-                    setLoading(false)
-                }
             });
 
             setIsSubscribed(true)
