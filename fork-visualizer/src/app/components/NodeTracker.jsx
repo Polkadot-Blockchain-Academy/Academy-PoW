@@ -97,6 +97,13 @@ export default function NodeTracker ({ addNode , children}) {
         setNodeAddr("")
     }
 
+    const onKeyDownHandler = e => {
+        if (e.keyCode === 13) {
+            onAddNode()
+            setNodeAddr("")
+        }
+    }
+
     return (
         <div className="fixed z-50 flex flex-col top-1 left-1">
             <div className="flex flex-row gap-2">
@@ -109,6 +116,7 @@ export default function NodeTracker ({ addNode , children}) {
                     onChange={(e) => {
                         setNodeAddr(e.target.value)
                     }}
+                    onKeyDown={onKeyDownHandler}
                 />
 
                 <button className="text-white btn" onClick={onAddNode}>Add</button>
