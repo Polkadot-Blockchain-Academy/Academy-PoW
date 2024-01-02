@@ -2,9 +2,9 @@ name: Build/Lint CI
 
 on:
   push:
-    branches: [ main, nik-add-CI-linter-check ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, nik-add-CI-linter-check ]
+    branches: [ main ]
 
 jobs:
   build:
