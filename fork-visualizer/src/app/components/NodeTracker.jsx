@@ -7,7 +7,7 @@ import { MAX_CHAIN_COUNT } from '@/constants'
 
 
 const defaultFunc = () => console.log("oops this is the default func")
-export function NodeState ({ wsAddress, updateStuff }) {
+export function NodeState ({ wsAddress, updateStuff, removeNode }) {
 
     const [ isSubscribed, setIsSubscribed ] = useState(false)
     const [ loading, setLoading ] = useState(false)
@@ -59,8 +59,18 @@ export function NodeState ({ wsAddress, updateStuff }) {
         setLoading(false)
     }
 
+    const handleRemoveNode = () => {
+        // if subscribed, unsubscribe
+        if (isSubscribed) unsubscribeFromNode()
+
+        removeNode(wsAddress)
+    }
+
     return (
         <div className="flex flex-row gap-3 px-4 text-white">
+
+            <button className="text-red-600 btn" onClick={handleRemoveNode}>remove</button>
+
             <span>{ wsAddress }</span>
 
             { loading && (

@@ -93,6 +93,16 @@ const LayoutFlow = () => {
     })
     const [ wsAddresses, setWsAddresses ] = useState([...INITIAL_WS_ADDRESSES])
 
+    const removeNode = (nodeAddress) => {
+        const newAddresses = [...wsAddresses]
+
+        const index = newAddresses.indexOf(nodeAddress);
+        if (index > -1) {
+            newAddresses.splice(index, 1)
+        }
+
+        setWsAddresses([...newAddresses])
+    }
 
     const updateStuff = useCallback(
         async (header, api, reportingNode) => {
@@ -262,7 +272,14 @@ const LayoutFlow = () => {
                 { wsAddresses && (
                     <div className="flex flex-col text-white">
                         { wsAddresses.map((wsAddress, index) => {
-                            return <NodeState key={index} wsAddress={wsAddress} updateStuff={updateStuff} />
+                            return (
+                                <NodeState
+                                    key={index}
+                                    wsAddress={wsAddress}
+                                    updateStuff={updateStuff}
+                                    removeNode={removeNode}
+                                />
+                            )
                         })}
                     </div>
                 )}
