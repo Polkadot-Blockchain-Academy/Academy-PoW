@@ -1,10 +1,5 @@
 # Workflow inspired by https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
 
-# This is currently somewhat redundant with the docker stuff in e2e-tests-suite.yml
-# This one is nice because it publishes the docker image to a registry so that students can
-# easily download it to their local systems or their servers. Ideally those e2e tests would be able
-# to use this same docker container somehow.
-
 name: Create and publish a Docker image
 
 on:
