@@ -44,8 +44,6 @@ const nodeTypes = {
     custom: CustomBlockNode,
 };
 
-
-
 const getLayoutedElements = (nodes, edges, direction = DEFAULT_DIRECTION) => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -89,7 +87,7 @@ const LayoutFlow = () => {
     const [ latestBlockNumber, setLatestBlockNumber ] = useState(0)
     const [ data, setData ] = useState({
         nodes: [],
-        edges: []
+        edges: [],
     })
     const [ wsAddresses, setWsAddresses ] = useState([...INITIAL_WS_ADDRESSES])
 
@@ -153,14 +151,12 @@ const LayoutFlow = () => {
                             number: header.number.toHuman(),
                             stateRoot: header.stateRoot.toHuman(),
                             extrinsicsRoot: header.extrinsicsRoot.toHuman(),
-                            digestLogs: header.digest.logs.map((d) => {
-                                return d.toHuman().Seal
-                            }),
-                            group: group,
-                            groupColor: groupColor,
+                            digestLogs: header.digest.logs.map((d) => d.toHuman().Seal),
+                            group,
+                            groupColor,
                             duplicate: false,
-                            authorAccount: authorAccount,
-                            reportingNode: reportingNode
+                            authorAccount,
+                            reportingNode,
                         },
                         position: DEFAULT_POSITION,
                         sourcePosition: 'right',
@@ -203,7 +199,7 @@ const LayoutFlow = () => {
 
                 return {
                     nodes: newLayoutedNodes,
-                    edges: newLayoutedEdges
+                    edges: newLayoutedEdges,
                 }
             });
 
