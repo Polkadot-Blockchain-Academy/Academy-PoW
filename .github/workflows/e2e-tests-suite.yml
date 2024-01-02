@@ -39,15 +39,12 @@ jobs:
             /tmp/academy-pow/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
 
-      - name: Install Rust toolchain
-        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
-
-      - name: build release binary
-        run: cargo build --release
+      - name: build binary
+        run: cargo build
 
       - name: Run a node
         shell: bash
-        run: /tmp/academy-pow/target/release/academy-pow --chain local --alice &
+        run: ./target/release/academy-pow --chain local --alice &
 
       - name: Verify chain responds
         shell: bash
