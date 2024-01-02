@@ -2,7 +2,7 @@
 
 A Proof of Work blockchain node for use in the Polkadot Blockchain Academy.
 It happens to be based on Substrate, but no Substrate knowledge is required.
-Students will use this node to start their own network, perform hard and soft forks, and execute smart contracts.
+Students will use this node to start their own network, and perform hard, soft, and contentious forks.
 
 Instructors, planning to host such an activity should see the docs on [setting up a bootnode](./SettingUpTheBootnode.md). TODO Expand that doc into a full guide to running the workshop.
 
