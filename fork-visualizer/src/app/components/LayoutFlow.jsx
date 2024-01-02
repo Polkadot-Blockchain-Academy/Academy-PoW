@@ -38,7 +38,7 @@ import {
 import CustomBlockNode from '@/app/components/CustomBlockNode';
 import BlockCounter from '@/app/components/BlockCounter'
 import BlockTracker from '@/app/components/BlockTracker';
-import NodeTracker, { NodeState } from './NodeTracker';
+import NodeTracker, { NodeState } from '@/app/components/NodeTracker';
 
 const nodeTypes = {
     custom: CustomBlockNode,

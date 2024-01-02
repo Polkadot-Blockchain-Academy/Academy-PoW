@@ -6,10 +6,12 @@ import { useState } from "react"
 import { MAX_CHAIN_COUNT } from '@/constants'
 
 
+const defaultFunc = () => console.log("oops this is the default func")
 export function NodeState ({ wsAddress, updateStuff }) {
 
     const [ isSubscribed, setIsSubscribed ] = useState(false)
     const [ loading, setLoading ] = useState(false)
+    const [ unsubscribeFromNode, setUnsubscribeFromNode ] = useState(() => defaultFunc)
 
     const subscribe = async () => {
         if (isSubscribed) return
@@ -26,13 +28,29 @@ export function NodeState ({ wsAddress, updateStuff }) {
                 await updateStuff(header, api, wsAddress)
 
                 if (++count === MAX_CHAIN_COUNT) {
+                    // would be nice for this to be defined
+                    // somewhere for here and below
+                    console.log("unsubscribing from ", wsAddress)
                     setLoading(true)
                     unsubscribe();
                     setIsSubscribed(false)
                     setLoading(false)
                 }
             });
+
             setIsSubscribed(true)
+
+            const newUnsubscribe = () => {
+                // would be nice for this to be defined
+                // somewhere for here and above
+                console.log("unsubscribing from ", wsAddress)
+                setLoading(true)
+                unsubscribe();
+                setIsSubscribed(false)
+                setLoading(false)
+            }
+
+            setUnsubscribeFromNode(() => newUnsubscribe)
         } catch (error) {
             console.error("failed to subscribe: ", error)
         }
@@ -52,10 +70,8 @@ export function NodeState ({ wsAddress, updateStuff }) {
                 </svg>
             )}
 
-            { isSubscribed && (
-                <span className="text-green-500 animate-pulse">subscribed</span>
-            )}
-            { !loading && !isSubscribed && <button className="text-red-600 underline btn" onClick={subscribe}>subscribe</button> }
+            { !loading && !isSubscribed && <button className="text-green-600 underline btn" onClick={subscribe}>subscribe</button> }
+            { !loading && isSubscribed && <button className="text-red-600 underline btn animate-pulse" onClick={unsubscribeFromNode}>unsubscribe</button> }
 
         </div>
     )
