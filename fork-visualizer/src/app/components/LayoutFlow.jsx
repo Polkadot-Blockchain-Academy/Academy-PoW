@@ -14,13 +14,9 @@ import 'reactflow/dist/style.css';
 import '@/index.css';
 
 import {
-    ENABLE_BLOCK_COUNTER,
-    ENABLE_BLOCK_LIST,
-
     GROUP_TO_COLOR,
     GROUP_TO_NODE_COLOR,
     SEAL_TO_GROUP,
-
     NODE_WIDTH,
     NODE_HEIGHT,
     DEFAULT_DIRECTION,
@@ -31,14 +27,12 @@ import {
     DEFAULT_VIEWPORT,
     ENABLE_MINIMAP,
     DEFAULT_MIN_ZOOM,
-
     INITIAL_WS_ADDRESSES,
 } from '@/constants';
 
 import CustomBlockNode from '@/app/components/CustomBlockNode';
-import BlockCounter from '@/app/components/BlockCounter'
-import BlockTracker from '@/app/components/BlockTracker';
-import NodeTracker, { NodeState } from '@/app/components/NodeTracker';
+import NodeWsInput from '@/app/components/NodeWsInput'
+import NodeWsController from '@/app/components/NodeWsController'
 
 const nodeTypes = {
     custom: CustomBlockNode,
@@ -84,7 +78,6 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements([], [
 const LayoutFlow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
-    const [ latestBlockNumber, setLatestBlockNumber ] = useState(0)
     const [ data, setData ] = useState({
         nodes: [],
         edges: [],
@@ -117,7 +110,6 @@ const LayoutFlow = () => {
                 groupColor = GROUP_TO_COLOR[group]
             }
 
-
             let authorAccount = undefined
             if (group != "genesis") {
                 const apiAt = await api.at(header.hash)
@@ -125,14 +117,6 @@ const LayoutFlow = () => {
 
                 authorAccount = aAccount.toHuman()
             }
-
-            // update block counter
-            setLatestBlockNumber(oldBlockNumber => {
-                const newNumber = header.number.toHuman()
-                if (newNumber > oldBlockNumber) return newNumber
-
-                return oldBlockNumber
-            })
 
             setData(({ nodes: n, edges: e }) => {
                 // If the node is not in the graph already, we add it.
@@ -220,18 +204,14 @@ const LayoutFlow = () => {
                 onEdgesChange={onEdgesChange}
                 connectionLineType={ConnectionLineType.SmoothStep}
                 fitView
-
                 nodeTypes={nodeTypes}
-
                 connectionLineStyle={DEFAULT_CONNECTION_LINE_STYLE}
                 snapToGrid={true}
                 snapGrid={DEFAULT_SNAP_GRID}
                 defaultViewport={DEFAULT_VIEWPORT}
                 attributionPosition="bottom-left"
                 style={{ background: '#1A192B' }}
-
                 minZoom={DEFAULT_MIN_ZOOM}
-
                 nodesDraggable={false}
                 nodesConnectable={false}
                 nodesFocusable={false}
@@ -254,15 +234,8 @@ const LayoutFlow = () => {
                 )}
                 <Controls />
             </ReactFlow>
-            { ENABLE_BLOCK_COUNTER && (
-                <BlockCounter latestBlockNumber={ latestBlockNumber } />
-            )}
 
-            { ENABLE_BLOCK_LIST && (
-                <BlockTracker blocks={ data.nodes }/>
-            )}
-
-            <NodeTracker
+            <NodeWsInput
                 addNode={addNode}
             >
                 { wsAddresses && (
@@ -279,7 +252,7 @@ const LayoutFlow = () => {
                             <tbody>
                                 { wsAddresses.map((wsAddress, index) => {
                                     return (
-                                        <NodeState
+                                        <NodeWsController
                                             key={index}
                                             wsAddress={wsAddress}
                                             updateStuff={updateStuff}
@@ -291,7 +264,7 @@ const LayoutFlow = () => {
                         </table>
                     </div>
                 )}
-            </NodeTracker>
+            </NodeWsInput>
         </>
     );
 };
