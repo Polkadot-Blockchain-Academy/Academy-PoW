@@ -27,7 +27,7 @@ import {
     DEFAULT_VIEWPORT,
     ENABLE_MINIMAP,
     DEFAULT_MIN_ZOOM,
-    INITIAL_WS_ADDRESSES,
+    INITIAL_WS_ADDRESS,
 } from '@/constants';
 
 import CustomBlockNode from '@/app/components/CustomBlockNode';
@@ -37,6 +37,8 @@ import NodeWsController from '@/app/components/NodeWsController'
 const nodeTypes = {
     custom: CustomBlockNode,
 };
+
+const initialWsAddress = process.env.NEXT_PUBLIC_INITIAL_WS_ADDRESS || INITIAL_WS_ADDRESS
 
 const getLayoutedElements = (nodes, edges, direction = DEFAULT_DIRECTION) => {
     const dagreGraph = new dagre.graphlib.Graph();
@@ -78,11 +80,14 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements([], [
 const LayoutFlow = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+    // I am using setData, but not data right now.
+    // There is probably a better way, just have not had time to make it better
     const [ data, setData ] = useState({
         nodes: [],
         edges: [],
     })
-    const [ wsAddresses, setWsAddresses ] = useState([...INITIAL_WS_ADDRESSES])
+    const [ wsAddresses, setWsAddresses ] = useState([initialWsAddress])
 
     const removeNode = (nodeAddress) => {
         const newAddresses = [...wsAddresses]
@@ -145,11 +150,6 @@ const LayoutFlow = () => {
                         position: DEFAULT_POSITION,
                         sourcePosition: 'right',
                         targetPosition: 'left',
-                        // style: {
-                        //     background: GROUP_TO_NODE_COLOR[group],
-                        //     color: 'white',
-                        //     width: 5000
-                        // },
                         type: 'custom',
                     }
                 }

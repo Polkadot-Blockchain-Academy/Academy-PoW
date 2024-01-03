@@ -10,13 +10,7 @@ export const ENABLE_MINIMAP = false
 export const MAX_CHAIN_COUNT = 100
 export const AUTO_SCROLL_DEFAULT = false
 
-export const INITIAL_WS_ADDRESSES = [
-    "ws://100.109.138.126:9944",
-    "ws://100.109.138.126:8844",
-    "ws://100.109.138.126:7744",
-    "ws://100.109.138.126:6644",
-    "ws://100.109.138.126:5544",
-]
+export const INITIAL_WS_ADDRESS = "ws://localhost:9944"
 
 export const SEAL_TO_GROUP = {
     "0x00": "md5",
