@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   visualizer:
-    build: .
+    image: ghcr.io/polkadot-blockchain-academy/fork-visualizer-dev:latest
     container_name: visualizer
     restart: always
     ports:
