@@ -10,8 +10,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: fork-visualizer
-  DEV_IMAGE_NAME: fork-visualizer-dev
+  IMAGE_NAME: polkadot-blockchain-academy/fork-visualizer
+  DEV_IMAGE_NAME: polkadot-blockchain-academy/fork-visualizer-dev
 
 jobs:
   build-and-push-node-image:
