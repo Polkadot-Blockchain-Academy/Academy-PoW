@@ -10,7 +10,7 @@ export const ENABLE_MINIMAP = false
 export const MAX_CHAIN_COUNT = 100
 export const AUTO_SCROLL_DEFAULT = false
 
-export const INITIAL_WS_ADDRESS = "ws://localhost:9944"
+export const INITIAL_WS_ADDRESS = "ws://127.0.0.1:9944"
 
 export const SEAL_TO_GROUP = {
     "0x00": "md5",

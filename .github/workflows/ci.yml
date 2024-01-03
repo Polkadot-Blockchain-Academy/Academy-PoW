@@ -33,4 +33,4 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-     - run: echo Success
+      - run: echo Success

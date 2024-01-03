@@ -83,6 +83,7 @@ const LayoutFlow = () => {
 
     // I am using setData, but not data right now.
     // There is probably a better way, just have not had time to make it better
+    // eslint-disable-next-line
     const [ data, setData ] = useState({
         nodes: [],
         edges: [],

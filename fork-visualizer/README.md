@@ -15,7 +15,15 @@ The visualizer helps to display several unique things about this network and the
 The easiest way to get this UI up and running to try it out and play around is to use the provided Docker compose file.
 This will start up a multi-node network as well as this visualizer UI.
 
-TODO @kevcoxe, how exactly do I use the docker compose file?
+The `docker-compose.yml` includes the fork-visualizer and 1 node in the network. If you would like to include more nodes, just uncomment the blocks.
+Please note the resource requirements when adding multiple nodes.
+
+```sh
+# to run and build this locally run
+docker-compose up --build
+
+# go to http://localhost:3000
+```
 
 ## With an Existing Blockchain
 
