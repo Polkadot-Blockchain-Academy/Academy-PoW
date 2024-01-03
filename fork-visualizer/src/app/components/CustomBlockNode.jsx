@@ -5,10 +5,15 @@ import { Handle, Position } from 'reactflow';
 
 const CustomBlockNode = Memo(({ data, isConnectable }) => {
 
-    const myClass = `flex flex-col ${ data.groupColor } rounded-lg`
+    const classNameMap = {
+        "genesis": "bg-green-600 flex flex-col rounded-lg",
+        "md5": "bg-red-600 flex flex-col rounded-lg",
+        "sha3": "bg-blue-600 flex flex-col rounded-lg",
+        "keccak": "bg-purple-600 flex flex-col rounded-lg",
+    }
 
     return (
-        <div className={ myClass }>
+        <div className={`${ classNameMap[data.group] }`}>
             <Handle
                 type="target"
                 position={Position.Left}

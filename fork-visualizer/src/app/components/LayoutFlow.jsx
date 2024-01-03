@@ -104,7 +104,6 @@ const LayoutFlow = () => {
     const updateStuff = useCallback(
         async (header, api, reportingNode) => {
             let group = "genesis";
-            let groupColor = GROUP_TO_COLOR[group]
             // The genesis block (number 0) does not have the normal PoW seal on it.
             // This avoids a crash when you re-start the block. There is likely a more
             // idiomatic way to do this is js.
@@ -113,7 +112,6 @@ const LayoutFlow = () => {
                 const seal = seal_data.slice(0, 4)
 
                 group = SEAL_TO_GROUP[seal] ?? "genesis"
-                groupColor = GROUP_TO_COLOR[group]
             }
 
             let authorAccount = undefined
@@ -143,7 +141,6 @@ const LayoutFlow = () => {
                             extrinsicsRoot: header.extrinsicsRoot.toHuman(),
                             digestLogs: header.digest.logs.map((d) => d.toHuman().Seal),
                             group,
-                            groupColor,
                             duplicate: false,
                             authorAccount,
                             reportingNode,

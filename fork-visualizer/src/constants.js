@@ -18,13 +18,6 @@ export const SEAL_TO_GROUP = {
     "0x02": "keccak",
 }
 
-export const GROUP_TO_COLOR = {
-    "genesis": "bg-green-600",
-    "md5": "bg-red-600",
-    "sha3": "bg-blue-600",
-    "keccak": "bg-purple-600",
-}
-
 export const GROUP_TO_NODE_COLOR = {
     "genesis": "#00ff00",
     "md5": "#ff0000",
