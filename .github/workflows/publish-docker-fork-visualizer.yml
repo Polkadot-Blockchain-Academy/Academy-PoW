@@ -38,7 +38,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha
-            type=ref,event=branch
+            type=ref,event=tag
         if: github.ref == 'refs/heads/main'
 
       - name: Build and push Docker image
@@ -58,7 +58,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.DEV_IMAGE_NAME }}
           tags: |
             type=sha
-            type=ref,event=branch
+            type=ref,event=tag
         if: github.ref != 'refs/heads/main'
 
       - name: Build and push Docker dev image
