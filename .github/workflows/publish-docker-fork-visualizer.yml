@@ -1,6 +1,6 @@
 # Workflow inspired by publish-docker.yml action
 
-name: Create and publish a Docker image
+name: Create and publish fork-visualizer Docker image
 
 on:
   push:
