@@ -16,7 +16,7 @@ services:
       - "9944:9944"
     command: [
       "--dev",
-      "--mining-algo=keccak",
+      "--mining-algo=md5",
       "--rpc-external",
       "--name=firstnode",
       "--node-key=0xf50eb51c7941cfe177b28f0c3a2b1261d579bc1a0c30f7ee112415c544adc0ae"
@@ -47,7 +47,7 @@ services:
   #     - "7744:9944"
   #   command: [
   #     "--dev",
-  #     "--mining-algo=md5",
+  #     "--mining-algo=keccak",
   #     "--rpc-external",
   #     "--bootnodes=/dns/first_node/tcp/30333/p2p/12D3KooWMQwdmPwsWNWUJhMNyQE4QzcCivxr7DDhhB3E46xH3QLx"
   #   ]

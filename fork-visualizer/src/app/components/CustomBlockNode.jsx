@@ -1,3 +1,5 @@
+"use client"
+
 import { memo as Memo } from 'react';
 import { Handle, Position } from 'reactflow';
 
