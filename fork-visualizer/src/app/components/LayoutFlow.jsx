@@ -14,7 +14,6 @@ import 'reactflow/dist/style.css';
 import '@/index.css';
 
 import {
-    GROUP_TO_COLOR,
     GROUP_TO_NODE_COLOR,
     SEAL_TO_GROUP,
     NODE_WIDTH,
