@@ -4,8 +4,11 @@ import { memo as Memo } from 'react';
 import { Handle, Position } from 'reactflow';
 
 const CustomBlockNode = Memo(({ data, isConnectable }) => {
+
+    const myClass = `flex flex-col ${ data.groupColor } rounded-lg`
+
     return (
-        <div className={`flex flex-col ${ data.groupColor } rounded-lg`}>
+        <div className={ myClass }>
             <Handle
                 type="target"
                 position={Position.Left}
