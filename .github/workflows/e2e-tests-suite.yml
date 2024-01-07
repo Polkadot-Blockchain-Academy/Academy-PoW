@@ -39,9 +39,6 @@ jobs:
             /tmp/academy-pow/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
 
-      - name: show pwd
-        run: pwd
-
       - name: build binary
         run: cargo build
 
