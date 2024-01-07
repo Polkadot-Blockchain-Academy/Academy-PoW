@@ -45,7 +45,7 @@ jobs:
       - name: Run a node
         shell: bash
         # This path is very specific to github actions. There must be a better way to do this, but I can't figure it out.
-        run: /home/runner/work/Academy-PoW/target/release/academy-pow --dev &
+        run: /home/runner/work/Academy-PoW/Academy-PoW/target/debug/academy-pow --dev &
 
       - name: Verify chain responds
         shell: bash
