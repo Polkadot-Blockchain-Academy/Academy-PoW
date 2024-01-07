@@ -2,15 +2,6 @@
 panic = "unwind"
 
 [workspace]
-exclude = [
-	"contracts/roulette",
-	"contracts/psp22-traits",
-	"contracts/psp22",
-	"contracts/simple-dex",
-	"contracts/old_a",
-	"contracts/new_a",
-	"contracts/test-utils",
-]
 members = [
 	"node",
 	"runtime",
@@ -46,8 +37,6 @@ frame-support = { branch = "release-polkadot-v1.5.0", default-features = false, 
 frame-system = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 frame-system-rpc-runtime-api = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-balances = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
-pallet-contracts = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
-pallet-insecure-randomness-collective-flip = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-timestamp = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-transaction-payment = { branch = "release-polkadot-v1.5.0", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-transaction-payment-rpc = { branch = "release-polkadot-v1.5.0", git = "https://github.com/paritytech/polkadot-sdk" }

@@ -27,27 +27,19 @@ jobs:
 
       - name: Checkout Source code
         uses: actions/checkout@v3
-
-      - name: Cache cargo
-        uses: actions/cache@v3
+        
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            /tmp/academy-pow/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
+          cache-targets: true
 
-      - name: Install Rust toolchain
-        uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
-
-      - name: build release binary
-        run: make release
+      - name: build binary
+        run: cargo build
 
       - name: Run a node
         shell: bash
-        run: /tmp/academy-pow/target/release/academy-pow --chain local --alice &
+        # This path is very specific to github actions. There must be a better way to do this, but I can't figure it out.
+        run: /home/runner/work/Academy-PoW/Academy-PoW/target/debug/academy-pow --dev &
 
       - name: Verify chain responds
         shell: bash
@@ -55,14 +47,3 @@ jobs:
            alias curl='docker run -it --rm curlimages/curl:8.1.2'
            curl --retry 12 --retry-all-errors --retry-delay 3 -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9944
 
-      - name: Verify contract interaction
-        shell: bash
-        run: ./.github/scripts/interact-with-contract.sh
-
-#      - name: Deploy contracts
-#        shell: bash
-#        run: ./scripts/deploy.sh
-#
-#      - name: Test basic contract interactions
-#        shell: bash
-#        run: ./scripts/interact.sh
