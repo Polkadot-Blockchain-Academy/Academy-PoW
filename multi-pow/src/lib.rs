@@ -255,11 +255,13 @@ where
         // Here we handle the forking logic according the the node operator's request.
         let valid_algorithm = match self.fork_config {
             ForkingConfig::Manual => manual_fork_validation(parent_number),
-            ForkingConfig::Automatic(fork_heights, maxi_position) => auto_fork_validation(parent_number, seal.work.algo, fork_heights, maxi_position),
+            ForkingConfig::Automatic(fork_heights, maxi_position) => {
+                auto_fork_validation(parent_number, seal.work.algo, fork_heights, maxi_position)
+            }
         };
 
         if !valid_algorithm {
-            return Ok(false)
+            return Ok(false);
         }
 
         // See whether the hash meets the difficulty requirement. If not, fail fast.
@@ -329,15 +331,19 @@ impl FromStr for MaxiPosition {
     }
 }
 
-
 fn manual_fork_validation(_parent_number: u32) -> bool {
     todo!("You must code up your own validation logic before you can run manual mode.")
 }
 
-fn auto_fork_validation(parent_number: u32, algo: SupportedHashes, fork_heights: ForkHeights, maxi_position: MaxiPosition) -> bool {
+fn auto_fork_validation(
+    parent_number: u32,
+    algo: SupportedHashes,
+    fork_heights: ForkHeights,
+    maxi_position: MaxiPosition,
+) -> bool {
     use MaxiPosition::*;
     use SupportedHashes::*;
-    
+
     if parent_number < fork_heights.add_sha3_keccak {
         // To begin with we only allow md5 hashes for our pow.
         // After the fork height this check is skipped so all the hashes become valid.
@@ -363,6 +369,7 @@ fn auto_fork_validation(parent_number: u32, algo: SupportedHashes, fork_heights:
     } else {
         // Finally we have the contentious fork.
         // Our behavior here depends which maxi position we have taken.
+        #[allow(clippy::match_like_matches_macro)]
         match (algo, maxi_position) {
             (Sha3, Sha3Maxi) => true,
             (Sha3, NoMaxi) => true,

@@ -1,0 +1,36 @@
+name: Build/Lint CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4.1.1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+      working-directory: fork-visualizer
+    - run: npm run build
+      working-directory: fork-visualizer
+    - run: npm run lint
+      working-directory: fork-visualizer
+
+  all:
+    # This dummy job depends on all the mandatory checks. It succeeds if and only if all CI checks
+    # are successful.
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo Success

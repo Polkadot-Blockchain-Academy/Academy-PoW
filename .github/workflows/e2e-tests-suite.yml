@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
            alias curl='docker run -it --rm curlimages/curl:8.1.2'
-           curl --retry 12 --retry-all-errors --retry-delay 3 -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9933
+           curl --retry 12 --retry-all-errors --retry-delay 3 -H "Content-Type: application/json" -d '{ "id": 1, "jsonrpc": "2.0", "method": "rpc_methods"}' http://127.0.0.1:9944
 
       - name: Verify contract interaction
         shell: bash

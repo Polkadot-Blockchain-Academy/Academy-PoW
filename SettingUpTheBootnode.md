@@ -135,15 +135,6 @@ server {
     proxy_set_header Connection "upgrade";
     proxy_read_timeout 86400;
   }
-
-# Uncomment these lines to enable reverse proxy for http rpc port as well
-# This might need updated; it hasn't been tested since circa 2020.
-#  location /alice/rpc {
-#    proxy_buffers 16 4k;
-#    proxy_buffer_size 2k;
-#    proxy_pass http://localhost:9933;
-#    proxy_http_version 1.1;
-#  }
 }
 
 ```
