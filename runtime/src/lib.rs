@@ -27,7 +27,6 @@ use frame_support::{
     sp_runtime::Perquintill,
     traits::{ConstU128, ConstU32, ConstU8},
 };
-use issuance::Issuance;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
@@ -77,9 +76,6 @@ pub type Hash = sp_core::H256;
 
 /// The BlockAuthor trait in `./block_author.rs`
 pub mod block_author;
-
-/// The Issuance trait in `./issuance.rs`
-pub mod issuance;
 
 // /// The Difficulty Adjustment Algorithm in `./difficulty.rs`
 pub mod difficulty;
@@ -250,12 +246,9 @@ impl faucet::Config for Runtime {
 }
 
 impl block_author::Config for Runtime {
-    // Issue some new tokens to the block author
+    // Each block mined issues 50 new tokens to the miner
     fn on_author_set(author_account: Self::AccountId) {
-        let block = System::block_number();
-        let issuance =
-            <issuance::BitcoinHalving as Issuance<BlockNumber, Balance>>::issuance(block);
-        let issuance = issuance * TOKEN;
+        let issuance = 50 * TOKEN;
         let _ = Balances::deposit_creating(&author_account, issuance);
     }
 }
