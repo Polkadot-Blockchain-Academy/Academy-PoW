@@ -1,0 +1,31 @@
+{
+  "extends": [
+	"next/core-web-vitals",
+	"eslint:recommended"
+  ],
+  "settings": {
+	"import/resolver": {
+		"alias": {
+			"map": [ ["@/*", "./src/*"] ]
+		}
+	}
+  },
+  "rules": {
+    // Stylistic
+    // ---------
+	"no-multiple-empty-lines": "error",
+    "comma-dangle": [
+      "error",
+      {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "never"
+      }
+    ],
+    "object-shorthand": "error",
+    "import/no-named-as-default": "off",
+    "import/no-named-as-default-member": "off"
+  }
+}
