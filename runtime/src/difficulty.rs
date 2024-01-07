@@ -43,7 +43,7 @@ pub mod pallet {
 
     /// Pallet's configuration trait.
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config<I: 'static = ()>: frame_system::Config {
         /// A Source for timestamp data
         type TimeProvider: Time;
         /// The block time that the DAA will attempt to maintain
@@ -59,22 +59,31 @@ pub mod pallet {
         /// avoids getting stuck when trying to increase difficulty subject to dampening
         /// Recommended to use same value as DampFactor
         type MinDifficulty: Get<u128>;
+
+        /// Now that the pallet is instantiable, we need a way to decide which blocks are
+        /// relevant to this instance. This function does just that.
+        /// 
+        /// The default implementation assumes that all blocks are relevant which is what
+        /// you probably want when there is only a single instance.
+        fn relevant_to_this_instance() -> bool {
+            true
+        }
     }
 
     #[pallet::pallet]
-    pub struct Pallet<T>(_);
+    pub struct Pallet<T, I = ()>(_);
 
-    type DifficultyList<T> =
-        [Option<DifficultyAndTimestamp<<<T as Config>::TimeProvider as Time>::Moment>>; 60];
+    type DifficultyList<T, I> =
+        [Option<DifficultyAndTimestamp<<<T as Config<I>>::TimeProvider as Time>::Moment>>; 60];
 
     /// Past difficulties and timestamps, from earliest to latest.
     #[pallet::storage]
-    pub type PastDifficultiesAndTimestamps<T> =
-        StorageValue<_, DifficultyList<T>, ValueQuery, EmptyList<T>>;
+    pub type PastDifficultiesAndTimestamps<T: Config<I>, I: 'static = ()> =
+        StorageValue<_, DifficultyList<T, I>, ValueQuery, EmptyList<T, I>>;
 
-    pub struct EmptyList<T: Config>(PhantomData<T>);
-    impl<T: Config> Get<DifficultyList<T>> for EmptyList<T> {
-        fn get() -> DifficultyList<T> {
+    pub struct EmptyList<T: Config<I>, I: 'static = ()>(PhantomData<(T, I)>);
+    impl<T: Config<I>, I> Get<DifficultyList<T, I>> for EmptyList<T, I> {
+        fn get() -> DifficultyList<T, I> {
             [None; DIFFICULTY_ADJUST_WINDOW as usize]
         }
     }
@@ -82,31 +91,31 @@ pub mod pallet {
     /// Current difficulty.
     #[pallet::storage]
     #[pallet::getter(fn difficulty)]
-    pub type CurrentDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
+    pub type CurrentDifficulty<T: Config<I>, I: 'static = ()> = StorageValue<_, Difficulty, ValueQuery>;
 
     /// Initial difficulty.
     #[pallet::storage]
-    pub type InitialDifficulty<T> = StorageValue<_, Difficulty, ValueQuery>;
+    pub type InitialDifficulty<T: Config<I>, I: 'static = ()> = StorageValue<_, Difficulty, ValueQuery>;
 
     #[pallet::genesis_config]
-    pub struct GenesisConfig<T> {
-        pub _ph_data: PhantomData<T>,
+    pub struct GenesisConfig<T: Config<I>, I: 'static = ()> {
+        pub _ph_data: PhantomData<(T, I)>,
         pub initial_difficulty: Difficulty,
     }
 
     #[pallet::genesis_build]
-    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+    impl<T: Config<I>, I: 'static> BuildGenesisConfig for GenesisConfig<T, I> {
         fn build(&self) {
             // Initialize the Current difficulty
-            CurrentDifficulty::<T>::put(self.initial_difficulty);
+            CurrentDifficulty::<T, I>::put(self.initial_difficulty);
 
             // Store the initial difficulty in storage because we will need it
             // during the first DIFFICULTY_ADJUSTMENT_WINDOW blocks (see todo below).
-            InitialDifficulty::<T>::put(self.initial_difficulty);
+            InitialDifficulty::<T, I>::put(self.initial_difficulty);
         }
     }
 
-    impl<T> Default for GenesisConfig<T> {
+    impl<T: Config<I>, I: 'static> Default for GenesisConfig<T, I> {
         fn default() -> Self {
             GenesisConfig {
                 _ph_data: Default::default(),
@@ -116,9 +125,14 @@ pub mod pallet {
     }
 
     #[pallet::hooks]
-    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+    impl<T: Config<I>, I: 'static> Hooks<BlockNumberFor<T>> for Pallet<T, I> {
         fn on_finalize(_n: BlockNumberFor<T>) {
-            let mut data = PastDifficultiesAndTimestamps::<T>::get();
+            // First check if this is block is relevant to this instance of the difficulty adjustment algorithm
+            if !T::relevant_to_this_instance() {
+                return
+            }
+
+            let mut data = PastDifficultiesAndTimestamps::<T, I>::get();
 
             for i in 1..data.len() {
                 data[i - 1] = data[i];
@@ -151,7 +165,7 @@ pub mod pallet {
             for item in data.iter().take(DIFFICULTY_ADJUST_WINDOW as usize) {
                 let diff = match item.map(|d| d.difficulty) {
                     Some(diff) => diff,
-                    None => InitialDifficulty::<T>::get(),
+                    None => InitialDifficulty::<T, I>::get(),
                 };
                 diff_sum += diff;
             }
@@ -179,8 +193,8 @@ pub mod pallet {
                 ),
             );
 
-            <PastDifficultiesAndTimestamps<T>>::put(data);
-            <CurrentDifficulty<T>>::put(difficulty);
+            <PastDifficultiesAndTimestamps<T, I>>::put(data);
+            <CurrentDifficulty<T, I>>::put(difficulty);
         }
     }
 }

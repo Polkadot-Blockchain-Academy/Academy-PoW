@@ -107,7 +107,7 @@ const LayoutFlow = () => {
             // This avoids a crash when you re-start the block. There is likely a more
             // idiomatic way to do this is js.
             if (header.number != 0) {
-                const seal_data = header.digest.logs[0].toJSON().seal[1];
+                const seal_data = header.digest.logs[0].toJSON().preRuntime[1];
                 const seal = seal_data.slice(0, 4)
 
                 group = SEAL_TO_GROUP[seal] ?? "genesis"
