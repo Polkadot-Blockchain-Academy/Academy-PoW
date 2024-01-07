@@ -42,9 +42,12 @@ jobs:
       - name: build binary
         run: cargo build
 
+      - name: show pwd
+        run: pwd
+
       - name: Run a node
         shell: bash
-        run: ./target/release/academy-pow --chain local --alice &
+        run: ($PWD)/target/release/academy-pow --chain local --alice &
 
       - name: Verify chain responds
         shell: bash
