@@ -6,7 +6,7 @@ services:
     container_name: node01
     user: ${UID:-0}
     environment:
-      - CUSTOM_ARGS=--log runtime::contracts=debug,sync=trace,pow=trace,manual-seal=trace,command=trace
+      - CUSTOM_ARGS=--log sync=trace,pow=trace,manual-seal=trace,command=trace
       - MINING_ACCOUNT_ID=$NODE01_ACCOUNT_ID
       - ALLOW_PRIVATE_IPV4=true
       - BASE_PATH=/data/$NODE01_ACCOUNT_ID
@@ -33,7 +33,7 @@ services:
     container_name: node02
     user: ${UID:-0}
     environment:
-      - CUSTOM_ARGS=--log runtime::contracts=debug,sync=trace,pow=trace,manual-seal=trace,command=trace
+      - CUSTOM_ARGS=--log sync=trace,pow=trace,manual-seal=trace,command=trace
       - MINING_ACCOUNT_ID=$NODE02_ACCOUNT_ID
       - ALLOW_PRIVATE_IPV4=true
       - BASE_PATH=/data/$NODE02_ACCOUNT_ID
