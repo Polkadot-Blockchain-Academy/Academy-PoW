@@ -79,6 +79,7 @@ Create your own index file at `/var/www/html/index.html` with content like the f
 			<li>Connect a <a href="https://polkadot.js.org/apps?rpc=wss://academy.bootnodes.net/websocket">Wallet to the bootnode</a>.</li>
 			<li>Connect a <a href="https://polkadot.js.org/apps?rpc=ws://127.0.0.1:9944">Wallet to your local node</a>.</li>
 			<li>View the <a href="https://telemetry.polkadot.io/#list/TODO_GENESIS_BLOCK_HASH">Node Telemetry</a>.</li>
+			<li>TODO link to the fork visualizer once it is hosted.</li>
 		</ul>
 	</body>
 </html>
