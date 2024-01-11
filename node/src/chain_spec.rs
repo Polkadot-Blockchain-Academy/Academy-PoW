@@ -129,11 +129,6 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
         // Pre-funded accounts
         vec![
             get_account_id_from_seed::<sr25519::Public>("Alice"),
-            get_account_id_from_seed::<sr25519::Public>("Bob"),
-            get_account_id_from_seed::<sr25519::Public>("Charlie"),
-            get_account_id_from_seed::<sr25519::Public>("Dave"),
-            get_account_id_from_seed::<sr25519::Public>("Eve"),
-            get_account_id_from_seed::<sr25519::Public>("Ferdie"),
         ],
         4_000_000,
     ))
@@ -143,8 +138,8 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 fn genesis(endowed_accounts: Vec<AccountId>, _initial_difficulty: u32) -> serde_json::Value {
     serde_json::json!({
         "balances": {
-            // Configure endowed accounts with initial balance of 1 << 60.
-            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1u64 << 60)).collect::<Vec<_>>(),
+            // Configure endowed accounts with initial balance of 1 << 50.
+            "balances": endowed_accounts.iter().cloned().map(|k| (k, 1u64 << 50)).collect::<Vec<_>>(),
         },
         //TODO Figure out how to convert a u32 into a proper json value here.
         // "difficultyAdjustment": {
