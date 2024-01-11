@@ -29,7 +29,7 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Claim a few tokens from the faucet
-        #[pallet::weight(1_000_000)]
+        #[pallet::weight((Weight::from(0), Pays::No))]
         pub fn claim(origin: OriginFor<T>) -> DispatchResult {
             let caller = ensure_signed(origin)?;
 
