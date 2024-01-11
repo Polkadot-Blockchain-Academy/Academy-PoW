@@ -254,7 +254,7 @@ where
 
         // Here we handle the forking logic according the the node operator's request.
         let valid_algorithm = match self.fork_config {
-            ForkingConfig::Manual => manual_fork_validation(parent_number),
+            ForkingConfig::Manual => manual_fork_validation(parent_number, seal.work.algo),
             ForkingConfig::Automatic(fork_heights, maxi_position) => {
                 auto_fork_validation(parent_number, seal.work.algo, fork_heights, maxi_position)
             }
@@ -331,8 +331,16 @@ impl FromStr for MaxiPosition {
     }
 }
 
-fn manual_fork_validation(_parent_number: u32) -> bool {
-    todo!("You must code up your own validation logic before you can run manual mode.")
+fn manual_fork_validation(_parent_number: u32, algo: SupportedHashes) -> bool {
+    use SupportedHashes::*;
+    
+    // To begin with we only allow md5 hashes for our pow.
+    // After the fork height this check is skipped so all the hashes become valid.
+    match algo {
+        Md5 => true,
+        Sha3 => false,
+        Keccak => false,
+    }
 }
 
 fn auto_fork_validation(
