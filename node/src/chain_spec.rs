@@ -1,6 +1,9 @@
 use std::str::FromStr;
 
-use academy_pow_runtime::{AccountId, RuntimeGenesisConfig, Signature, WASM_BINARY};
+use academy_pow_runtime::{
+    AccountId, RuntimeGenesisConfig, SS58Prefix, Signature, TOKEN_DECIMALS, TOKEN_SYMBOL,
+    WASM_BINARY,
+};
 use multi_pow::{ForkHeights, ForkingConfig, MaxiPosition};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
@@ -108,6 +111,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
         // Initial Difficulty
         4_000_000,
     ))
+    .with_properties(system_properties())
     .build())
 }
 
@@ -132,6 +136,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
         ],
         4_000_000,
     ))
+    .with_properties(system_properties())
     .build())
 }
 
@@ -146,4 +151,14 @@ fn genesis(endowed_accounts: Vec<AccountId>, _initial_difficulty: u32) -> serde_
         //     "initialDifficulty": serde_json::json!(initial_difficulty),
         // },
     })
+}
+
+fn system_properties() -> sc_chain_spec::Properties {
+    let mut properties = sc_chain_spec::Properties::new();
+
+    properties.insert("ss58Format".into(), SS58Prefix::get().into());
+    properties.insert("tokenSymbol".into(), TOKEN_SYMBOL.into());
+    properties.insert("tokenDecimals".into(), TOKEN_DECIMALS.into());
+
+    properties
 }
