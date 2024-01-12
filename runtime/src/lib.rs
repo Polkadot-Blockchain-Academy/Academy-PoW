@@ -129,6 +129,7 @@ pub fn native_version() -> NativeVersion {
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 // native chain currency
+pub const TOKEN_SYMBOL: &str = "Unit";
 pub const TOKEN_DECIMALS: u32 = 12;
 pub const TOKEN: u128 = 10u128.pow(TOKEN_DECIMALS);
 
