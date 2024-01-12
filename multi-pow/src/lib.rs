@@ -338,8 +338,8 @@ fn manual_fork_validation(_parent_number: u32, algo: SupportedHashes) -> bool {
     // After the fork height this check is skipped so all the hashes become valid.
     match algo {
         Md5 => true,
-        Sha3 => false,
-        Keccak => false,
+        Sha3 => true,
+        Keccak => true,
     }
 }
 
