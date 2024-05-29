@@ -79,6 +79,9 @@ pub type Index = u32;
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
 
+/// Consensus digest containing block author and supported hash algorithm.
+pub type PreDigest = (AccountId, SupportedHashes);
+
 /// The BlockAuthor trait in `./block_author.rs`
 pub mod block_author;
 
@@ -239,7 +242,8 @@ fn current_blocks_mining_algo() -> SupportedHashes {
         .iter()
         .find_map(|digest_item| {
             match digest_item {
-                DigestItem::PreRuntime(POW_ENGINE_ID, encoded_algo) => SupportedHashes::decode(&mut &encoded_algo[..]).ok(),
+                DigestItem::PreRuntime(POW_ENGINE_ID, pre_digest) =>
+                    PreDigest::decode(&mut &pre_digest[..]).map(|d| d.1).ok(),
                 _ => None,
             }
         })

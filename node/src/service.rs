@@ -3,7 +3,7 @@
 use core::clone::Clone;
 use std::sync::Arc;
 
-use academy_pow_runtime::{self, opaque::Block, RuntimeApi};
+use academy_pow_runtime::{self, opaque::Block, PreDigest, RuntimeApi};
 use multi_pow::{ForkingConfig, MultiPow, SupportedHashes};
 use parity_scale_codec::Encode;
 use sc_consensus::LongestChain;
@@ -238,7 +238,7 @@ pub fn new_full(
                 // This allows us to know which algo it was in the runtime.
                 // TODO This also makes it possible to remove the algo info from
                 // the seal.
-                Some(mining_algo.encode()),
+                Some(PreDigest::from((sr25519_public_key.into(), mining_algo)).encode()),
                 // This code is copied from above. Would be better to not repeat it.
                 move |_, ()| async move {
                     let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
