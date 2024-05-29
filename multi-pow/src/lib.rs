@@ -331,15 +331,25 @@ impl FromStr for MaxiPosition {
     }
 }
 
-fn manual_fork_validation(_parent_number: u32, algo: SupportedHashes) -> bool {
+fn manual_fork_validation(parent_number: u32, algo: SupportedHashes) -> bool {
     use SupportedHashes::*;
+
+    const FORK_HEIGHT: u32 = 2100;
     
     // To begin with we only allow md5 hashes for our pow.
     // After the fork height this check is skipped so all the hashes become valid.
-    match algo {
-        Md5 => true,
-        Sha3 => false,
-        Keccak => false,
+    if parent_number < FORK_HEIGHT {
+        match algo {
+            Md5 => true,
+            Sha3 => false,
+            Keccak => false,
+        }
+    } else {
+        match algo {
+            Md5 => true,
+            Sha3 => true,
+            Keccak => true,
+        }
     }
 }
 
