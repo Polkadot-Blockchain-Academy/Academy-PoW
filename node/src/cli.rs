@@ -47,12 +47,12 @@ pub struct AcademyPowCli {
 }
 
 impl AcademyPowCli {
-    pub fn public_key_bytes(&self) -> [u8; 32] {
+    pub fn public_key_bytes(&self, keyring: Option<sp_keyring::Sr25519Keyring>) -> [u8; 32] {
         match &self.mining_account_id {
             Some(account_id) => *account_id.as_ref(),
             None => match self.mining_public_key {
                 Some(public_key) => public_key.0,
-                None => [0u8; 32],
+                None => keyring.map(|k| k.to_raw_public()).unwrap_or([0u8; 32]),
             },
         }
     }
