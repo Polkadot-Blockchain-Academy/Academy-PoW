@@ -147,7 +147,7 @@ pub fn run() -> sc_cli::Result<()> {
         }
         None => {
             // Get the mining account from the cli
-            let bytes: [u8; 32] = cli.pow.public_key_bytes();
+            let bytes: [u8; 32] = cli.pow.public_key_bytes(cli.run.get_keyring());
             let sr25519_public_key = Public(bytes);
 
             let runner = cli.create_runner(&cli.run)?;

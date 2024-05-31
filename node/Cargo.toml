@@ -45,6 +45,7 @@ sp-consensus = { workspace = true }
 sp-consensus-pow = { workspace = true }
 sp-core = { workspace = true }
 sp-inherents = { workspace = true }
+sp-keyring = { workspace = true }
 sp-runtime = { workspace = true }
 sp-timestamp = { workspace = true }
 sp-transaction-pool = { workspace = true }
